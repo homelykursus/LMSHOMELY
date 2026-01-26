@@ -38,9 +38,9 @@ export default function StudentPhotoUpload({
         return;
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Ukuran file maksimal 5MB');
+      // Validate file size (max 10MB untuk Cloudinary free)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Ukuran file maksimal 10MB');
         return;
       }
 
@@ -65,16 +65,18 @@ export default function StudentPhotoUpload({
     
     try {
       const formData = new FormData();
-      formData.append('photo', selectedFile);
+      formData.append('file', selectedFile);
       formData.append('studentId', studentId);
 
-      const response = await fetch(`/api/students/${studentId}/photo`, {
-        method: 'PUT',
+      const response = await fetch('/api/upload/student-photo', {
+        method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
-        toast.success('Foto siswa berhasil diperbarui');
+        const result = await response.json();
+        toast.success('Foto siswa berhasil diperbarui dengan Cloudinary');
+        console.log('Cloudinary upload result:', result.data.cloudinary);
         onPhotoUpdated();
         handleClose();
       } else {
@@ -167,7 +169,7 @@ export default function StudentPhotoUpload({
                       Klik atau drag & drop foto di sini
                     </p>
                     <p className="text-xs text-gray-500">
-                      JPG, PNG, GIF maksimal 5MB
+                      JPG, PNG, GIF maksimal 10MB (Cloudinary)
                     </p>
                   </div>
                 </div>
