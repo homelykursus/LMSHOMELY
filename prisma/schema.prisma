@@ -1,0 +1,381 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  duration    Int      // durasi dalam jam
+  category    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  pricing      CoursePricing[]
+  students     Student[]
+  teachers     TeacherCourse[]
+  classes      Class[]
+  certificates Certificate[]
+  templates    CertificateTemplate[]
+}
+
+model CoursePricing {
+  id           String   @id @default(cuid())
+  courseId     String
+  courseType   String   // 'regular' atau 'private'
+  basePrice    Int      // harga dasar
+  discountRate Int?     // persentase diskon (0-100)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Student {
+  id            String   @id @default(cuid())
+  studentNumber String   @unique // STD001, STD002, etc - User-friendly student ID
+  name          String
+  dateOfBirth   String   // format YYYY-MM-DD
+  gender        String?  // 'male' atau 'female'
+  whatsapp      String
+  photo         String?  // URL foto siswa
+  courseId      String
+  courseType    String   // 'regular' atau 'private'
+  participants  Int      // jumlah peserta
+  finalPrice    Int      // harga final setelah diskon
+  discount      Int      @default(0) // diskon nominal dalam Rupiah
+  lastEducation String?  // pendidikan terakhir: SD, SMP, SMA, S1, S2, S3
+  referralSource String? // sumber referral: Instagram, Facebook, Google, Tiktok, dari Teman, Lainnya
+  status        String   @default("pending") // pending, confirmed, completed
+  completedAt   DateTime? // tanggal selesai kursus
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  course        Course   @relation(fields: [courseId], references: [id])
+  payments      Payment[]
+  classes       ClassStudent[]
+  attendances   Attendance[]
+  certificates  Certificate[]
+}
+
+model Teacher {
+  id            String   @id @default(cuid())
+  name          String
+  dateOfBirth   String   // format YYYY-MM-DD
+  whatsapp      String   @unique // unique untuk login
+  password      String?  // password untuk login guru
+  photo         String?  // URL foto guru
+  education     String   // pendidikan terakhir: SMA, S1, S2, S3, dll
+  specialization String? // spesialisasi keahlian
+  experience    Int?     // pengalaman mengajar dalam tahun
+  address       String?  // alamat lengkap
+  joinDate      String   // tanggal bergabung format YYYY-MM-DD
+  status        String   @default("active") // active, inactive, leave
+  salary        Int?     // gaji per bulan
+  notes         String?  // catatan tambahan
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  courses              TeacherCourse[]
+  classes              Class[]
+  attendances          TeacherAttendance[]
+  substituteMeetings   ClassMeeting[] @relation("SubstituteTeacher")
+  actualMeetings       ClassMeeting[] @relation("ActualTeacher")
+  certificates         Certificate[]
+  
+  @@index([status])
+  @@index([education])
+}
+
+model TeacherCourse {
+  id        String   @id @default(cuid())
+  teacherId String
+  courseId  String
+  isMain    Boolean  @default(false) // apakah ini program utama
+  createdAt DateTime @default(now())
+  
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([teacherId, courseId])
+  @@index([teacherId])
+  @@index([courseId])
+}
+
+model Payment {
+  id                String              @id @default(cuid())
+  studentId         String
+  totalAmount       Int                 // total harga kursus
+  paidAmount        Int                 @default(0) // jumlah yang sudah dibayar
+  remainingAmount   Int                 // totalAmount - paidAmount
+  status            String              @default("pending") // pending, partial, completed, overdue
+  paymentMethod     String?             // cash, transfer, e-wallet
+  paymentProof      String?             // URL bukti pembayaran
+  notes             String?             // catatan pembayaran
+  dueDate           DateTime?           // tanggal jatuh tempo
+  completedAt       DateTime?           // tanggal pembayaran lunas
+  reminderDismissedAt DateTime?         // kapan reminder di-dismiss
+  reminderDismissedBy String?           // siapa yang dismiss reminder
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  student           Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  transactions      PaymentTransaction[]
+  
+  @@index([studentId])
+  @@index([status])
+}
+
+model PaymentTransaction {
+  id              String   @id @default(cuid())
+  paymentId       String
+  amount          Int      // jumlah pembayaran
+  paymentMethod   String   // cash, transfer, e-wallet
+  paymentDate     DateTime @default(now())
+  proofUrl        String?  // URL bukti pembayaran
+  notes           String?  // catatan transaksi
+  createdBy       String?  // yang mencatat pembayaran
+  createdAt       DateTime @default(now())
+  
+  payment         Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  
+  @@index([paymentId])
+  @@index([paymentDate])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // hashed password
+  role      String   @default("admin") // admin, super_admin
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  capacity    Int?     // kapasitas ruangan
+  floor       String?  // lantai
+  building    String?  // gedung
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  classes     Class[]
+  
+  @@index([isActive])
+  @@index([name])
+}
+
+model Class {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  courseId          String    // relasi ke course/program
+  teacherId         String?   // guru yang mengajar (opsional)
+  roomId            String    // ruangan kelas
+  maxStudents       Int       // kapasitas maksimal siswa
+  commissionType    String    @default("BY_CLASS") // 'BY_CLASS' | 'BY_STUDENT'
+  commissionAmount  Int       // biaya komisi guru (renamed from commissionFee)
+  schedule          String    // jadwal (contoh: "Senin, 09:00-11:00")
+  startDate         DateTime? // tanggal mulai (diisi otomatis saat absensi pertama)
+  endDate           DateTime? // tanggal selesai (diisi otomatis saat kelas selesai)
+  totalMeetings     Int       @default(0) // total jumlah pertemuan yang dijadwalkan
+  completedMeetings Int       @default(0) // jumlah pertemuan yang sudah selesai
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relasi
+  course            Course          @relation(fields: [courseId], references: [id])
+  teacher           Teacher?        @relation(fields: [teacherId], references: [id])
+  room              Room            @relation(fields: [roomId], references: [id])
+  students          ClassStudent[]
+  meetings          ClassMeeting[]
+  
+  @@index([isActive])
+  @@index([teacherId])
+  @@index([courseId])
+  @@index([roomId])
+  @@index([commissionType])
+}
+
+model ClassStudent {
+  id        String   @id @default(cuid())
+  classId   String
+  studentId String
+  joinedAt  DateTime @default(now())
+  
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([classId, studentId])
+  @@index([classId])
+  @@index([studentId])
+}
+
+model ClassMeeting {
+  id                    String   @id @default(cuid())
+  classId               String
+  meetingNumber         Int      // nomor pertemuan (1, 2, 3, ...)
+  date                  DateTime // tanggal pertemuan
+  startTime             DateTime // waktu mulai
+  endTime               DateTime? // waktu selesai
+  topic                 String?  // topik/materi pertemuan
+  notes                 String?  // catatan pertemuan
+  status                String   @default("SCHEDULED") // 'SCHEDULED', 'COMPLETED', 'CANCELLED'
+  substituteTeacherId   String? // guru pengganti (opsional)
+  actualTeacherId       String? // guru yang benar-benar mengajar pertemuan ini
+  calculatedCommission  Int?     // calculated commission amount
+  commissionBreakdown   String?  // commission calculation details
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  class                 Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  substituteTeacher     Teacher? @relation("SubstituteTeacher", fields: [substituteTeacherId], references: [id], onDelete: SetNull)
+  actualTeacher         Teacher? @relation("ActualTeacher", fields: [actualTeacherId], references: [id], onDelete: SetNull)
+  attendances           Attendance[]
+  teacherAttendances    TeacherAttendance[]
+  
+  @@unique([classId, meetingNumber])
+  @@index([classId])
+  @@index([date])
+  @@index([substituteTeacherId])
+  @@index([actualTeacherId])
+  @@index([calculatedCommission])
+}
+
+model Attendance {
+  id              String   @id @default(cuid())
+  classMeetingId  String
+  studentId       String
+  status          String   // 'HADIR', 'TIDAK_HADIR', 'TERLAMBAT', 'IZIN'
+  notes           String?  // catatan absensi
+  markedAt        DateTime @default(now())
+  
+  classMeeting    ClassMeeting @relation(fields: [classMeetingId], references: [id], onDelete: Cascade)
+  student         Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([classMeetingId, studentId])
+  @@index([classMeetingId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model TeacherAttendance {
+  id              String   @id @default(cuid())
+  classMeetingId  String
+  teacherId       String
+  status          String   // 'HADIR', 'TIDAK_HADIR'
+  notes           String?  // catatan absensi
+  markedAt        DateTime @default(now())
+  
+  classMeeting    ClassMeeting @relation(fields: [classMeetingId], references: [id], onDelete: Cascade)
+  teacher         Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  @@unique([classMeetingId, teacherId])
+  @@index([classMeetingId])
+  @@index([teacherId])
+  @@index([status])
+}
+
+model EmployeeAttendance {
+  id            String   @id @default(cuid())
+  employeeName  String
+  employeeId    String
+  type          String   // 'check_in' atau 'check_out'
+  timestamp     DateTime @default(now())
+  notes         String?  // catatan tambahan
+  status        String   @default("success") // 'success' atau 'error'
+  errorMessage  String?  // pesan error jika gagal
+  ipAddress     String?  // IP address untuk tracking
+  userAgent     String?  // browser/device info
+  createdAt     DateTime @default(now())
+  
+  @@index([employeeId])
+  @@index([type])
+  @@index([status])
+  @@index([timestamp])
+}
+
+model CertificateTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  category          String   @default("course_completion") // 'course_completion', 'graduation', 'achievement'
+  courseId          String?  // relasi ke course (opsional untuk template umum)
+  originalFileName  String   // nama file Word asli
+  filePath          String   // path ke file Word template
+  placeholders      String   // JSON array placeholder yang ditemukan
+  fileSize          Int      // ukuran file dalam bytes
+  fileType          String   // 'docx' atau 'doc'
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdBy         String   // user ID yang upload template
+  
+  course            Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  certificates      Certificate[]
+  
+  @@index([isActive])
+  @@index([category])
+  @@index([courseId])
+  @@index([createdBy])
+}
+
+model Certificate {
+  id                String   @id @default(cuid())
+  certificateNumber String   @unique // nomor sertifikat unik
+  templateId        String   // relasi ke template
+  studentId         String   // relasi ke student
+  teacherId         String?  // guru yang mengajar (bisa null)
+  courseId          String   // relasi ke course
+  courseName        String   // nama course saat generate (snapshot)
+  studentName       String   // nama student saat generate (snapshot)
+  teacherName       String?  // nama teacher saat generate (snapshot)
+  courseDuration    String   // durasi course saat generate (snapshot)
+  generatedAt       DateTime @default(now()) // tanggal generate
+  filePath          String   // path ke file PDF hasil
+  downloadUrl       String?  // URL download (optional)
+  fileSize          Int?     // ukuran file PDF
+  status            String   @default("generated") // 'generated', 'downloaded'
+  generatedBy       String   // user ID yang generate
+  metadata          String?  // JSON metadata tambahan
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  template          CertificateTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  student           Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher           Teacher?            @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  course            Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@index([templateId])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([courseId])
+  @@index([status])
+  @@index([generatedAt])
+  @@index([certificateNumber])
+}
