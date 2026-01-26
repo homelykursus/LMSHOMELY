@@ -9,10 +9,7 @@ import path from 'path';
 // GET - List all templates
 export async function GET(request: NextRequest) {
   return withAuth(async (req, user) => {
-    console.log('✅ [TEMPLATE UPLOAD] Authentication passed');
-    console.log('👤 [TEMPLATE UPLOAD] User:', { id: user.id, email: user.email, role: user.role });
     try {
-      console.log('📁 [TEMPLATE UPLOAD] Creating uploads directory...');
       const { searchParams } = new URL(req.url);
       const category = searchParams.get('category');
       const courseId = searchParams.get('courseId');
@@ -50,8 +47,6 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json(templatesWithParsedPlaceholders);
     } catch (error) {
-      console.log('❌ [TEMPLATE UPLOAD] Main error:', error);
-      console.log('❌ [TEMPLATE UPLOAD] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       console.error('Error fetching templates:', error);
       return NextResponse.json(
         { error: 'Gagal mengambil data template' },
@@ -63,31 +58,20 @@ export async function GET(request: NextRequest) {
 
 // POST - Upload new template
 export async function POST(request: NextRequest) {
-  console.log('🚀 [TEMPLATE UPLOAD] Starting upload process...');
-  console.log('🔍 [TEMPLATE UPLOAD] Request URL:', request.url);
-  console.log('🔍 [TEMPLATE UPLOAD] Request method:', request.method);
   return withAuth(async (req, user) => {
     try {
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
       await fs.mkdir(uploadsDir, { recursive: true });
 
       // Parse form data
-      console.log('📋 [TEMPLATE UPLOAD] Parsing form data...');
       const formData = await req.formData();
-      console.log('✅ [TEMPLATE UPLOAD] Form data parsed successfully');
       const file = formData.get('file') as File;
-      console.log('📄 [TEMPLATE UPLOAD] File info:', {
-        name: file?.name,
-        size: file?.size,
-        type: file?.type
-      });
       const name = formData.get('name') as string;
       const description = formData.get('description') as string;
       const category = formData.get('category') as string || 'course_completion';
       const courseId = formData.get('courseId') as string;
 
       if (!file) {
-        console.log('❌ [TEMPLATE UPLOAD] No file provided');
         return NextResponse.json(
           { error: 'File template harus diupload' },
           { status: 400 }
@@ -95,7 +79,6 @@ export async function POST(request: NextRequest) {
       }
 
       if (!name) {
-        console.log('❌ [TEMPLATE UPLOAD] No name provided');
         return NextResponse.json(
           { error: 'Nama template harus diisi' },
           { status: 400 }
@@ -104,9 +87,7 @@ export async function POST(request: NextRequest) {
 
       // Validate file type
       const allowedTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
-      console.log('🔍 [TEMPLATE UPLOAD] Validating file type:', file.type);
       if (!allowedTypes.includes(file.type)) {
-        console.log('❌ [TEMPLATE UPLOAD] Invalid file type:', file.type);
         return NextResponse.json(
           { error: 'Format file tidak didukung. Hanya mendukung .docx dan .doc' },
           { status: 400 }
@@ -114,9 +95,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Validate file size (max 10MB)
-      console.log('📏 [TEMPLATE UPLOAD] Validating file size:', file.size);
       if (file.size > 10 * 1024 * 1024) {
-        console.log('❌ [TEMPLATE UPLOAD] File too large:', file.size);
         return NextResponse.json(
           { error: 'Ukuran file maksimal 10MB' },
           { status: 400 }
@@ -129,35 +108,17 @@ export async function POST(request: NextRequest) {
       const filePath = path.join(uploadsDir, fileName);
 
       // Save file
-      console.log('🔄 [TEMPLATE UPLOAD] Converting file to buffer...');
       const buffer = Buffer.from(await file.arrayBuffer());
-      console.log('✅ [TEMPLATE UPLOAD] Buffer created, size:', buffer.length);
-      console.log('💾 [TEMPLATE UPLOAD] Saving file to:', filePath);
       await fs.writeFile(filePath, buffer);
-      console.log('✅ [TEMPLATE UPLOAD] File saved successfully');
 
       try {
         // Process template
-        console.log('🔧 [TEMPLATE UPLOAD] Creating template processor...');
-      const processor = new WordTemplateProcessor();
-      console.log('✅ [TEMPLATE UPLOAD] Processor created');
-        console.log('📖 [TEMPLATE UPLOAD] Parsing template...');
-      const templateData = await processor.parseTemplate(filePath);
-      console.log('✅ [TEMPLATE UPLOAD] Template parsed:', {
-        placeholders: templateData.placeholders.length,
-        fileSize: templateData.metadata.fileSize
-      });
+        const processor = new WordTemplateProcessor();
+        const templateData = await processor.parseTemplate(filePath);
         
         // Validate template
-        console.log('🔍 [TEMPLATE UPLOAD] Validating template...');
-      const validation = await processor.validateTemplate(templateData);
-      console.log('📋 [TEMPLATE UPLOAD] Validation result:', {
-        isValid: validation.isValid,
-        errors: validation.errors,
-        warnings: validation.warnings
-      });
+        const validation = await processor.validateTemplate(templateData);
         if (!validation.isValid) {
-        console.log('❌ [TEMPLATE UPLOAD] Template validation failed');
           // Delete uploaded file if validation fails
           await fs.unlink(filePath);
           return NextResponse.json(
@@ -170,8 +131,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Save template to database
-        console.log('💾 [TEMPLATE UPLOAD] Saving to database...');
-      const template = await db.certificateTemplate.create({
+        const template = await db.certificateTemplate.create({
           data: {
             name,
             description,
@@ -187,8 +147,7 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('✅ [TEMPLATE UPLOAD] Template saved successfully');
-      return NextResponse.json({
+        return NextResponse.json({
           message: 'Template berhasil diupload',
           template: {
             ...template,
@@ -198,7 +157,6 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (processingError) {
-        console.log('❌ [TEMPLATE UPLOAD] Processing error:', processingError);
         // Delete uploaded file if processing fails
         await fs.unlink(filePath);
         throw processingError;

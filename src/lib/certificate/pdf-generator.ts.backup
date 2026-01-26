@@ -2,6 +2,7 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import mammoth from 'mammoth';
 import fs from 'fs/promises';
 import { StudentData } from './word-template-processor';
+import { LibreOfficePDFGenerator } from './libreoffice-pdf-generator';
 
 export interface PDFGenerationOptions {
   format: 'A4' | 'Letter' | 'Legal';
@@ -30,9 +31,15 @@ export class PDFGenerator {
     embedFonts: true
   };
 
+  private libreOfficeGenerator: LibreOfficePDFGenerator;
+
+  constructor() {
+    this.libreOfficeGenerator = new LibreOfficePDFGenerator();
+  }
+
   /**
    * Generate PDF from Word template with student data
-   * Uses pure JavaScript approach (no LibreOffice dependency)
+   * Now uses LibreOffice for high-fidelity conversion when available
    */
   async generateFromWordTemplate(
     templatePath: string, 
@@ -42,9 +49,28 @@ export class PDFGenerator {
     try {
       const finalOptions = { ...this.defaultOptions, ...options };
 
-      console.log('📄 Generating PDF using pure JavaScript approach (no LibreOffice)');
-      
-      // Use basic PDF generation method (reliable, no external dependencies)
+      // First, try LibreOffice conversion for high-fidelity PDF
+      try {
+        const validation = await this.libreOfficeGenerator.validateLibreOfficeInstallation();
+        
+        if (validation.isAvailable) {
+          console.log('Using LibreOffice for high-fidelity PDF conversion');
+          
+          // Read the Word template (should already have placeholders replaced)
+          const wordBuffer = await fs.readFile(templatePath);
+          
+          // Convert to PDF using LibreOffice
+          const pdfBuffer = await this.libreOfficeGenerator.convertWordToPDF(wordBuffer);
+          
+          return pdfBuffer;
+        } else {
+          console.warn('LibreOffice not available, falling back to basic PDF generation:', validation.error);
+        }
+      } catch (libreOfficeError) {
+        console.warn('LibreOffice conversion failed, falling back to basic PDF generation:', libreOfficeError);
+      }
+
+      // Fallback to original PDF generation method
       return await this.generateBasicPDF(templatePath, studentData, finalOptions);
     } catch (error) {
       throw new Error(`Gagal generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -52,7 +78,7 @@ export class PDFGenerator {
   }
 
   /**
-   * Generate PDF using basic method (pure JavaScript, no LibreOffice)
+   * Generate PDF using basic method (fallback when LibreOffice unavailable)
    */
   private async generateBasicPDF(
     templatePath: string, 
