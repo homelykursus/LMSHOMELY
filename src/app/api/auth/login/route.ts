@@ -5,8 +5,11 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
+    console.log('🔐 Login attempt:', { email, passwordLength: password?.length });
+
     // Validate input
     if (!email || !password) {
+      console.log('❌ Missing email or password');
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
@@ -14,9 +17,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticate user
+    console.log('🔍 Attempting authentication...');
     const user = await AuthService.authenticate(email, password);
+    console.log('🔍 Authentication result:', user ? 'SUCCESS' : 'FAILED');
     
     if (!user) {
+      console.log('❌ Authentication failed for:', email);
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }

@@ -137,6 +137,8 @@ export class AuthService {
    */
   static async authenticate(email: string, password: string): Promise<AuthUser | null> {
     try {
+      console.log('🔍 AuthService.authenticate called with:', { email, passwordLength: password?.length });
+      
       const user = await db.user.findUnique({
         where: { email: email.toLowerCase() },
         select: {
@@ -149,12 +151,29 @@ export class AuthService {
         }
       });
 
+      console.log('🔍 User found in database:', user ? 'YES' : 'NO');
+      if (user) {
+        console.log('🔍 User details:', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isActive: user.isActive,
+          hasPassword: !!user.password
+        });
+      }
+
       if (!user || !user.isActive) {
+        console.log('❌ User not found or inactive');
         return null;
       }
 
+      console.log('🔐 Verifying password...');
       const isValidPassword = await this.verifyPassword(password, user.password);
+      console.log('🔐 Password verification result:', isValidPassword);
+      
       if (!isValidPassword) {
+        console.log('❌ Invalid password');
         return null;
       }
 
@@ -164,6 +183,7 @@ export class AuthService {
         data: { lastLogin: new Date() }
       });
 
+      console.log('✅ Authentication successful');
       return {
         id: user.id,
         email: user.email,
@@ -171,7 +191,7 @@ export class AuthService {
         role: user.role
       };
     } catch (error) {
-      console.error('Error authenticating user:', error);
+      console.error('❌ Error authenticating user:', error);
       return null;
     }
   }
