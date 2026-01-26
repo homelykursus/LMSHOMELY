@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AuthService } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 
 export async function GET() {
   try {
@@ -87,28 +85,45 @@ export async function POST(request: NextRequest) {
 
     // Handle photo upload
     if (photo && photo.size > 0) {
+      // Validasi file
+      if (!photo.type.startsWith('image/')) {
+        return NextResponse.json(
+          { error: 'File must be an image' },
+          { status: 400 }
+        );
+      }
+
+      // Maksimal 10MB (sesuai limit Cloudinary free)
+      if (photo.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'File size must be less than 10MB' },
+          { status: 400 }
+        );
+      }
+
+      // Convert file to buffer
       const bytes = await photo.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const originalName = photo.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filename = `${timestamp}_${originalName}`;
+      // Upload ke Cloudinary
+      const { CloudinaryService } = await import('@/lib/cloudinary');
       
-      // Ensure uploads directory exists
-      const uploadDir = join(process.cwd(), 'public', 'uploads', 'teachers');
-      try {
-        await mkdir(uploadDir, { recursive: true });
-      } catch (error) {
-        // Directory might already exist
-      }
+      // Generate temporary teacher ID for Cloudinary upload
+      const tempTeacherId = `temp_${Date.now()}`;
+      
+      const uploadResult = await CloudinaryService.uploadTeacherPhoto(
+        buffer,
+        tempTeacherId,
+        {
+          width: 400,
+          height: 400,
+          crop: 'fill',
+          quality: 'auto:good'
+        }
+      );
 
-      // Write file
-      const filepath = join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-      
-      // Store relative URL
-      photoUrl = `/uploads/teachers/${filename}`;
+      // Store Cloudinary URL
+      photoUrl = uploadResult.secure_url;
     }
 
     const teacher = await db.teacher.create({
@@ -141,6 +156,40 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // If we uploaded a photo with temporary ID, update it with the real teacher ID
+    if (photo && photo.size > 0 && photoUrl) {
+      try {
+        const { CloudinaryService } = await import('@/lib/cloudinary');
+        
+        // Upload again with the correct teacher ID
+        const bytes = await photo.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        const finalUploadResult = await CloudinaryService.uploadTeacherPhoto(
+          buffer,
+          teacher.id,
+          {
+            width: 400,
+            height: 400,
+            crop: 'fill',
+            quality: 'auto:good'
+          }
+        );
+
+        // Update the teacher record with the final photo URL
+        await db.teacher.update({
+          where: { id: teacher.id },
+          data: { photo: finalUploadResult.secure_url }
+        });
+
+        // Update the teacher object for response
+        teacher.photo = finalUploadResult.secure_url;
+      } catch (photoError) {
+        console.error('Error updating teacher photo with final ID:', photoError);
+        // Continue without failing the entire operation
+      }
+    }
 
     // Handle course assignments
     if (courseIds) {

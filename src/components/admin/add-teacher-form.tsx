@@ -66,20 +66,61 @@ export default function AddTeacherForm({ onTeacherAdded }: AddTeacherFormProps) 
     }));
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        photo: file
-      }));
+      // Import image compression utility
+      const { ImageCompressor } = await import('@/lib/image-compression');
       
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Validate image
+      const validation = ImageCompressor.validateImage(file);
+      if (!validation.valid) {
+        setError(validation.error || 'File tidak valid');
+        return;
+      }
+
+      try {
+        // Check if compression is needed
+        const shouldCompress = ImageCompressor.shouldCompress(file);
+        let finalFile = file;
+
+        if (shouldCompress) {
+          // Show compression message
+          setError('Mengompres gambar untuk optimasi...');
+          
+          // Compress image for production compatibility
+          finalFile = await ImageCompressor.compressImage(file, {
+            maxWidth: 1920,
+            maxHeight: 1080,
+            quality: 0.8,
+            maxSizeKB: 2048 // 2MB limit for Vercel
+          });
+
+          const originalSize = ImageCompressor.formatFileSize(file.size);
+          const compressedSize = ImageCompressor.formatFileSize(finalFile.size);
+          
+          setError(`Gambar dikompres: ${originalSize} → ${compressedSize}`);
+          
+          // Clear message after 3 seconds
+          setTimeout(() => setError(null), 3000);
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          photo: finalFile
+        }));
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhotoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(finalFile);
+        
+      } catch (error) {
+        console.error('Error processing image:', error);
+        setError('Gagal memproses gambar');
+      }
     }
   };
 

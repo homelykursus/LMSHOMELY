@@ -147,29 +147,54 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
     setCalculatedPrice(finalPrice);
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validasi tipe file
-      if (!file.type.startsWith('image/')) {
-        toast.error('File harus berupa gambar');
-        return;
-      }
-
-      // Validasi ukuran file (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Ukuran gambar maksimal 5MB');
-        return;
-      }
-
-      setSelectedPhoto(file);
+      // Import image compression utility
+      const { ImageCompressor } = await import('@/lib/image-compression');
       
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotoPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Validate image
+      const validation = ImageCompressor.validateImage(file);
+      if (!validation.valid) {
+        toast.error(validation.error);
+        return;
+      }
+
+      try {
+        // Check if compression is needed
+        const shouldCompress = ImageCompressor.shouldCompress(file);
+        let finalFile = file;
+
+        if (shouldCompress) {
+          toast.info('Mengompres gambar untuk optimasi...');
+          
+          // Compress image for production compatibility
+          finalFile = await ImageCompressor.compressImage(file, {
+            maxWidth: 1920,
+            maxHeight: 1080,
+            quality: 0.8,
+            maxSizeKB: 2048 // 2MB limit for Vercel
+          });
+
+          const originalSize = ImageCompressor.formatFileSize(file.size);
+          const compressedSize = ImageCompressor.formatFileSize(finalFile.size);
+          
+          toast.success(`Gambar dikompres: ${originalSize} → ${compressedSize}`);
+        }
+
+        setSelectedPhoto(finalFile);
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPhotoPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(finalFile);
+        
+      } catch (error) {
+        console.error('Error processing image:', error);
+        toast.error('Gagal memproses gambar');
+      }
     }
   };
 

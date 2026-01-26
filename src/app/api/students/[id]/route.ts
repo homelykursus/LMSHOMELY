@@ -138,31 +138,41 @@ export async function PUT(
 
       // Handle photo upload
       if (photo && photo.size > 0) {
-        const { writeFile, mkdir } = await import('fs/promises');
-        const { join } = await import('path');
-        
+        // Validasi file
+        if (!photo.type.startsWith('image/')) {
+          return NextResponse.json(
+            { error: 'File must be an image' },
+            { status: 400 }
+          );
+        }
+
+        // Maksimal 10MB (sesuai limit Cloudinary free)
+        if (photo.size > 10 * 1024 * 1024) {
+          return NextResponse.json(
+            { error: 'File size must be less than 10MB' },
+            { status: 400 }
+          );
+        }
+
+        // Convert file to buffer
         const bytes = await photo.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Generate unique filename
-        const timestamp = Date.now();
-        const originalName = photo.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filename = `${timestamp}_${originalName}`;
-        
-        // Ensure uploads directory exists
-        const uploadDir = join(process.cwd(), 'public', 'uploads', 'students');
-        try {
-          await mkdir(uploadDir, { recursive: true });
-        } catch (error) {
-          // Directory might already exist
-        }
+        // Upload ke Cloudinary
+        const { CloudinaryService } = await import('@/lib/cloudinary');
+        const uploadResult = await CloudinaryService.uploadStudentPhoto(
+          buffer,
+          params.id,
+          {
+            width: 400,
+            height: 400,
+            crop: 'fill',
+            quality: 'auto:good'
+          }
+        );
 
-        // Write file
-        const filepath = join(uploadDir, filename);
-        await writeFile(filepath, buffer);
-        
-        // Store relative URL
-        photoUrl = `/uploads/students/${filename}`;
+        // Store Cloudinary URL
+        photoUrl = uploadResult.secure_url;
       }
 
       updatedStudent = await db.student.update({
