@@ -1,54 +1,84 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function GET() {
-  const startTime = Date.now()
-  
   try {
+    console.log('🔍 Testing database connection...');
+    
     // Test database connection
-    await db.$queryRaw`SELECT 1`
-    const dbResponseTime = Date.now() - startTime
+    await db.$connect();
+    console.log('✅ Database connected successfully');
     
-    // Get basic stats
-    const [employeeCount, teacherCount, studentCount] = await Promise.all([
-      db.employeeAttendance.count(),
-      db.teacher.count(),
-      db.student.count()
-    ])
-    
-    const totalResponseTime = Date.now() - startTime
-    
-    return NextResponse.json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      responseTime: {
-        database: `${dbResponseTime}ms`,
-        total: `${totalResponseTime}ms`
-      },
-      database: {
-        status: "connected",
-        records: {
-          employeeAttendance: employeeCount,
-          teachers: teacherCount,
-          students: studentCount
-        }
-      },
-      system: {
-        nodeVersion: process.version,
-        platform: process.platform,
-        memory: {
-          used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-          total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
-        }
-      }
+    // Check if admin exists
+    const existingAdmin = await db.user.findUnique({
+      where: { email: 'admin@kursus.com' }
     });
-  } catch (error) {
+
+    let adminStatus = 'exists';
+    
+    if (!existingAdmin) {
+      console.log('🔐 Creating default admin user...');
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash('admin123', 12);
+      
+      // Create admin user
+      const admin = await db.user.create({
+        data: {
+          id: 'admin-production-001',
+          email: 'admin@kursus.com',
+          name: 'Super Admin',
+          password: hashedPassword,
+          role: 'super_admin',
+          isActive: true
+        }
+      });
+      
+      adminStatus = 'created';
+      console.log('✅ Admin user created:', admin.email);
+    }
+
+    // Get basic stats
+    const userCount = await db.user.count();
+    const teacherCount = await db.teacher.count();
+    const studentCount = await db.student.count();
+    const courseCount = await db.course.count();
+
     return NextResponse.json({
-      status: "unhealthy",
-      timestamp: new Date().toISOString(),
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Database connection failed',
-      responseTime: `${Date.now() - startTime}ms`
+      status: 'success',
+      message: 'Database connection successful',
+      database: {
+        connected: true,
+        provider: 'postgresql'
+      },
+      admin: {
+        status: adminStatus,
+        email: 'admin@kursus.com',
+        password: 'admin123'
+      },
+      stats: {
+        users: userCount,
+        teachers: teacherCount,
+        students: studentCount,
+        courses: courseCount
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    
+    return NextResponse.json({
+      status: 'error',
+      message: 'Database connection failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      database: {
+        connected: false
+      },
+      timestamp: new Date().toISOString()
     }, { status: 500 });
+  } finally {
+    await db.$disconnect();
   }
 }
