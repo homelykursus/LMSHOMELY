@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import JSZip from 'jszip';
 import fs from 'fs/promises';
 import path from 'path';
 import { db } from '@/lib/db';
+import { AuthService } from '@/lib/auth';
 
 export interface BackupMetadata {
   version: string;
@@ -25,7 +25,6 @@ export interface BackupData {
     certificates: any[];
     certificateTemplates: any[];
     users: any[];
-    financialRecords: any[];
     rooms: any[];
   };
   assets?: {
@@ -63,7 +62,6 @@ export class BackupService {
       let payments: any[] = [];
       let certificates: any[] = [];
       let certificateTemplates: any[] = [];
-      let financialRecords: any[] = [];
       let meetings: any[] = [];
 
       try {
@@ -85,12 +83,6 @@ export class BackupService {
       }
 
       try {
-        financialRecords = await db.financialRecord.findMany();
-      } catch (e) {
-        console.warn('⚠️  FinancialRecord table not accessible');
-      }
-
-      try {
         meetings = await db.classMeeting.findMany();
       } catch (e) {
         console.warn('⚠️  ClassMeeting table not accessible');
@@ -100,7 +92,7 @@ export class BackupService {
       const totalRecords = students.length + teachers.length + classes.length + 
                           courses.length + payments.length + certificates.length + 
                           certificateTemplates.length + users.length + 
-                          financialRecords.length + rooms.length + meetings.length;
+                          rooms.length + meetings.length;
 
       // Create backup data structure
       const backupData: BackupData = {
@@ -124,7 +116,6 @@ export class BackupService {
             ...user,
             password: '[REDACTED]' // Don't backup passwords
           })),
-          financialRecords,
           rooms
         }
       };
@@ -285,13 +276,6 @@ export class BackupService {
           console.log('   ✅ Rooms cleared');
         } catch (e) {
           console.log('   ⚠️  Rooms table not found or empty');
-        }
-
-        try {
-          await tx.financialRecord.deleteMany();
-          console.log('   ✅ Financial records cleared');
-        } catch (e) {
-          console.log('   ⚠️  Financial records table not found or empty');
         }
 
         try {
@@ -540,24 +524,6 @@ export class BackupService {
           }
         }
 
-        console.log('📝 Restoring financial records...');
-        if (backupData.data.financialRecords?.length > 0) {
-          try {
-            await tx.financialRecord.createMany({
-              data: backupData.data.financialRecords.map(record => ({
-                ...record,
-                createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-                updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-                date: record.date ? new Date(record.date) : new Date()
-              }))
-            });
-            console.log(`   ✅ ${backupData.data.financialRecords.length} financial records restored`);
-          } catch (error) {
-            console.error('   ❌ Error restoring financial records:', error);
-            throw error;
-          }
-        }
-
         console.log('📝 Restoring users...');
         if (backupData.data.users?.length > 0) {
           try {
@@ -565,7 +531,8 @@ export class BackupService {
               let userData = { ...user };
               if (userData.password === '[REDACTED]') {
                 // Skip users with redacted passwords or set default
-                userData.password = 'admin123'; // Default password
+                const hashedPassword = await AuthService.hashPassword('admin123');
+                userData.password = hashedPassword;
               }
               
               // Check if user already exists (to avoid duplicates)
@@ -675,21 +642,21 @@ export class BackupService {
 
       // Collect Cloudinary URLs from database
       const students = await db.student.findMany({
-        select: { photoUrl: true }
+        select: { photo: true }
       });
       const teachers = await db.teacher.findMany({
-        select: { photoUrl: true }
+        select: { photo: true }
       });
 
       students.forEach(student => {
-        if (student.photoUrl && student.photoUrl.includes('cloudinary')) {
-          assets.cloudinary_urls.push(student.photoUrl);
+        if (student.photo && student.photo.includes('cloudinary')) {
+          assets.cloudinary_urls.push(student.photo);
         }
       });
 
       teachers.forEach(teacher => {
-        if (teacher.photoUrl && teacher.photoUrl.includes('cloudinary')) {
-          assets.cloudinary_urls.push(teacher.photoUrl);
+        if (teacher.photo && teacher.photo.includes('cloudinary')) {
+          assets.cloudinary_urls.push(teacher.photo);
         }
       });
 
