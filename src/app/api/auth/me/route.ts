@@ -3,6 +3,7 @@ import { AuthService } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    // Get user from request (checks both Authorization header and cookie)
     const user = await AuthService.getUserFromRequest(request);
     
     if (!user) {
@@ -12,16 +13,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Return user data
     return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      }
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
     });
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error('Auth me error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
