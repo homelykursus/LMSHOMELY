@@ -87,10 +87,30 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
 
   useEffect(() => {
     if (student) {
+      // Normalize WhatsApp format to +62xxxxxxxxxx
+      let normalizedWhatsApp = student.whatsapp;
+      if (normalizedWhatsApp && !normalizedWhatsApp.startsWith('+62')) {
+        // Remove any non-digit characters
+        const digits = normalizedWhatsApp.replace(/\D/g, '');
+        
+        // Convert to +62 format
+        if (digits.startsWith('08')) {
+          normalizedWhatsApp = '+62' + digits.substring(2);
+        } else if (digits.startsWith('8')) {
+          normalizedWhatsApp = '+62' + digits;
+        } else if (digits.startsWith('62')) {
+          normalizedWhatsApp = '+' + digits;
+        } else if (digits.startsWith('0')) {
+          normalizedWhatsApp = '+62' + digits.substring(1);
+        } else {
+          normalizedWhatsApp = '+62' + digits;
+        }
+      }
+
       setFormData({
         name: student.name,
         dateOfBirth: student.dateOfBirth,
-        whatsapp: student.whatsapp,
+        whatsapp: normalizedWhatsApp,
         courseId: student.courseId,
         courseType: student.courseType,
         participants: student.participants,
