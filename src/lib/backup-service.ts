@@ -423,14 +423,21 @@ export class BackupService {
           try {
             for (const classData of backupData.data.classes) {
               const { course, teacher, students, meetings, room, ...classInfo } = classData;
+              
+              // Handle class data with proper field mapping
+              const processedClass = {
+                ...classInfo,
+                // Ensure required fields have proper values
+                name: classInfo.name || 'Unnamed Class',
+                status: classInfo.status || 'active',
+                createdAt: classInfo.createdAt ? new Date(classInfo.createdAt) : new Date(),
+                updatedAt: classInfo.updatedAt ? new Date(classInfo.updatedAt) : new Date(),
+                startDate: classInfo.startDate ? new Date(classInfo.startDate) : new Date(),
+                endDate: classInfo.endDate ? new Date(classInfo.endDate) : null
+              };
+              
               await tx.class.create({
-                data: {
-                  ...classInfo,
-                  createdAt: classInfo.createdAt ? new Date(classInfo.createdAt) : new Date(),
-                  updatedAt: classInfo.updatedAt ? new Date(classInfo.updatedAt) : new Date(),
-                  startDate: classInfo.startDate ? new Date(classInfo.startDate) : new Date(),
-                  endDate: classInfo.endDate ? new Date(classInfo.endDate) : null
-                }
+                data: processedClass
               });
             }
             console.log(`   ✅ ${backupData.data.classes.length} classes restored`);
@@ -445,13 +452,20 @@ export class BackupService {
           try {
             for (const meeting of backupData.data.meetings) {
               const { class: classData, teacher, actualTeacher, attendances, ...meetingData } = meeting;
+              
+              // Handle meeting data with proper field mapping
+              const processedMeeting = {
+                ...meetingData,
+                // Ensure required fields have proper values
+                meetingNumber: meetingData.meetingNumber || 1,
+                status: meetingData.status || 'scheduled',
+                createdAt: meetingData.createdAt ? new Date(meetingData.createdAt) : new Date(),
+                updatedAt: meetingData.updatedAt ? new Date(meetingData.updatedAt) : new Date(),
+                date: meetingData.date ? new Date(meetingData.date) : new Date()
+              };
+              
               await tx.classMeeting.create({
-                data: {
-                  ...meetingData,
-                  createdAt: meetingData.createdAt ? new Date(meetingData.createdAt) : new Date(),
-                  updatedAt: meetingData.updatedAt ? new Date(meetingData.updatedAt) : new Date(),
-                  date: meetingData.date ? new Date(meetingData.date) : new Date()
-                }
+                data: processedMeeting
               });
             }
             console.log(`   ✅ ${backupData.data.meetings.length} meetings restored`);
@@ -465,14 +479,30 @@ export class BackupService {
         if (backupData.data.payments?.length > 0) {
           try {
             for (const payment of backupData.data.payments) {
-              const { student, ...paymentData } = payment;
+              const { student, transactions, ...paymentData } = payment;
+              
+              // Handle payment data with proper field mapping
+              const processedPayment = {
+                ...paymentData,
+                // Ensure required fields have proper values
+                totalAmount: paymentData.totalAmount || 0,
+                paidAmount: paymentData.paidAmount || 0,
+                remainingAmount: paymentData.remainingAmount || paymentData.totalAmount || 0,
+                status: paymentData.status || 'pending',
+                createdAt: paymentData.createdAt ? new Date(paymentData.createdAt) : new Date(),
+                updatedAt: paymentData.updatedAt ? new Date(paymentData.updatedAt) : new Date(),
+                // Handle date fields properly - map paymentDate to completedAt if exists
+                completedAt: paymentData.completedAt ? new Date(paymentData.completedAt) : 
+                           (paymentData.paymentDate ? new Date(paymentData.paymentDate) : null),
+                dueDate: paymentData.dueDate ? new Date(paymentData.dueDate) : null,
+                reminderDismissedAt: paymentData.reminderDismissedAt ? new Date(paymentData.reminderDismissedAt) : null
+              };
+              
+              // Remove any fields that don't exist in the schema
+              delete (processedPayment as any).paymentDate;
+              
               await tx.payment.create({
-                data: {
-                  ...paymentData,
-                  createdAt: paymentData.createdAt ? new Date(paymentData.createdAt) : new Date(),
-                  updatedAt: paymentData.updatedAt ? new Date(paymentData.updatedAt) : new Date(),
-                  paymentDate: paymentData.paymentDate ? new Date(paymentData.paymentDate) : new Date()
-                }
+                data: processedPayment
               });
             }
             console.log(`   ✅ ${backupData.data.payments.length} payments restored`);
@@ -487,13 +517,20 @@ export class BackupService {
           try {
             for (const certificate of backupData.data.certificates) {
               const { student, template, ...certData } = certificate;
+              
+              // Handle certificate data with proper field mapping
+              const processedCertificate = {
+                ...certData,
+                // Ensure required fields have proper values
+                certificateNumber: certData.certificateNumber || `CERT-${Date.now()}`,
+                status: certData.status || 'issued',
+                createdAt: certData.createdAt ? new Date(certData.createdAt) : new Date(),
+                updatedAt: certData.updatedAt ? new Date(certData.updatedAt) : new Date(),
+                issuedDate: certData.issuedDate ? new Date(certData.issuedDate) : new Date()
+              };
+              
               await tx.certificate.create({
-                data: {
-                  ...certData,
-                  createdAt: certData.createdAt ? new Date(certData.createdAt) : new Date(),
-                  updatedAt: certData.updatedAt ? new Date(certData.updatedAt) : new Date(),
-                  issuedDate: certData.issuedDate ? new Date(certData.issuedDate) : new Date()
-                }
+                data: processedCertificate
               });
             }
             console.log(`   ✅ ${backupData.data.certificates.length} certificates restored`);
