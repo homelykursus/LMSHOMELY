@@ -158,10 +158,10 @@ export default function AddStudentForm({ onStudentAdded }: AddStudentFormProps) 
       return false;
     }
 
-    // Validasi format WhatsApp (+62xxxxxxxxxx)
-    const whatsappRegex = /^\+62\d{9,13}$/;
+    // Validasi format WhatsApp (62xxxxxxxxxx)
+    const whatsappRegex = /^62\d{9,13}$/;
     if (!whatsappRegex.test(formData.whatsapp)) {
-      toast.error('Format WhatsApp: +62xxxxxxxxxx');
+      toast.error('Format WhatsApp: 62xxxxxxxxxx');
       return false;
     }
 
@@ -363,44 +363,40 @@ export default function AddStudentForm({ onStudentAdded }: AddStudentFormProps) 
                       // Hapus semua karakter non-digit kecuali +
                       value = value.replace(/[^\d+]/g, '');
                       
-                      // Jika user mengetik angka tanpa +62, otomatis tambahkan +62
-                      if (value.length > 0 && !value.startsWith('+62')) {
-                        // Jika dimulai dengan 08, ganti dengan +62
+                      // Jika user mengetik angka tanpa 62, otomatis tambahkan 62
+                      if (value.length > 0 && !value.startsWith('62')) {
+                        // Jika dimulai dengan 08, ganti dengan 628
                         if (value.startsWith('08')) {
-                          value = '+62' + value.substring(2);
+                          value = '628' + value.substring(2);
                         }
-                        // Jika dimulai dengan 8, ganti dengan +628
+                        // Jika dimulai dengan 8, ganti dengan 628
                         else if (value.startsWith('8')) {
-                          value = '+62' + value;
+                          value = '628' + value.substring(1);
                         }
-                        // Jika dimulai dengan 62, tambahkan + di depan
-                        else if (value.startsWith('62')) {
-                          value = '+' + value;
-                        }
-                        // Jika dimulai dengan 0 tapi bukan 08, ganti 0 dengan +62
+                        // Jika dimulai dengan 0 tapi bukan 08, ganti 0 dengan 62
                         else if (value.startsWith('0')) {
-                          value = '+62' + value.substring(1);
+                          value = '62' + value.substring(1);
                         }
-                        // Jika tidak dimulai dengan 0, 8, atau 62, tambahkan +62 di depan
-                        else if (!value.startsWith('+')) {
-                          value = '+62' + value;
+                        // Jika tidak dimulai dengan 0, 8, atau 62, tambahkan 62 di depan
+                        else {
+                          value = '62' + value;
                         }
                       }
                       
-                      // Pastikan tidak lebih dari +62 + 13 digit
-                      if (value.length > 16) {
-                        value = value.substring(0, 16);
+                      // Pastikan tidak lebih dari 62 + 13 digit
+                      if (value.length > 15) {
+                        value = value.substring(0, 15);
                       }
                       
                       setFormData({ ...formData, whatsapp: value });
                     }}
-                    placeholder="+62xxxxxxxxxx"
+                    placeholder="62xxxxxxxxxx"
                     className="pl-10"
-                    maxLength={16}
+                    maxLength={15}
                     required
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Format: +62xxxxxxxxxx (otomatis ditambahkan +62)</p>
+                <p className="text-sm text-gray-500 mt-1">Format: 62xxxxxxxxxx (otomatis ditambahkan 62)</p>
               </div>
 
               <div>
