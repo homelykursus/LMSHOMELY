@@ -567,19 +567,58 @@ export class BackupService {
                 // Skip users with redacted passwords or set default
                 userData.password = 'admin123'; // Default password
               }
-              await tx.user.create({
-                data: {
-                  ...userData,
-                  createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
-                  updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
-                }
+              
+              // Check if user already exists (to avoid duplicates)
+              const existingUser = await tx.user.findUnique({
+                where: { email: userData.email }
               });
+              
+              if (!existingUser) {
+                await tx.user.create({
+                  data: {
+                    ...userData,
+                    createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+                    updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
+                  }
+                });
+              } else {
+                console.log(`   ⚠️  User ${userData.email} already exists, skipping`);
+              }
             }
-            console.log(`   ✅ ${backupData.data.users.length} users restored`);
+            console.log(`   ✅ ${backupData.data.users.length} users processed`);
           } catch (error) {
             console.error('   ❌ Error restoring users:', error);
             throw error;
           }
+        }
+
+        // Ensure admin user exists after restore
+        console.log('🔐 Ensuring admin user exists...');
+        const adminExists = await tx.user.findFirst({
+          where: {
+            OR: [
+              { role: 'super_admin' },
+              { role: 'admin' }
+            ]
+          }
+        });
+
+        if (!adminExists) {
+          console.log('   🆘 No admin user found, creating emergency admin...');
+          const hashedPassword = await AuthService.hashPassword('admin123');
+          
+          await tx.user.create({
+            data: {
+              email: 'admin@kursus.com',
+              name: 'Auto-Created Admin',
+              password: hashedPassword,
+              role: 'super_admin',
+              isActive: true
+            }
+          });
+          console.log('   ✅ Emergency admin created');
+        } else {
+          console.log('   ✅ Admin user exists');
         }
       });
 
