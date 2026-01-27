@@ -137,8 +137,14 @@ export class AuthService {
    */
   static async authenticate(email: string, password: string): Promise<AuthUser | null> {
     try {
+      // Clean and normalize email
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPassword = password.trim();
+
+      console.log(`[AUTH] Attempting login for email: ${cleanEmail}`);
+
       const user = await db.user.findUnique({
-        where: { email: email.toLowerCase() },
+        where: { email: cleanEmail },
         select: {
           id: true,
           email: true,
@@ -149,14 +155,23 @@ export class AuthService {
         }
       });
 
-      if (!user || !user.isActive) {
+      if (!user) {
+        console.log(`[AUTH] User not found: ${cleanEmail}`);
         return null;
       }
 
-      const isValidPassword = await this.verifyPassword(password, user.password);
-      if (!isValidPassword) {
+      if (!user.isActive) {
+        console.log(`[AUTH] User inactive: ${cleanEmail}`);
         return null;
       }
+
+      const isValidPassword = await this.verifyPassword(cleanPassword, user.password);
+      if (!isValidPassword) {
+        console.log(`[AUTH] Invalid password for: ${cleanEmail}`);
+        return null;
+      }
+
+      console.log(`[AUTH] Login successful for: ${cleanEmail}`);
 
       // Update last login
       await db.user.update({

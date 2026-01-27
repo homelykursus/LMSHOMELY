@@ -23,9 +23,11 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Clean input - trim whitespace and normalize
+    const cleanValue = name === 'email' ? value.trim().toLowerCase() : value.trim();
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: cleanValue
     }));
     // Clear error when user starts typing
     if (error) setError('');
@@ -37,15 +39,31 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // Clean and validate input data
+      const cleanFormData = {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password.trim()
+      };
+
+      // Basic validation
+      if (!cleanFormData.email || !cleanFormData.password) {
+        setError('Email dan password harus diisi');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Login attempt:', { email: cleanFormData.email, password: '***' });
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanFormData),
       });
 
       const data = await response.json();
+      console.log('Login response:', { status: response.status, success: data.success });
 
       if (response.ok) {
         toast.success(`Selamat datang, ${data.user.name}!`);
@@ -56,6 +74,7 @@ export default function LoginPage() {
         // Redirect to admin dashboard
         router.push('/admin');
       } else {
+        console.error('Login failed:', data);
         setError(data.error || 'Login failed');
       }
     } catch (error) {
