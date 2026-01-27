@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BackupService } from '@/lib/backup-service';
-import { verifyAuth } from '@/lib/auth';
+import { AuthService } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const authResult = await verifyAuth(request);
-    if (!authResult.success) {
+    const user = await AuthService.getUserFromRequest(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

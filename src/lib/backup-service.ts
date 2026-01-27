@@ -290,7 +290,7 @@ export class BackupService {
         if (backupData.data.meetings?.length > 0) {
           for (const meeting of backupData.data.meetings) {
             const { class: classData, teacher, actualTeacher, attendances, ...meetingData } = meeting;
-            await tx.meeting.create({
+            await tx.classMeeting.create({
               data: meetingData
             });
           }
