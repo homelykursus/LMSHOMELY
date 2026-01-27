@@ -11,7 +11,6 @@ import {
   Download, 
   Upload, 
   Database, 
-  FileText, 
   Calendar,
   Clock,
   CheckCircle,
@@ -234,6 +233,13 @@ export default function BackupPage() {
       console.log('🔄 Starting restore process...');
       console.log(`📁 File: ${file.name} (${file.size} bytes)`);
 
+      // Show initial progress toast
+      toast({
+        title: "🔄 Memulai Restore",
+        description: `Memproses file: ${file.name}`,
+        duration: 3000,
+      });
+
       const formData = new FormData();
       formData.append('backup', file);
 
@@ -262,32 +268,59 @@ export default function BackupPage() {
 
       if (!response.ok) {
         let errorMessage = 'Restore failed';
+        let errorDetails = '';
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
+          errorDetails = errorData.details ? (Array.isArray(errorData.details) ? errorData.details.join(', ') : errorData.details) : '';
           console.error('❌ Restore error:', errorData);
         } catch (e) {
           const errorText = await response.text();
           console.error('❌ Restore error (text):', errorText);
           errorMessage = errorText || errorMessage;
         }
-        throw new Error(errorMessage);
+        throw new Error(`${errorMessage}${errorDetails ? ` (${errorDetails})` : ''}`);
       }
 
       const result = await response.json();
       console.log('✅ Restore successful:', result);
 
+      // Enhanced success message with detailed information
       toast({
-        title: "Restore Berhasil",
-        description: `Data berhasil dipulihkan dari backup. ${result.restored_records} records restored.`,
+        title: "🎉 Restore Berhasil!",
+        description: (
+          <div className="space-y-2">
+            <p className="font-medium">Data berhasil dipulihkan dari backup</p>
+            <div className="text-sm space-y-1">
+              <p>📊 Records dipulihkan: <span className="font-semibold">{result.restored_records}</span></p>
+              <p>📅 Backup dari: <span className="font-semibold">{new Date(result.backup_date).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}</span></p>
+              <p>📦 Tipe backup: <span className="font-semibold">{result.backup_type === 'data' ? 'Data Only' : 'Full Backup'}</span></p>
+            </div>
+            <p className="text-xs text-green-600 mt-2">✅ Sistem siap digunakan kembali</p>
+          </div>
+        ),
+        duration: 8000, // Show for 8 seconds
       });
 
     } catch (error) {
       console.error('❌ Restore failed:', error);
       toast({
-        title: "Restore Gagal",
-        description: error instanceof Error ? error.message : "Terjadi kesalahan saat memulihkan data.",
+        title: "❌ Restore Gagal",
+        description: (
+          <div className="space-y-2">
+            <p className="font-medium">Terjadi kesalahan saat memulihkan data</p>
+            <p className="text-sm text-red-600">{error instanceof Error ? error.message : "Kesalahan tidak diketahui"}</p>
+            <p className="text-xs text-gray-600 mt-2">💡 Pastikan file backup valid dan coba lagi</p>
+          </div>
+        ),
         variant: "destructive",
+        duration: 10000, // Show error longer
       });
     } finally {
       setIsRestoring(false);
@@ -536,29 +569,43 @@ export default function BackupPage() {
                   className="hidden"
                   id="restore-file"
                 />
-                <div className="cursor-pointer" onClick={() => document.getElementById('restore-file')?.click()}>
+                <div>
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-2">
                     Pilih File Backup
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    Drag & drop atau klik untuk memilih file backup (.json atau .zip)
+                    Drag & drop atau klik tombol di bawah untuk memilih file backup (.json atau .zip)
                   </p>
+                  
+                  {isRestoring && (
+                    <div className="mb-4 space-y-2">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+                      </div>
+                      <p className="text-sm text-blue-600 font-medium">Sedang memulihkan data...</p>
+                    </div>
+                  )}
+                  
                   <Button 
                     variant="outline" 
                     disabled={isRestoring}
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       document.getElementById('restore-file')?.click();
                     }}
                   >
                     {isRestoring ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Memulihkan...
+                        Memulihkan Data...
                       </>
                     ) : (
-                      'Pilih File'
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Pilih File
+                      </>
                     )}
                   </Button>
                 </div>
