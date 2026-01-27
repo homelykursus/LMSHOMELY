@@ -252,6 +252,7 @@ export async function PUT(
               where: { id: existingPayment.id },
               data: {
                 totalAmount: finalPrice,
+                paidAmount: totalPaid, // Fix: Update paidAmount to match transactions
                 remainingAmount: newRemainingAmount,
                 status: newStatus,
                 // Reset reminder dismissal if there's a new balance
