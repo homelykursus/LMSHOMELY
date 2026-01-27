@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BackupService } from '@/lib/backup-service';
 import { AuthService } from '@/lib/auth';
+import JSZip from 'jszip';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,30 +42,58 @@ export async function POST(request: NextRequest) {
 
     console.log(`📁 [BACKUP RESTORE] File received: ${backupFile.name} (${backupFile.size} bytes)`);
 
-    // Read file content
-    let fileContent;
-    try {
-      fileContent = await backupFile.text();
-      console.log(`📄 [BACKUP RESTORE] File content length: ${fileContent.length} characters`);
-    } catch (error) {
-      console.error('❌ [BACKUP RESTORE] Failed to read file content:', error);
-      return NextResponse.json(
-        { error: 'Failed to read backup file' },
-        { status: 400 }
-      );
-    }
-
-    // Parse JSON
     let backupData;
-    try {
-      backupData = JSON.parse(fileContent);
-      console.log('✅ [BACKUP RESTORE] JSON parsed successfully');
-    } catch (error) {
-      console.error('❌ [BACKUP RESTORE] Invalid JSON format:', error);
-      return NextResponse.json(
-        { error: 'Invalid backup file format - not valid JSON' },
-        { status: 400 }
-      );
+    let backupType = 'data';
+
+    // Check if it's a ZIP file (full backup) or JSON file (data backup)
+    if (backupFile.name.endsWith('.zip')) {
+      console.log('📦 [BACKUP RESTORE] Processing ZIP file (full backup)...');
+      backupType = 'full';
+      
+      try {
+        // Read ZIP file
+        const arrayBuffer = await backupFile.arrayBuffer();
+        const zip = new JSZip();
+        const zipContent = await zip.loadAsync(arrayBuffer);
+        
+        // Extract database.json from ZIP
+        const databaseFile = zipContent.file('database.json');
+        if (!databaseFile) {
+          throw new Error('database.json not found in ZIP file');
+        }
+        
+        const databaseContent = await databaseFile.async('text');
+        backupData = JSON.parse(databaseContent);
+        
+        console.log('✅ [BACKUP RESTORE] ZIP file processed, database.json extracted');
+        
+        // Note: File assets (templates, certificates) are not restored in serverless environment
+        // This is a limitation of Vercel's serverless functions
+        console.log('⚠️  [BACKUP RESTORE] File assets will not be restored (serverless limitation)');
+        
+      } catch (error) {
+        console.error('❌ [BACKUP RESTORE] Failed to process ZIP file:', error);
+        return NextResponse.json(
+          { error: 'Failed to process ZIP backup file' },
+          { status: 400 }
+        );
+      }
+    } else {
+      console.log('📄 [BACKUP RESTORE] Processing JSON file (data backup)...');
+      
+      // Read file content as JSON
+      try {
+        const fileContent = await backupFile.text();
+        console.log(`📄 [BACKUP RESTORE] File content length: ${fileContent.length} characters`);
+        backupData = JSON.parse(fileContent);
+        console.log('✅ [BACKUP RESTORE] JSON parsed successfully');
+      } catch (error) {
+        console.error('❌ [BACKUP RESTORE] Failed to read/parse JSON file:', error);
+        return NextResponse.json(
+          { error: 'Failed to read backup file or invalid JSON format' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate backup data structure
@@ -96,10 +125,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Data restored successfully',
+      message: backupType === 'full' 
+        ? 'Data restored successfully (files not restored due to serverless limitations)' 
+        : 'Data restored successfully',
       restored_records: backupData.metadata.total_records,
       backup_date: backupData.metadata.created_at,
-      backup_type: backupData.metadata.backup_type
+      backup_type: backupData.metadata.backup_type,
+      notes: backupType === 'full' 
+        ? 'File assets (templates, certificates) were not restored due to serverless environment limitations'
+        : undefined
     });
 
   } catch (error) {

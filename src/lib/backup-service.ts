@@ -166,10 +166,13 @@ export class BackupService {
           try {
             const fileBuffer = await fs.readFile(template.path);
             templatesFolder?.file(template.name, fileBuffer);
+            console.log(`📄 Added template: ${template.name}`);
           } catch (error) {
-            console.warn(`⚠️  Could not read template file: ${template.path}`);
+            console.warn(`⚠️  Could not read template file: ${template.path} (serverless limitation)`);
           }
         }
+      } else {
+        console.log('📄 No certificate templates to backup');
       }
 
       // Add generated certificates
@@ -179,10 +182,13 @@ export class BackupService {
           try {
             const fileBuffer = await fs.readFile(cert.path);
             certsFolder?.file(cert.name, fileBuffer);
+            console.log(`📄 Added certificate: ${cert.name}`);
           } catch (error) {
-            console.warn(`⚠️  Could not read certificate file: ${cert.path}`);
+            console.warn(`⚠️  Could not read certificate file: ${cert.path} (serverless limitation)`);
           }
         }
+      } else {
+        console.log('📄 No generated certificates to backup');
       }
 
       // Add asset manifest
@@ -651,9 +657,12 @@ export class BackupService {
     };
 
     try {
+      // In serverless environment (Vercel), file system access is limited
+      // We'll try to collect what we can, but gracefully handle failures
+      
       // Collect certificate templates
-      const templatesDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
       try {
+        const templatesDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
         const templateFiles = await fs.readdir(templatesDir);
         for (const file of templateFiles) {
           if (file.endsWith('.docx')) {
@@ -663,13 +672,14 @@ export class BackupService {
             });
           }
         }
+        console.log(`📄 Found ${assets.certificateTemplates.length} certificate templates`);
       } catch (error) {
-        console.warn('⚠️  Certificate templates directory not found');
+        console.warn('⚠️  Certificate templates directory not accessible (serverless limitation)');
       }
 
       // Collect generated certificates
-      const certsDir = path.join(process.cwd(), 'public', 'certificates');
       try {
+        const certsDir = path.join(process.cwd(), 'public', 'certificates');
         const certFiles = await fs.readdir(certsDir);
         for (const file of certFiles) {
           if (file.endsWith('.pdf')) {
@@ -679,29 +689,36 @@ export class BackupService {
             });
           }
         }
+        console.log(`📄 Found ${assets.certificates.length} generated certificates`);
       } catch (error) {
-        console.warn('⚠️  Certificates directory not found');
+        console.warn('⚠️  Certificates directory not accessible (serverless limitation)');
       }
 
-      // Collect Cloudinary URLs from database
-      const students = await db.student.findMany({
-        select: { photo: true }
-      });
-      const teachers = await db.teacher.findMany({
-        select: { photo: true }
-      });
+      // Collect Cloudinary URLs from database (this should work in serverless)
+      try {
+        const students = await db.student.findMany({
+          select: { photo: true }
+        });
+        const teachers = await db.teacher.findMany({
+          select: { photo: true }
+        });
 
-      students.forEach(student => {
-        if (student.photo && student.photo.includes('cloudinary')) {
-          assets.cloudinary_urls.push(student.photo);
-        }
-      });
+        students.forEach(student => {
+          if (student.photo && student.photo.includes('cloudinary')) {
+            assets.cloudinary_urls.push(student.photo);
+          }
+        });
 
-      teachers.forEach(teacher => {
-        if (teacher.photo && teacher.photo.includes('cloudinary')) {
-          assets.cloudinary_urls.push(teacher.photo);
-        }
-      });
+        teachers.forEach(teacher => {
+          if (teacher.photo && teacher.photo.includes('cloudinary')) {
+            assets.cloudinary_urls.push(teacher.photo);
+          }
+        });
+        
+        console.log(`🌐 Found ${assets.cloudinary_urls.length} Cloudinary URLs`);
+      } catch (error) {
+        console.warn('⚠️  Error collecting Cloudinary URLs:', error);
+      }
 
     } catch (error) {
       console.warn('⚠️  Error collecting file assets:', error);
