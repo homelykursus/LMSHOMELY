@@ -216,123 +216,312 @@ export class BackupService {
         throw new Error('Invalid backup format');
       }
 
-      // Clear existing data (in transaction)
+      console.log(`📊 Restoring backup from: ${backupData.metadata.created_at}`);
+      console.log(`📋 Total records to restore: ${backupData.metadata.total_records}`);
+
+      // Clear existing data and restore (in transaction)
       await db.$transaction(async (tx) => {
+        console.log('🗑️  Clearing existing data...');
+        
         // Delete in correct order to avoid foreign key constraints
-        await tx.certificate.deleteMany();
-        await tx.payment.deleteMany();
-        await tx.classMeeting.deleteMany();
-        await tx.class.deleteMany();
-        await tx.student.deleteMany();
-        await tx.teacher.deleteMany();
-        await tx.certificateTemplate.deleteMany();
-        await tx.course.deleteMany();
-        await tx.room.deleteMany();
-        await tx.financialRecord.deleteMany();
-        await tx.user.deleteMany();
+        try {
+          await tx.certificate.deleteMany();
+          console.log('   ✅ Certificates cleared');
+        } catch (e) {
+          console.log('   ⚠️  Certificates table not found or empty');
+        }
+
+        try {
+          await tx.payment.deleteMany();
+          console.log('   ✅ Payments cleared');
+        } catch (e) {
+          console.log('   ⚠️  Payments table not found or empty');
+        }
+
+        try {
+          await tx.classMeeting.deleteMany();
+          console.log('   ✅ Class meetings cleared');
+        } catch (e) {
+          console.log('   ⚠️  Class meetings table not found or empty');
+        }
+
+        try {
+          await tx.class.deleteMany();
+          console.log('   ✅ Classes cleared');
+        } catch (e) {
+          console.log('   ⚠️  Classes table not found or empty');
+        }
+
+        try {
+          await tx.student.deleteMany();
+          console.log('   ✅ Students cleared');
+        } catch (e) {
+          console.log('   ⚠️  Students table not found or empty');
+        }
+
+        try {
+          await tx.teacher.deleteMany();
+          console.log('   ✅ Teachers cleared');
+        } catch (e) {
+          console.log('   ⚠️  Teachers table not found or empty');
+        }
+
+        try {
+          await tx.certificateTemplate.deleteMany();
+          console.log('   ✅ Certificate templates cleared');
+        } catch (e) {
+          console.log('   ⚠️  Certificate templates table not found or empty');
+        }
+
+        try {
+          await tx.course.deleteMany();
+          console.log('   ✅ Courses cleared');
+        } catch (e) {
+          console.log('   ⚠️  Courses table not found or empty');
+        }
+
+        try {
+          await tx.room.deleteMany();
+          console.log('   ✅ Rooms cleared');
+        } catch (e) {
+          console.log('   ⚠️  Rooms table not found or empty');
+        }
+
+        try {
+          await tx.financialRecord.deleteMany();
+          console.log('   ✅ Financial records cleared');
+        } catch (e) {
+          console.log('   ⚠️  Financial records table not found or empty');
+        }
+
+        try {
+          await tx.user.deleteMany();
+          console.log('   ✅ Users cleared');
+        } catch (e) {
+          console.log('   ⚠️  Users table not found or empty');
+        }
+
+        console.log('📥 Starting data restoration...');
 
         // Restore data in correct order
         console.log('📝 Restoring courses...');
         if (backupData.data.courses?.length > 0) {
-          await tx.course.createMany({
-            data: backupData.data.courses
-          });
+          try {
+            await tx.course.createMany({
+              data: backupData.data.courses.map(course => ({
+                ...course,
+                createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+                updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date()
+              }))
+            });
+            console.log(`   ✅ ${backupData.data.courses.length} courses restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring courses:', error);
+            throw error;
+          }
         }
 
         console.log('📝 Restoring rooms...');
         if (backupData.data.rooms?.length > 0) {
-          await tx.room.createMany({
-            data: backupData.data.rooms
-          });
+          try {
+            await tx.room.createMany({
+              data: backupData.data.rooms.map(room => ({
+                ...room,
+                createdAt: room.createdAt ? new Date(room.createdAt) : new Date(),
+                updatedAt: room.updatedAt ? new Date(room.updatedAt) : new Date()
+              }))
+            });
+            console.log(`   ✅ ${backupData.data.rooms.length} rooms restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring rooms:', error);
+            throw error;
+          }
         }
 
         console.log('📝 Restoring teachers...');
         if (backupData.data.teachers?.length > 0) {
-          for (const teacher of backupData.data.teachers) {
-            const { classes, meetings, commissions, ...teacherData } = teacher;
-            await tx.teacher.create({
-              data: teacherData
-            });
+          try {
+            for (const teacher of backupData.data.teachers) {
+              const { classes, meetings, commissions, ...teacherData } = teacher;
+              await tx.teacher.create({
+                data: {
+                  ...teacherData,
+                  createdAt: teacherData.createdAt ? new Date(teacherData.createdAt) : new Date(),
+                  updatedAt: teacherData.updatedAt ? new Date(teacherData.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.teachers.length} teachers restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring teachers:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring students...');
         if (backupData.data.students?.length > 0) {
-          for (const student of backupData.data.students) {
-            const { classes, payments, meetings, certificates, ...studentData } = student;
-            await tx.student.create({
-              data: studentData
-            });
+          try {
+            for (const student of backupData.data.students) {
+              const { classes, payments, meetings, certificates, ...studentData } = student;
+              await tx.student.create({
+                data: {
+                  ...studentData,
+                  createdAt: studentData.createdAt ? new Date(studentData.createdAt) : new Date(),
+                  updatedAt: studentData.updatedAt ? new Date(studentData.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.students.length} students restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring students:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring certificate templates...');
         if (backupData.data.certificateTemplates?.length > 0) {
-          for (const template of backupData.data.certificateTemplates) {
-            const { certificates, ...templateData } = template;
-            await tx.certificateTemplate.create({
-              data: templateData
-            });
+          try {
+            for (const template of backupData.data.certificateTemplates) {
+              const { certificates, ...templateData } = template;
+              await tx.certificateTemplate.create({
+                data: {
+                  ...templateData,
+                  createdAt: templateData.createdAt ? new Date(templateData.createdAt) : new Date(),
+                  updatedAt: templateData.updatedAt ? new Date(templateData.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.certificateTemplates.length} certificate templates restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring certificate templates:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring classes...');
         if (backupData.data.classes?.length > 0) {
-          for (const classData of backupData.data.classes) {
-            const { course, teacher, students, meetings, room, ...classInfo } = classData;
-            await tx.class.create({
-              data: classInfo
-            });
+          try {
+            for (const classData of backupData.data.classes) {
+              const { course, teacher, students, meetings, room, ...classInfo } = classData;
+              await tx.class.create({
+                data: {
+                  ...classInfo,
+                  createdAt: classInfo.createdAt ? new Date(classInfo.createdAt) : new Date(),
+                  updatedAt: classInfo.updatedAt ? new Date(classInfo.updatedAt) : new Date(),
+                  startDate: classInfo.startDate ? new Date(classInfo.startDate) : new Date(),
+                  endDate: classInfo.endDate ? new Date(classInfo.endDate) : null
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.classes.length} classes restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring classes:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring meetings...');
         if (backupData.data.meetings?.length > 0) {
-          for (const meeting of backupData.data.meetings) {
-            const { class: classData, teacher, actualTeacher, attendances, ...meetingData } = meeting;
-            await tx.classMeeting.create({
-              data: meetingData
-            });
+          try {
+            for (const meeting of backupData.data.meetings) {
+              const { class: classData, teacher, actualTeacher, attendances, ...meetingData } = meeting;
+              await tx.classMeeting.create({
+                data: {
+                  ...meetingData,
+                  createdAt: meetingData.createdAt ? new Date(meetingData.createdAt) : new Date(),
+                  updatedAt: meetingData.updatedAt ? new Date(meetingData.updatedAt) : new Date(),
+                  date: meetingData.date ? new Date(meetingData.date) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.meetings.length} meetings restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring meetings:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring payments...');
         if (backupData.data.payments?.length > 0) {
-          for (const payment of backupData.data.payments) {
-            const { student, ...paymentData } = payment;
-            await tx.payment.create({
-              data: paymentData
-            });
+          try {
+            for (const payment of backupData.data.payments) {
+              const { student, ...paymentData } = payment;
+              await tx.payment.create({
+                data: {
+                  ...paymentData,
+                  createdAt: paymentData.createdAt ? new Date(paymentData.createdAt) : new Date(),
+                  updatedAt: paymentData.updatedAt ? new Date(paymentData.updatedAt) : new Date(),
+                  paymentDate: paymentData.paymentDate ? new Date(paymentData.paymentDate) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.payments.length} payments restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring payments:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring certificates...');
         if (backupData.data.certificates?.length > 0) {
-          for (const certificate of backupData.data.certificates) {
-            const { student, template, ...certData } = certificate;
-            await tx.certificate.create({
-              data: certData
-            });
+          try {
+            for (const certificate of backupData.data.certificates) {
+              const { student, template, ...certData } = certificate;
+              await tx.certificate.create({
+                data: {
+                  ...certData,
+                  createdAt: certData.createdAt ? new Date(certData.createdAt) : new Date(),
+                  updatedAt: certData.updatedAt ? new Date(certData.updatedAt) : new Date(),
+                  issuedDate: certData.issuedDate ? new Date(certData.issuedDate) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.certificates.length} certificates restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring certificates:', error);
+            throw error;
           }
         }
 
         console.log('📝 Restoring financial records...');
         if (backupData.data.financialRecords?.length > 0) {
-          await tx.financialRecord.createMany({
-            data: backupData.data.financialRecords
-          });
+          try {
+            await tx.financialRecord.createMany({
+              data: backupData.data.financialRecords.map(record => ({
+                ...record,
+                createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
+                updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
+                date: record.date ? new Date(record.date) : new Date()
+              }))
+            });
+            console.log(`   ✅ ${backupData.data.financialRecords.length} financial records restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring financial records:', error);
+            throw error;
+          }
         }
 
         console.log('📝 Restoring users...');
         if (backupData.data.users?.length > 0) {
-          for (const user of backupData.data.users) {
-            if (user.password === '[REDACTED]') {
-              // Skip users with redacted passwords or set default
-              user.password = 'admin123'; // Default password
+          try {
+            for (const user of backupData.data.users) {
+              let userData = { ...user };
+              if (userData.password === '[REDACTED]') {
+                // Skip users with redacted passwords or set default
+                userData.password = 'admin123'; // Default password
+              }
+              await tx.user.create({
+                data: {
+                  ...userData,
+                  createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+                  updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
+                }
+              });
             }
-            await tx.user.create({
-              data: user
-            });
+            console.log(`   ✅ ${backupData.data.users.length} users restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring users:', error);
+            throw error;
           }
         }
       });
