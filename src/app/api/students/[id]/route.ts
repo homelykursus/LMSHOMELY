@@ -214,6 +214,72 @@ export async function PUT(
           }
         }
       });
+
+      // Check if course or pricing has changed
+      const courseChanged = student.courseId !== courseId;
+      const priceChanged = student.finalPrice !== finalPrice;
+      
+      if (courseChanged || priceChanged) {
+        console.log(`🔄 [STUDENT UPDATE] Course/price changed for student ${params.id}`);
+        console.log(`📚 Course changed: ${courseChanged}, Price changed: ${priceChanged}`);
+        
+        // Update payment record to reflect new pricing
+        try {
+          const existingPayment = await db.payment.findFirst({
+            where: { studentId: params.id },
+            include: {
+              transactions: true
+            }
+          });
+
+          if (existingPayment) {
+            // Calculate total paid amount from transactions
+            const totalPaid = existingPayment.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+            
+            // Calculate new remaining amount
+            const newRemainingAmount = Math.max(0, finalPrice - totalPaid);
+            
+            // Determine new payment status
+            let newStatus = 'pending';
+            if (totalPaid >= finalPrice) {
+              newStatus = 'completed';
+            } else if (totalPaid > 0) {
+              newStatus = 'partial';
+            }
+
+            // Update payment record
+            await db.payment.update({
+              where: { id: existingPayment.id },
+              data: {
+                totalAmount: finalPrice,
+                remainingAmount: newRemainingAmount,
+                status: newStatus,
+                // Reset reminder dismissal if there's a new balance
+                reminderDismissedAt: newRemainingAmount > 0 ? null : existingPayment.reminderDismissedAt,
+                reminderDismissedBy: newRemainingAmount > 0 ? null : existingPayment.reminderDismissedBy,
+              }
+            });
+
+            console.log(`✅ [STUDENT UPDATE] Payment updated - Old: ${existingPayment.totalAmount}, New: ${finalPrice}, Remaining: ${newRemainingAmount}`);
+          } else {
+            // Create new payment record if none exists
+            await db.payment.create({
+              data: {
+                studentId: params.id,
+                totalAmount: finalPrice,
+                paidAmount: 0,
+                remainingAmount: finalPrice,
+                status: 'pending'
+              }
+            });
+
+            console.log(`✅ [STUDENT UPDATE] New payment record created for ${finalPrice}`);
+          }
+        } catch (paymentError) {
+          console.error('❌ [STUDENT UPDATE] Error updating payment record:', paymentError);
+          // Don't fail the student update if payment update fails
+        }
+      }
     }
 
     return NextResponse.json(updatedStudent);

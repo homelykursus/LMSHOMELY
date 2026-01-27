@@ -27,7 +27,8 @@ import {
   Award,
   ChevronDown,
   ChevronRight,
-  Database
+  Database,
+  Megaphone
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -87,6 +88,11 @@ const sidebarItems: SidebarItem[] = [
     title: 'Cetak Sertifikat',
     href: '/admin/certificates',
     icon: Award,
+  },
+  {
+    title: 'Kelola Pengumuman',
+    href: '/admin/announcements',
+    icon: Megaphone,
   },
   {
     title: 'Data Guru',

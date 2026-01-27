@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { RunningText } from '@/components/ui/running-text';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Users,
   BookOpen,
@@ -11,7 +13,8 @@ import {
   Clock,
   TrendingUp,
   Award,
-  CheckCircle
+  CheckCircle,
+  Megaphone
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -24,25 +27,61 @@ interface DashboardStats {
   attendanceRate: number;
 }
 
+interface TeacherProfile {
+  id: string;
+  name: string;
+  whatsapp: string;
+  photoUrl?: string;
+}
+
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  priority: number;
+  createdAt: string;
+}
+
 export default function TeacherDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [teacher, setTeacher] = useState<TeacherProfile | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchDashboardData();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/teacher/dashboard/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      } else {
-        console.error('Failed to fetch dashboard stats');
+      // Fetch dashboard stats
+      const statsResponse = await fetch('/api/teacher/dashboard/stats');
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData);
       }
+
+      // Fetch teacher profile
+      const profileResponse = await fetch('/api/teacher/profile');
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setTeacher({
+          id: profileData.teacher.id,
+          name: profileData.teacher.name,
+          whatsapp: profileData.teacher.whatsapp,
+          photoUrl: profileData.teacher.photo
+        });
+      }
+
+      // Fetch announcements
+      const announcementsResponse = await fetch('/api/teacher/announcements');
+      if (announcementsResponse.ok) {
+        const announcementsData = await announcementsResponse.json();
+        setAnnouncements(announcementsData.data || []);
+      }
+
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -56,6 +95,14 @@ export default function TeacherDashboardPage() {
     }).format(amount);
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -64,7 +111,7 @@ export default function TeacherDashboardPage() {
     );
   }
 
-  if (!stats) {
+  if (!stats || !teacher) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Gagal memuat data dashboard</p>
@@ -74,10 +121,18 @@ export default function TeacherDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Guru</h1>
-        <p className="text-gray-600">Selamat datang! Berikut ringkasan aktivitas mengajar Anda.</p>
+      {/* Header with Teacher Photo */}
+      <div className="flex items-center space-x-4">
+        <Avatar className="h-16 w-16">
+          <AvatarImage src={teacher.photoUrl} alt={teacher.name} />
+          <AvatarFallback className="bg-blue-100 text-blue-600 text-lg">
+            {getInitials(teacher.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard Guru</h1>
+          <p className="text-gray-600">Selamat datang, {teacher.name}! Berikut ringkasan aktivitas mengajar Anda.</p>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -225,60 +280,46 @@ export default function TeacherDashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Information Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Aksi Cepat</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5" />
+            Informasi 📢
+          </CardTitle>
           <CardDescription>
-            Akses fitur yang sering digunakan
+            Pengumuman dan informasi terbaru dari manajemen
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a
-              href="/teacher/student-attendance"
-              className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              <Users className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <p className="font-medium text-blue-900">Absen Siswa</p>
-                <p className="text-sm text-blue-600">Catat kehadiran siswa</p>
-              </div>
-            </a>
-
-            <a
-              href="/teacher/teacher-attendance"
-              className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            >
-              <Clock className="h-8 w-8 text-green-600 mr-3" />
-              <div>
-                <p className="font-medium text-green-900">Absen Guru</p>
-                <p className="text-sm text-green-600">Catat kehadiran Anda</p>
-              </div>
-            </a>
-
-            <a
-              href="/teacher/classes"
-              className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
-            >
-              <BookOpen className="h-8 w-8 text-purple-600 mr-3" />
-              <div>
-                <p className="font-medium text-purple-900">Data Kelas</p>
-                <p className="text-sm text-purple-600">Lihat kelas Anda</p>
-              </div>
-            </a>
-
-            <a
-              href="/teacher/commissions"
-              className="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
-            >
-              <Award className="h-8 w-8 text-orange-600 mr-3" />
-              <div>
-                <p className="font-medium text-orange-900">Komisi</p>
-                <p className="text-sm text-orange-600">Lihat komisi Anda</p>
-              </div>
-            </a>
-          </div>
+          {announcements.length > 0 ? (
+            <div className="space-y-4">
+              {announcements.map((announcement) => (
+                <div key={announcement.id} className="border-l-4 border-blue-500 pl-4 py-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-gray-900">{announcement.title}</h4>
+                    <span className="text-xs text-gray-500">
+                      {new Date(announcement.createdAt).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 overflow-hidden">
+                    <RunningText 
+                      text={announcement.content}
+                      className="text-blue-800 font-medium"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-50 text-gray-400" />
+              <p className="text-gray-500">Belum ada pengumuman</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Pengumuman dari admin akan muncul di sini
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

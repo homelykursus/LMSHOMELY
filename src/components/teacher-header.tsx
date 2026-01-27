@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,33 @@ interface TeacherHeaderProps {
   teacher: AuthTeacher;
 }
 
+interface TeacherProfile {
+  id: string;
+  name: string;
+  whatsapp: string;
+  photo?: string;
+}
+
 export function TeacherHeader({ teacher }: TeacherHeaderProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetchTeacherProfile();
+  }, []);
+
+  const fetchTeacherProfile = async () => {
+    try {
+      const response = await fetch('/api/teacher/profile');
+      if (response.ok) {
+        const result = await response.json();
+        setTeacherProfile(result.teacher);
+      }
+    } catch (error) {
+      console.error('Error fetching teacher profile:', error);
+    }
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -54,6 +78,10 @@ export function TeacherHeader({ teacher }: TeacherHeaderProps) {
       .toUpperCase();
   };
 
+  const displayName = teacherProfile?.name || teacher.name;
+  const displayWhatsapp = teacherProfile?.whatsapp || teacher.whatsapp;
+  const photoUrl = teacherProfile?.photo;
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -70,8 +98,8 @@ export function TeacherHeader({ teacher }: TeacherHeaderProps) {
             {/* Teacher info */}
             <div className="hidden md:flex md:items-center md:space-x-3">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{teacher.name}</p>
-                <p className="text-xs text-gray-500">{teacher.whatsapp}</p>
+                <p className="text-sm font-medium text-gray-900">{displayName}</p>
+                <p className="text-xs text-gray-500">{displayWhatsapp}</p>
               </div>
             </div>
 
@@ -80,9 +108,9 @@ export function TeacherHeader({ teacher }: TeacherHeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="" alt={teacher.name} />
+                    <AvatarImage src={photoUrl} alt={displayName} />
                     <AvatarFallback className="bg-blue-100 text-blue-600">
-                      {getInitials(teacher.name)}
+                      {getInitials(displayName)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -90,9 +118,9 @@ export function TeacherHeader({ teacher }: TeacherHeaderProps) {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{teacher.name}</p>
+                    <p className="text-sm font-medium leading-none">{displayName}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {teacher.whatsapp}
+                      {displayWhatsapp}
                     </p>
                   </div>
                 </DropdownMenuLabel>

@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -378,4 +378,21 @@ model Certificate {
   @@index([status])
   @@index([generatedAt])
   @@index([certificateNumber])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String   // judul pengumuman
+  content     String   // isi pengumuman (running text)
+  isActive    Boolean  @default(true) // apakah aktif ditampilkan
+  priority    Int      @default(1) // prioritas tampil (1=highest)
+  targetRole  String   @default("teacher") // 'teacher', 'admin', 'all'
+  createdBy   String   // user ID yang membuat
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([priority])
+  @@index([targetRole])
+  @@index([createdAt])
 }

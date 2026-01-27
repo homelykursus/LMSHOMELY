@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart, PieChart, Pie, Cell } from 'recharts';
 import { 
   BookOpen, 
   Users, 
@@ -19,7 +19,8 @@ import {
   Calendar,
   BarChart3,
   Users2,
-  UserCheck
+  UserCheck,
+  PieChart as PieChartIcon
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -76,13 +77,17 @@ export default function AdminDashboard() {
     confirmedStudents: 0,
     totalRevenue: 0
   });
+  const [referralData, setReferralData] = useState<any[]>([]);
+  const [referralSummary, setReferralSummary] = useState<any>(null);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchReferralData();
   }, []);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchReferralData();
   }, [filterMonth, filterYear]);
 
   useEffect(() => {
@@ -183,6 +188,26 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error generating chart data:', error);
       setChartData([]);
+    }
+  };
+
+  const fetchReferralData = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterMonth) params.append('month', filterMonth);
+      if (filterYear) params.append('year', filterYear);
+      
+      const response = await fetch(`/api/admin/referral-stats?${params.toString()}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setReferralData(result.data);
+        setReferralSummary(result.summary);
+      }
+    } catch (error) {
+      console.error('Error fetching referral data:', error);
+      setReferralData([]);
+      setReferralSummary(null);
     }
   };
 
@@ -680,6 +705,147 @@ export default function AdminDashboard() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Referral Source Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5" />
+              Sumber Referral Siswa
+            </CardTitle>
+            <CardDescription>
+              {referralSummary?.period?.monthName && referralSummary?.period?.year 
+                ? `Data untuk ${referralSummary.period.monthName} ${referralSummary.period.year}`
+                : referralSummary?.period?.year 
+                ? `Data untuk tahun ${referralSummary.period.year}`
+                : 'Semua data siswa'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {referralData.length > 0 ? (
+              <div className="space-y-6">
+                {/* Pie Chart */}
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={referralData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percentage }) => `${name} (${percentage}%)`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {referralData.map((entry, index) => {
+                          const colors = [
+                            '#E91E63', // Instagram (Pink)
+                            '#1877F2', // Facebook (Blue)
+                            '#4285F4', // Google (Blue)
+                            '#000000', // TikTok (Black)
+                            '#10B981', // Dari Teman (Green)
+                            '#6B7280'  // Lainnya (Gray)
+                          ];
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={colors[index % colors.length]} 
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                        formatter={(value: number, name: string) => [
+                          `${value} siswa (${referralData.find(d => d.name === name)?.percentage}%)`,
+                          'Jumlah'
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {referralSummary?.totalStudents || 0}
+                    </div>
+                    <div className="text-sm text-blue-800">Total Siswa</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {referralSummary?.totalSources || 0}
+                    </div>
+                    <div className="text-sm text-green-800">Sumber Aktif</div>
+                  </div>
+                </div>
+
+                {/* Top Source */}
+                {referralSummary?.topSource && (
+                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-purple-600 font-medium">Sumber Terpopuler</div>
+                        <div className="text-lg font-bold text-purple-900">
+                          {referralSummary.topSource.name}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {referralSummary.topSource.count}
+                        </div>
+                        <div className="text-sm text-purple-700">
+                          {referralSummary.topSource.percentage}% dari total
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Legend */}
+                <div className="grid grid-cols-2 gap-2">
+                  {referralData.map((entry, index) => {
+                    const colors = [
+                      '#E91E63', // Instagram (Pink)
+                      '#1877F2', // Facebook (Blue)
+                      '#4285F4', // Google (Blue)
+                      '#000000', // TikTok (Black)
+                      '#10B981', // Dari Teman (Green)
+                      '#6B7280'  // Lainnya (Gray)
+                    ];
+                    return (
+                      <div key={entry.name} className="flex items-center gap-2 text-sm">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: colors[index % colors.length] }}
+                        />
+                        <span className="font-medium">{entry.name}:</span>
+                        <span className="text-gray-600">{entry.value} ({entry.percentage}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <PieChartIcon className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-lg">
+                  Belum ada data referral
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Data akan muncul ketika siswa mengisi sumber referral saat mendaftar
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Recent Students */}
         <Card>
           <CardHeader>
