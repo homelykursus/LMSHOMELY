@@ -307,13 +307,19 @@ export class BackupService {
         console.log('📝 Restoring courses...');
         if (backupData.data.courses?.length > 0) {
           try {
-            await tx.course.createMany({
-              data: backupData.data.courses.map(course => ({
-                ...course,
-                createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
-                updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date()
-              }))
-            });
+            for (const course of backupData.data.courses) {
+              const { pricing, students, teachers, classes, certificates, templates, ...courseData } = course;
+              await tx.course.create({
+                data: {
+                  ...courseData,
+                  // Ensure required fields have default values
+                  category: courseData.category || 'General',
+                  isActive: courseData.isActive !== undefined ? courseData.isActive : true,
+                  createdAt: courseData.createdAt ? new Date(courseData.createdAt) : new Date(),
+                  updatedAt: courseData.updatedAt ? new Date(courseData.updatedAt) : new Date()
+                }
+              });
+            }
             console.log(`   ✅ ${backupData.data.courses.length} courses restored`);
           } catch (error) {
             console.error('   ❌ Error restoring courses:', error);
@@ -342,10 +348,15 @@ export class BackupService {
         if (backupData.data.teachers?.length > 0) {
           try {
             for (const teacher of backupData.data.teachers) {
-              const { classes, meetings, commissions, ...teacherData } = teacher;
+              const { courses, classes, attendances, substituteMeetings, actualMeetings, certificates, ...teacherData } = teacher;
               await tx.teacher.create({
                 data: {
                   ...teacherData,
+                  // Ensure required fields have default values
+                  dateOfBirth: teacherData.dateOfBirth || '1990-01-01',
+                  education: teacherData.education || 'S1',
+                  joinDate: teacherData.joinDate || new Date().toISOString().split('T')[0],
+                  status: teacherData.status || 'active',
                   createdAt: teacherData.createdAt ? new Date(teacherData.createdAt) : new Date(),
                   updatedAt: teacherData.updatedAt ? new Date(teacherData.updatedAt) : new Date()
                 }
@@ -362,12 +373,21 @@ export class BackupService {
         if (backupData.data.students?.length > 0) {
           try {
             for (const student of backupData.data.students) {
-              const { classes, payments, meetings, certificates, ...studentData } = student;
+              const { course, classes, payments, meetings, certificates, attendances, ...studentData } = student;
               await tx.student.create({
                 data: {
                   ...studentData,
+                  // Ensure required fields have default values
+                  dateOfBirth: studentData.dateOfBirth || '2000-01-01',
+                  whatsapp: studentData.whatsapp || '081234567890',
+                  courseType: studentData.courseType || 'regular',
+                  participants: studentData.participants || 1,
+                  finalPrice: studentData.finalPrice || 0,
+                  discount: studentData.discount || 0,
+                  status: studentData.status || 'pending',
                   createdAt: studentData.createdAt ? new Date(studentData.createdAt) : new Date(),
-                  updatedAt: studentData.updatedAt ? new Date(studentData.updatedAt) : new Date()
+                  updatedAt: studentData.updatedAt ? new Date(studentData.updatedAt) : new Date(),
+                  completedAt: studentData.completedAt ? new Date(studentData.completedAt) : null
                 }
               });
             }

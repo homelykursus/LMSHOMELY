@@ -59,6 +59,8 @@ export default function BackupPage() {
     setBackupProgress(0);
 
     try {
+      console.log('🔄 Starting data backup...');
+
       // Simulate backup progress
       const interval = setInterval(() => {
         setBackupProgress(prev => {
@@ -70,11 +72,24 @@ export default function BackupPage() {
         });
       }, 200);
 
+      // Get authentication token from cookie
+      const authToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth-token='))
+        ?.split('=')[1];
+
+      console.log('🔐 Auth token found:', !!authToken);
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch('/api/admin/backup/data', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -82,6 +97,7 @@ export default function BackupPage() {
       }
 
       const result = await response.json();
+      console.log('✅ Data backup successful:', result);
       
       // Add new backup to list
       const newBackup: BackupFile = {
@@ -114,6 +130,7 @@ export default function BackupPage() {
       URL.revokeObjectURL(url);
 
     } catch (error) {
+      console.error('❌ Data backup failed:', error);
       toast({
         title: "Backup Gagal",
         description: "Terjadi kesalahan saat melakukan backup data.",
@@ -130,6 +147,8 @@ export default function BackupPage() {
     setBackupProgress(0);
 
     try {
+      console.log('🔄 Starting full backup...');
+
       // Simulate backup progress
       const interval = setInterval(() => {
         setBackupProgress(prev => {
@@ -141,11 +160,24 @@ export default function BackupPage() {
         });
       }, 300);
 
+      // Get authentication token from cookie
+      const authToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth-token='))
+        ?.split('=')[1];
+
+      console.log('🔐 Auth token found:', !!authToken);
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch('/api/admin/backup/full', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -153,6 +185,7 @@ export default function BackupPage() {
       }
 
       const blob = await response.blob();
+      console.log('✅ Full backup successful');
       
       // Add new backup to list
       const newBackup: BackupFile = {
@@ -182,6 +215,7 @@ export default function BackupPage() {
       URL.revokeObjectURL(url);
 
     } catch (error) {
+      console.error('❌ Full backup failed:', error);
       toast({
         title: "Backup Full Gagal",
         description: "Terjadi kesalahan saat melakukan backup lengkap.",
@@ -197,20 +231,51 @@ export default function BackupPage() {
     setIsRestoring(true);
 
     try {
+      console.log('🔄 Starting restore process...');
+      console.log(`📁 File: ${file.name} (${file.size} bytes)`);
+
       const formData = new FormData();
       formData.append('backup', file);
 
+      // Get authentication token from cookie
+      const authToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth-token='))
+        ?.split('=')[1];
+
+      console.log('🔐 Auth token found:', !!authToken);
+
+      const headers: HeadersInit = {};
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
+      console.log('📡 Making restore request...');
+
       const response = await fetch('/api/admin/backup/restore', {
         method: 'POST',
+        headers,
         body: formData,
       });
 
+      console.log(`📊 Response status: ${response.status}`);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Restore failed');
+        let errorMessage = 'Restore failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error('❌ Restore error:', errorData);
+        } catch (e) {
+          const errorText = await response.text();
+          console.error('❌ Restore error (text):', errorText);
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      console.log('✅ Restore successful:', result);
 
       toast({
         title: "Restore Berhasil",
@@ -218,6 +283,7 @@ export default function BackupPage() {
       });
 
     } catch (error) {
+      console.error('❌ Restore failed:', error);
       toast({
         title: "Restore Gagal",
         description: error instanceof Error ? error.message : "Terjadi kesalahan saat memulihkan data.",
