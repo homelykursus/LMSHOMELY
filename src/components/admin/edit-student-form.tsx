@@ -475,12 +475,8 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
                     <SelectItem value="Instagram">Instagram</SelectItem>
                     <SelectItem value="Facebook">Facebook</SelectItem>
                     <SelectItem value="Google">Google</SelectItem>
-                    <SelectItem value="TikTok">TikTok</SelectItem>
-                    <SelectItem value="YouTube">YouTube</SelectItem>
+                    <SelectItem value="Tiktok">Tiktok</SelectItem>
                     <SelectItem value="dari Teman">dari Teman</SelectItem>
-                    <SelectItem value="Keluarga">Keluarga</SelectItem>
-                    <SelectItem value="Brosur/Flyer">Brosur/Flyer</SelectItem>
-                    <SelectItem value="Website">Website</SelectItem>
                     <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>
                 </Select>
