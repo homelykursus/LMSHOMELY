@@ -206,22 +206,59 @@ export default function BackupPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Restore failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Restore failed');
       }
+
+      const result = await response.json();
 
       toast({
         title: "Restore Berhasil",
-        description: "Data berhasil dipulihkan dari backup.",
+        description: `Data berhasil dipulihkan dari backup. ${result.restored_records} records restored.`,
       });
 
     } catch (error) {
       toast({
         title: "Restore Gagal",
-        description: "Terjadi kesalahan saat memulihkan data.",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat memulihkan data.",
         variant: "destructive",
       });
     } finally {
       setIsRestoring(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/json' || file.name.endsWith('.json') || file.name.endsWith('.zip')) {
+        handleRestore(file);
+      } else {
+        toast({
+          title: "File Tidak Valid",
+          description: "Hanya file .json atau .zip yang diperbolehkan.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -414,7 +451,13 @@ export default function BackupPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors"
+                onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <input
                   type="file"
                   accept=".json,.zip"
@@ -427,7 +470,7 @@ export default function BackupPage() {
                   className="hidden"
                   id="restore-file"
                 />
-                <label htmlFor="restore-file" className="cursor-pointer">
+                <div className="cursor-pointer" onClick={() => document.getElementById('restore-file')?.click()}>
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-2">
                     Pilih File Backup
@@ -435,7 +478,14 @@ export default function BackupPage() {
                   <p className="text-sm text-gray-600 mb-4">
                     Drag & drop atau klik untuk memilih file backup (.json atau .zip)
                   </p>
-                  <Button variant="outline" disabled={isRestoring}>
+                  <Button 
+                    variant="outline" 
+                    disabled={isRestoring}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('restore-file')?.click();
+                    }}
+                  >
                     {isRestoring ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -445,7 +495,7 @@ export default function BackupPage() {
                       'Pilih File'
                     )}
                   </Button>
-                </label>
+                </div>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
