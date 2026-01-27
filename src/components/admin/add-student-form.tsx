@@ -402,6 +402,7 @@ export default function AddStudentForm({ onStudentAdded }: AddStudentFormProps) 
                     <SelectItem value="SD / Sederajat">SD / Sederajat</SelectItem>
                     <SelectItem value="SMP / Sederajat">SMP / Sederajat</SelectItem>
                     <SelectItem value="SMA / Sederajat">SMA / Sederajat</SelectItem>
+                    <SelectItem value="D3 / Sederajat">D3 / Sederajat</SelectItem>
                     <SelectItem value="S1 / Sederajat">S1 / Sederajat</SelectItem>
                     <SelectItem value="S2 / Sederajat">S2 / Sederajat</SelectItem>
                     <SelectItem value="S3 / Sederajat">S3 / Sederajat</SelectItem>
@@ -422,8 +423,12 @@ export default function AddStudentForm({ onStudentAdded }: AddStudentFormProps) 
                     <SelectItem value="Instagram">Instagram</SelectItem>
                     <SelectItem value="Facebook">Facebook</SelectItem>
                     <SelectItem value="Google">Google</SelectItem>
-                    <SelectItem value="Tiktok">Tiktok</SelectItem>
+                    <SelectItem value="TikTok">TikTok</SelectItem>
+                    <SelectItem value="YouTube">YouTube</SelectItem>
                     <SelectItem value="dari Teman">dari Teman</SelectItem>
+                    <SelectItem value="Keluarga">Keluarga</SelectItem>
+                    <SelectItem value="Brosur/Flyer">Brosur/Flyer</SelectItem>
+                    <SelectItem value="Website">Website</SelectItem>
                     <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>
                 </Select>

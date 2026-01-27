@@ -34,6 +34,7 @@ interface Student {
   finalPrice: number;
   discount: number;
   lastEducation?: string | null;
+  referralSource?: string | null;
   status: 'pending' | 'confirmed' | 'completed';
   createdAt: string;
   course: {
@@ -70,7 +71,8 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
     courseType: 'regular',
     participants: 1,
     discount: 0,
-    lastEducation: ''
+    lastEducation: '',
+    referralSource: ''
   });
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -93,7 +95,8 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
         courseType: student.courseType,
         participants: student.participants,
         discount: student.discount,
-        lastEducation: student.lastEducation || ''
+        lastEducation: student.lastEducation || '',
+        referralSource: student.referralSource || ''
       });
       setPhotoPreview(student.photo || null);
     }
@@ -432,9 +435,34 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
                     <SelectItem value="SD / Sederajat">SD / Sederajat</SelectItem>
                     <SelectItem value="SMP / Sederajat">SMP / Sederajat</SelectItem>
                     <SelectItem value="SMA / Sederajat">SMA / Sederajat</SelectItem>
+                    <SelectItem value="D3 / Sederajat">D3 / Sederajat</SelectItem>
                     <SelectItem value="S1 / Sederajat">S1 / Sederajat</SelectItem>
                     <SelectItem value="S2 / Sederajat">S2 / Sederajat</SelectItem>
                     <SelectItem value="S3 / Sederajat">S3 / Sederajat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="referralSource">Tau Homely Kursus dari mana?</Label>
+                <Select
+                  value={formData.referralSource}
+                  onValueChange={(value) => setFormData({ ...formData, referralSource: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih sumber referral" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Instagram">Instagram</SelectItem>
+                    <SelectItem value="Facebook">Facebook</SelectItem>
+                    <SelectItem value="Google">Google</SelectItem>
+                    <SelectItem value="TikTok">TikTok</SelectItem>
+                    <SelectItem value="YouTube">YouTube</SelectItem>
+                    <SelectItem value="dari Teman">dari Teman</SelectItem>
+                    <SelectItem value="Keluarga">Keluarga</SelectItem>
+                    <SelectItem value="Brosur/Flyer">Brosur/Flyer</SelectItem>
+                    <SelectItem value="Website">Website</SelectItem>
+                    <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
