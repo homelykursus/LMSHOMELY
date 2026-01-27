@@ -22,6 +22,7 @@ export interface BackupData {
     courses: any[];
     meetings: any[];
     payments: any[];
+    paymentTransactions: any[];
     certificates: any[];
     certificateTemplates: any[];
     users: any[];
@@ -60,6 +61,7 @@ export class BackupService {
 
       // Try to get other data if tables exist
       let payments: any[] = [];
+      let paymentTransactions: any[] = [];
       let certificates: any[] = [];
       let certificateTemplates: any[] = [];
       let meetings: any[] = [];
@@ -68,6 +70,12 @@ export class BackupService {
         payments = await db.payment.findMany();
       } catch (e) {
         console.warn('⚠️  Payment table not accessible');
+      }
+
+      try {
+        paymentTransactions = await db.paymentTransaction.findMany();
+      } catch (e) {
+        console.warn('⚠️  PaymentTransaction table not accessible');
       }
 
       try {
@@ -90,8 +98,8 @@ export class BackupService {
 
       // Calculate total records
       const totalRecords = students.length + teachers.length + classes.length + 
-                          courses.length + payments.length + certificates.length + 
-                          certificateTemplates.length + users.length + 
+                          courses.length + payments.length + paymentTransactions.length + 
+                          certificates.length + certificateTemplates.length + users.length + 
                           rooms.length + meetings.length;
 
       // Create backup data structure
@@ -110,6 +118,7 @@ export class BackupService {
           courses,
           meetings,
           payments,
+          paymentTransactions,
           certificates,
           certificateTemplates,
           users: users.map(user => ({
@@ -220,6 +229,13 @@ export class BackupService {
           console.log('   ✅ Certificates cleared');
         } catch (e) {
           console.log('   ⚠️  Certificates table not found or empty');
+        }
+
+        try {
+          await tx.paymentTransaction.deleteMany();
+          console.log('   ✅ Payment transactions cleared');
+        } catch (e) {
+          console.log('   ⚠️  Payment transactions table not found or empty');
         }
 
         try {
@@ -496,6 +512,33 @@ export class BackupService {
           }
         }
 
+        console.log('📝 Restoring payment transactions...');
+        if (backupData.data.paymentTransactions?.length > 0) {
+          try {
+            for (const transaction of backupData.data.paymentTransactions) {
+              const { payment, ...transactionData } = transaction;
+              
+              // Handle payment transaction data with proper field mapping
+              const processedTransaction = {
+                ...transactionData,
+                // Ensure required fields have proper values
+                amount: transactionData.amount || 0,
+                paymentMethod: transactionData.paymentMethod || 'cash',
+                createdAt: transactionData.createdAt ? new Date(transactionData.createdAt) : new Date(),
+                paymentDate: transactionData.paymentDate ? new Date(transactionData.paymentDate) : new Date()
+              };
+              
+              await tx.paymentTransaction.create({
+                data: processedTransaction
+              });
+            }
+            console.log(`   ✅ ${backupData.data.paymentTransactions.length} payment transactions restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring payment transactions:', error);
+            throw error;
+          }
+        }
+
         console.log('📝 Restoring certificates...');
         if (backupData.data.certificates?.length > 0) {
           try {
@@ -691,6 +734,14 @@ export class BackupService {
         for (const table of requiredTables) {
           if (!Array.isArray(backupData.data[table])) {
             errors.push(`Invalid or missing ${table} data`);
+          }
+        }
+        
+        // Check optional tables
+        const optionalTables = ['payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms'];
+        for (const table of optionalTables) {
+          if (backupData.data[table] && !Array.isArray(backupData.data[table])) {
+            errors.push(`Invalid ${table} data format`);
           }
         }
       }
