@@ -124,10 +124,16 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
     }
 
     const course = courses.find(c => c.id === formData.courseId);
-    if (!course) return;
+    if (!course) {
+      setCalculatedPrice(null);
+      return;
+    }
 
     const pricing = course.pricing.find(p => p.courseType === formData.courseType);
-    if (!pricing) return;
+    if (!pricing) {
+      setCalculatedPrice(null);
+      return;
+    }
 
     let basePrice = pricing.basePrice;
     let discount = 0;
@@ -259,11 +265,7 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (calculatedPrice === null) {
-      toast.error('Gagal menghitung harga');
-      return;
-    }
-
+    
     if (!student) return;
 
     setLoading(true);
@@ -280,8 +282,9 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
         formDataToSend.append('photo', selectedPhoto);
       }
       
-      // Add final price
-      formDataToSend.append('finalPrice', calculatedPrice.toString());
+      // Add final price - use calculated price if available, otherwise keep existing price
+      const finalPrice = calculatedPrice !== null ? calculatedPrice : student.finalPrice;
+      formDataToSend.append('finalPrice', finalPrice.toString());
 
       const response = await fetch(`/api/students/${student.id}`, {
         method: 'PUT',
@@ -625,7 +628,7 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
             </Button>
             <Button
               type="submit"
-              disabled={loading || !calculatedPrice}
+              disabled={loading}
             >
               {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
             </Button>
