@@ -12,7 +12,12 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build"
+    "vercel-build": "prisma generate && next build",
+    "test:pre-deploy": "tsx scripts/pre-deployment-test.ts",
+    "health:check": "curl http://localhost:3000/api/health",
+    "health:check:prod": "curl https://daftar.homelykursus.com/api/health",
+    "db:health": "tsx scripts/debug-production-login-issue.ts",
+    "setup:env": "tsx scripts/setup-environment.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
