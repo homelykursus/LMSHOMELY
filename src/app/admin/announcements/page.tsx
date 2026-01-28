@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { RunningText } from '@/components/ui/running-text';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -296,7 +297,7 @@ export default function AnnouncementsPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -346,7 +347,7 @@ export default function AnnouncementsPage() {
         </Card>
       </div>
 
-      {/* Announcements List */}
+      {/* Announcements Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -354,104 +355,134 @@ export default function AnnouncementsPage() {
             Daftar Pengumuman
           </CardTitle>
           <CardDescription>
-            Kelola pengumuman yang akan ditampilkan di dashboard guru
+            Menampilkan {announcements.length} pengumuman yang telah dibuat
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {announcements.length > 0 ? (
-              announcements.map((announcement) => (
-                <div key={announcement.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Megaphone className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{announcement.title}</h3>
-                        <p className="text-sm text-gray-500">
-                          Dibuat {new Date(announcement.createdAt).toLocaleDateString('id-ID')} • 
-                          Target: {announcement.targetRole === 'teacher' ? 'Guru' : 
-                                  announcement.targetRole === 'admin' ? 'Admin' : 'Semua'} • 
-                          Prioritas: {announcement.priority}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
-                        {announcement.isActive ? (
-                          <>
-                            <Eye className="h-3 w-3 mr-1" />
-                            Aktif
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="h-3 w-3 mr-1" />
-                            Nonaktif
-                          </>
-                        )}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(announcement)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
+          {announcements.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">No</TableHead>
+                    <TableHead>Judul</TableHead>
+                    <TableHead>Isi Pengumuman</TableHead>
+                    <TableHead>Preview</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Prioritas</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead>Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {announcements.map((announcement, index) => (
+                    <TableRow key={announcement.id}>
+                      <TableCell className="font-medium text-center">{index + 1}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{announcement.title}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate text-sm text-gray-600">
+                          {announcement.content}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-48 bg-blue-50 rounded p-2 overflow-hidden border border-blue-200">
+                          <RunningText 
+                            text={announcement.content}
+                            className="text-blue-800 text-xs font-medium"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {announcement.targetRole === 'teacher' ? 'Guru' : 
+                           announcement.targetRole === 'admin' ? 'Admin' : 'Semua'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {announcement.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
+                          {announcement.isActive ? (
+                            <>
+                              <Eye className="h-3 w-3 mr-1" />
+                              Aktif
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="h-3 w-3 mr-1" />
+                              Nonaktif
+                            </>
+                          )}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-600">
+                          {new Date(announcement.createdAt).toLocaleDateString('id-ID')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(announcement)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="Edit Pengumuman"
+                          >
+                            <Edit className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Apakah Anda yakin ingin menghapus pengumuman "{announcement.title}"? 
-                              Tindakan ini tidak dapat dibatalkan.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(announcement.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Hapus
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                  
-                  {/* Preview Running Text */}
-                  <div className="mb-3">
-                    <div className="bg-blue-50 rounded-lg p-3 overflow-hidden border border-blue-200">
-                      <RunningText 
-                        text={announcement.content}
-                        className="text-blue-800 font-medium"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="text-sm text-gray-600">
-                    <strong>Isi Pengumuman:</strong> {announcement.content}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12">
-                <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                <p className="text-gray-500 text-lg">Belum ada pengumuman</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Klik "Tambah Pengumuman" untuk membuat pengumuman pertama
-                </p>
-              </div>
-            )}
-          </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                title="Hapus Pengumuman"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Apakah Anda yakin ingin menghapus pengumuman "{announcement.title}"? 
+                                  Tindakan ini tidak dapat dibatalkan.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(announcement.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Hapus
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Belum ada pengumuman</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Klik "Tambah Pengumuman" untuk membuat pengumuman pertama
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
