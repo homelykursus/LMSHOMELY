@@ -23,8 +23,8 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Clean input - trim whitespace and normalize
-    const cleanValue = name === 'email' ? value.trim().toLowerCase() : value.trim();
+    // Don't trim during typing, only normalize email case
+    const cleanValue = name === 'email' ? value.toLowerCase() : value;
     setFormData(prev => ({
       ...prev,
       [name]: cleanValue
