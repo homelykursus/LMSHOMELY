@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Megaphone, Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Megaphone, Plus, Edit, Trash2, Eye, EyeOff, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Announcement {
@@ -173,9 +173,9 @@ export default function AnnouncementsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Kelola Pengumuman</h1>
           <p className="text-gray-600">Buat dan kelola pengumuman untuk guru</p>
@@ -295,101 +295,165 @@ export default function AnnouncementsPage() {
         </Dialog>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Megaphone className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Pengumuman</p>
+                <p className="text-2xl font-bold">{announcements.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Eye className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pengumuman Aktif</p>
+                <p className="text-2xl font-bold">{announcements.filter(a => a.isActive).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <EyeOff className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pengumuman Nonaktif</p>
+                <p className="text-2xl font-bold">{announcements.filter(a => !a.isActive).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <User className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Target Guru</p>
+                <p className="text-2xl font-bold">{announcements.filter(a => a.targetRole === 'teacher').length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Announcements List */}
-      <div className="grid gap-4">
-        {announcements.length > 0 ? (
-          announcements.map((announcement) => (
-            <Card key={announcement.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Megaphone className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <CardTitle className="text-lg">{announcement.title}</CardTitle>
-                      <CardDescription>
-                        Dibuat {new Date(announcement.createdAt).toLocaleDateString('id-ID')} • 
-                        Target: {announcement.targetRole === 'teacher' ? 'Guru' : 
-                                announcement.targetRole === 'admin' ? 'Admin' : 'Semua'} • 
-                        Prioritas: {announcement.priority}
-                      </CardDescription>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-blue-600" />
+            Daftar Pengumuman
+          </CardTitle>
+          <CardDescription>
+            Kelola pengumuman yang akan ditampilkan di dashboard guru
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {announcements.length > 0 ? (
+              announcements.map((announcement) => (
+                <div key={announcement.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Megaphone className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{announcement.title}</h3>
+                        <p className="text-sm text-gray-500">
+                          Dibuat {new Date(announcement.createdAt).toLocaleDateString('id-ID')} • 
+                          Target: {announcement.targetRole === 'teacher' ? 'Guru' : 
+                                  announcement.targetRole === 'admin' ? 'Admin' : 'Semua'} • 
+                          Prioritas: {announcement.priority}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
+                        {announcement.isActive ? (
+                          <>
+                            <Eye className="h-3 w-3 mr-1" />
+                            Aktif
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-3 w-3 mr-1" />
+                            Nonaktif
+                          </>
+                        )}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(announcement)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Apakah Anda yakin ingin menghapus pengumuman "{announcement.title}"? 
+                              Tindakan ini tidak dapat dibatalkan.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(announcement.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Hapus
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={announcement.isActive ? 'default' : 'secondary'}>
-                      {announcement.isActive ? (
-                        <>
-                          <Eye className="h-3 w-3 mr-1" />
-                          Aktif
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="h-3 w-3 mr-1" />
-                          Nonaktif
-                        </>
-                      )}
-                    </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(announcement)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Hapus Pengumuman</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus pengumuman "{announcement.title}"? 
-                            Tindakan ini tidak dapat dibatalkan.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Batal</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(announcement.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Hapus
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                  
+                  {/* Preview Running Text */}
+                  <div className="mb-3">
+                    <div className="bg-blue-50 rounded-lg p-3 overflow-hidden border border-blue-200">
+                      <RunningText 
+                        text={announcement.content}
+                        className="text-blue-800 font-medium"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="text-sm text-gray-600">
+                    <strong>Isi Pengumuman:</strong> {announcement.content}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="bg-blue-50 rounded-lg p-3 overflow-hidden">
-                    <RunningText 
-                      text={announcement.content}
-                      className="text-blue-800 font-medium"
-                    />
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    <strong>Isi:</strong> {announcement.content}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-              <p className="text-gray-500 text-lg">Belum ada pengumuman</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Klik "Tambah Pengumuman" untuk membuat pengumuman pertama
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-lg">Belum ada pengumuman</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Klik "Tambah Pengumuman" untuk membuat pengumuman pertama
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
