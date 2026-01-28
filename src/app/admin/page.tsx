@@ -79,15 +79,19 @@ export default function AdminDashboard() {
   });
   const [referralData, setReferralData] = useState<any[]>([]);
   const [referralSummary, setReferralSummary] = useState<any>(null);
+  const [genderData, setGenderData] = useState<any[]>([]);
+  const [genderSummary, setGenderSummary] = useState<any>(null);
 
   useEffect(() => {
     fetchDashboardData();
     fetchReferralData();
+    fetchGenderData();
   }, []);
 
   useEffect(() => {
     fetchDashboardData();
     fetchReferralData();
+    fetchGenderData();
   }, [filterMonth, filterYear]);
 
   useEffect(() => {
@@ -188,6 +192,26 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error generating chart data:', error);
       setChartData([]);
+    }
+  };
+
+  const fetchGenderData = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterMonth) params.append('month', filterMonth);
+      if (filterYear) params.append('year', filterYear);
+      
+      const response = await fetch(`/api/admin/gender-stats?${params.toString()}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setGenderData(result.data);
+        setGenderSummary(result.summary);
+      }
+    } catch (error) {
+      console.error('Error fetching gender data:', error);
+      setGenderData([]);
+      setGenderSummary(null);
     }
   };
 
@@ -704,7 +728,148 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Gender Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users2 className="h-5 w-5" />
+              Distribusi Gender Siswa
+            </CardTitle>
+            <CardDescription>
+              {genderSummary?.period?.monthName && genderSummary?.period?.year 
+                ? `Data untuk ${genderSummary.period.monthName} ${genderSummary.period.year}`
+                : genderSummary?.period?.year 
+                ? `Data untuk tahun ${genderSummary.period.year}`
+                : 'Semua data siswa'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {genderData.length > 0 ? (
+              <div className="space-y-6">
+                {/* Pie Chart */}
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={genderData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percentage }) => `${name} (${percentage}%)`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {genderData.map((entry, index) => {
+                          const colors = [
+                            '#3B82F6', // Laki-laki (Blue)
+                            '#EC4899', // Perempuan (Pink)
+                            '#6B7280'  // Tidak Diketahui (Gray)
+                          ];
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={colors[index % colors.length]} 
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                        formatter={(value: number, name: string) => [
+                          `${value} siswa (${genderData.find(d => d.name === name)?.percentage}%)`,
+                          'Jumlah'
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {genderSummary?.maleCount || 0}
+                    </div>
+                    <div className="text-sm text-blue-800">Laki-laki</div>
+                    <div className="text-xs text-blue-600">
+                      {genderSummary?.malePercentage || 0}%
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-pink-50 rounded-lg">
+                    <div className="text-2xl font-bold text-pink-600">
+                      {genderSummary?.femaleCount || 0}
+                    </div>
+                    <div className="text-sm text-pink-800">Perempuan</div>
+                    <div className="text-xs text-pink-600">
+                      {genderSummary?.femalePercentage || 0}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gender Balance Indicator */}
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-pink-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-600 font-medium">Rasio Gender</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {genderSummary?.maleCount || 0} : {genderSummary?.femaleCount || 0}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">
+                        {genderSummary?.maleCount > genderSummary?.femaleCount ? 'Laki-laki Dominan' :
+                         genderSummary?.femaleCount > genderSummary?.maleCount ? 'Perempuan Dominan' :
+                         'Seimbang'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Total: {genderSummary?.totalStudents || 0} siswa
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="grid grid-cols-1 gap-2">
+                  {genderData.map((entry, index) => {
+                    const colors = [
+                      '#3B82F6', // Laki-laki (Blue)
+                      '#EC4899', // Perempuan (Pink)
+                      '#6B7280'  // Tidak Diketahui (Gray)
+                    ];
+                    return (
+                      <div key={entry.name} className="flex items-center gap-2 text-sm">
+                        <div 
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: colors[index % colors.length] }}
+                        />
+                        <span className="font-medium">{entry.name}:</span>
+                        <span className="text-gray-600">{entry.value} ({entry.percentage}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Users2 className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-lg">
+                  Belum ada data gender
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Data akan muncul ketika siswa mengisi informasi gender saat mendaftar
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Referral Source Pie Chart */}
         <Card>
           <CardHeader>
@@ -847,7 +1012,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Recent Students */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
@@ -905,61 +1070,61 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Aksi Cepat
-            </CardTitle>
-            <CardDescription>
-              Akses cepat ke fitur-fitur utama
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+      {/* Quick Actions */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Aksi Cepat
+          </CardTitle>
+          <CardDescription>
+            Akses cepat ke fitur-fitur utama
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Button 
+              className="justify-start" 
+              variant="outline"
+              onClick={() => window.location.href = '/admin/courses'}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Kelola Kursus
+            </Button>
+            
+            <Button 
+              className="justify-start" 
+              variant="outline"
+              onClick={() => window.location.href = '/admin/students'}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Kelola Siswa
+            </Button>
+            
+            {stats.pendingStudents > 0 && (
               <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => window.location.href = '/admin/courses'}
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Kelola Kursus
-              </Button>
-              
-              <Button 
-                className="w-full justify-start" 
+                className="justify-start" 
                 variant="outline"
                 onClick={() => window.location.href = '/admin/students'}
               >
-                <Users className="h-4 w-4 mr-2" />
-                Kelola Siswa
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Proses Pendaftaran ({stats.pendingStudents})
               </Button>
-              
-              {stats.pendingStudents > 0 && (
-                <Button 
-                  className="w-full justify-start" 
-                  variant="outline"
-                  onClick={() => window.location.href = '/admin/students'}
-                >
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Proses Pendaftaran ({stats.pendingStudents})
-                </Button>
-              )}
-              
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => window.location.href = '/'}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Lihat Website
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            )}
+            
+            <Button 
+              className="justify-start" 
+              variant="outline"
+              onClick={() => window.location.href = '/'}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Lihat Website
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
