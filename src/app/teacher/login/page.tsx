@@ -156,7 +156,7 @@ export default function TeacherLoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
-            © 2025 Sistem Kursus. All rights reserved.
+            © 2026 Sistem Kursus. All rights reserved.
           </p>
         </div>
       </div>

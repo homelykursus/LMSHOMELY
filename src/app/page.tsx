@@ -674,7 +674,7 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
             
             <div className="border-t border-gray-700 pt-8 text-sm text-gray-400">
               <div className="text-center">
-                <span>© 2025 Homely Kursus Komputer. All rights reserved.</span>
+                <span>© 2026 Homely Kursus Komputer. All rights reserved.</span>
               </div>
             </div>
           </div>

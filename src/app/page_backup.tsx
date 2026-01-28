@@ -621,7 +621,7 @@ export default function RegistrationPage() {
             Tempat terbaik untuk belajar komputer dengan metode praktis dan mudah dipahami
           </p>
           <div className="text-sm text-gray-500">
-            © 2024 Homely Kursus Komputer. All rights reserved.
+            © 2026 Homely Kursus Komputer. All rights reserved.
             {/* Hidden admin link */}
             <span className="mx-2">•</span>
             <a 
