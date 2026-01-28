@@ -81,17 +81,21 @@ export default function AdminDashboard() {
   const [referralSummary, setReferralSummary] = useState<any>(null);
   const [genderData, setGenderData] = useState<any[]>([]);
   const [genderSummary, setGenderSummary] = useState<any>(null);
+  const [courseData, setCourseData] = useState<any[]>([]);
+  const [courseSummary, setCourseSummary] = useState<any>(null);
 
   useEffect(() => {
     fetchDashboardData();
     fetchReferralData();
     fetchGenderData();
+    fetchCourseData();
   }, []);
 
   useEffect(() => {
     fetchDashboardData();
     fetchReferralData();
     fetchGenderData();
+    fetchCourseData();
   }, [filterMonth, filterYear]);
 
   useEffect(() => {
@@ -192,6 +196,26 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error generating chart data:', error);
       setChartData([]);
+    }
+  };
+
+  const fetchCourseData = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterMonth) params.append('month', filterMonth);
+      if (filterYear) params.append('year', filterYear);
+      
+      const response = await fetch(`/api/admin/course-stats?${params.toString()}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setCourseData(result.data);
+        setCourseSummary(result.summary);
+      }
+    } catch (error) {
+      console.error('Error fetching course data:', error);
+      setCourseData([]);
+      setCourseSummary(null);
     }
   };
 
@@ -728,28 +752,28 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Gender Distribution Pie Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users2 className="h-5 w-5" />
-              Distribusi Gender Siswa
+              Distribusi Gender
             </CardTitle>
             <CardDescription>
               {genderSummary?.period?.monthName && genderSummary?.period?.year 
-                ? `Data untuk ${genderSummary.period.monthName} ${genderSummary.period.year}`
+                ? `${genderSummary.period.monthName} ${genderSummary.period.year}`
                 : genderSummary?.period?.year 
-                ? `Data untuk tahun ${genderSummary.period.year}`
-                : 'Semua data siswa'
+                ? `Tahun ${genderSummary.period.year}`
+                : 'Semua data'
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
             {genderData.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Pie Chart */}
-                <div className="h-80 w-full">
+                <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -757,8 +781,8 @@ export default function AdminDashboard() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percentage }) => `${name} (${percentage}%)`}
-                        outerRadius={100}
+                        label={({ percentage }) => `${percentage}%`}
+                        outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
                       >
@@ -783,8 +807,8 @@ export default function AdminDashboard() {
                           border: '1px solid #e5e7eb'
                         }}
                         formatter={(value: number, name: string) => [
-                          `${value} siswa (${genderData.find(d => d.name === name)?.percentage}%)`,
-                          'Jumlah'
+                          `${value} siswa`,
+                          name
                         ]}
                       />
                     </PieChart>
@@ -792,51 +816,23 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-center p-2 bg-blue-50 rounded-lg">
+                    <div className="text-lg font-bold text-blue-600">
                       {genderSummary?.maleCount || 0}
                     </div>
-                    <div className="text-sm text-blue-800">Laki-laki</div>
-                    <div className="text-xs text-blue-600">
-                      {genderSummary?.malePercentage || 0}%
-                    </div>
+                    <div className="text-xs text-blue-800">Laki-laki</div>
                   </div>
-                  <div className="text-center p-4 bg-pink-50 rounded-lg">
-                    <div className="text-2xl font-bold text-pink-600">
+                  <div className="text-center p-2 bg-pink-50 rounded-lg">
+                    <div className="text-lg font-bold text-pink-600">
                       {genderSummary?.femaleCount || 0}
                     </div>
-                    <div className="text-sm text-pink-800">Perempuan</div>
-                    <div className="text-xs text-pink-600">
-                      {genderSummary?.femalePercentage || 0}%
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gender Balance Indicator */}
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-pink-50 rounded-lg border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm text-gray-600 font-medium">Rasio Gender</div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {genderSummary?.maleCount || 0} : {genderSummary?.femaleCount || 0}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-600">
-                        {genderSummary?.maleCount > genderSummary?.femaleCount ? 'Laki-laki Dominan' :
-                         genderSummary?.femaleCount > genderSummary?.maleCount ? 'Perempuan Dominan' :
-                         'Seimbang'}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Total: {genderSummary?.totalStudents || 0} siswa
-                      </div>
-                    </div>
+                    <div className="text-xs text-pink-800">Perempuan</div>
                   </div>
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-1">
                   {genderData.map((entry, index) => {
                     const colors = [
                       '#3B82F6', // Laki-laki (Blue)
@@ -844,27 +840,141 @@ export default function AdminDashboard() {
                       '#6B7280'  // Tidak Diketahui (Gray)
                     ];
                     return (
-                      <div key={entry.name} className="flex items-center gap-2 text-sm">
+                      <div key={entry.name} className="flex items-center gap-2 text-xs">
                         <div 
-                          className="w-3 h-3 rounded-full"
+                          className="w-2 h-2 rounded-full"
                           style={{ backgroundColor: colors[index % colors.length] }}
                         />
                         <span className="font-medium">{entry.name}:</span>
-                        <span className="text-gray-600">{entry.value} ({entry.percentage}%)</span>
+                        <span className="text-gray-600">{entry.percentage}%</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Users2 className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                <p className="text-gray-500 text-lg">
-                  Belum ada data gender
-                </p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Data akan muncul ketika siswa mengisi informasi gender saat mendaftar
-                </p>
+              <div className="text-center py-8">
+                <Users2 className="h-12 w-12 mx-auto mb-2 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-sm">Belum ada data gender</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Course Distribution Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Distribusi Kursus
+            </CardTitle>
+            <CardDescription>
+              {courseSummary?.period?.monthName && courseSummary?.period?.year 
+                ? `${courseSummary.period.monthName} ${courseSummary.period.year}`
+                : courseSummary?.period?.year 
+                ? `Tahun ${courseSummary.period.year}`
+                : 'Semua data'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {courseData.length > 0 ? (
+              <div className="space-y-4">
+                {/* Pie Chart */}
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={courseData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ percentage }) => `${percentage}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {courseData.map((entry, index) => {
+                          const colors = [
+                            '#10B981', // Green
+                            '#F59E0B', // Amber
+                            '#EF4444', // Red
+                            '#8B5CF6', // Purple
+                            '#06B6D4', // Cyan
+                            '#84CC16', // Lime
+                            '#F97316', // Orange
+                            '#EC4899'  // Pink
+                          ];
+                          return (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={colors[index % colors.length]} 
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                          borderRadius: '8px',
+                          border: '1px solid #e5e7eb'
+                        }}
+                        formatter={(value: number, name: string) => [
+                          `${value} siswa`,
+                          name
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Top Course */}
+                {courseSummary?.topCourse && (
+                  <div className="p-2 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-center">
+                      <div className="text-xs text-green-600 font-medium">Terpopuler</div>
+                      <div className="text-sm font-bold text-green-900 truncate">
+                        {courseSummary.topCourse.name}
+                      </div>
+                      <div className="text-xs text-green-700">
+                        {courseSummary.topCourse.count} siswa ({courseSummary.topCourse.percentage}%)
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Legend */}
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {courseData.slice(0, 5).map((entry, index) => {
+                    const colors = [
+                      '#10B981', // Green
+                      '#F59E0B', // Amber
+                      '#EF4444', // Red
+                      '#8B5CF6', // Purple
+                      '#06B6D4'  // Cyan
+                    ];
+                    return (
+                      <div key={entry.name} className="flex items-center gap-2 text-xs">
+                        <div 
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: colors[index % colors.length] }}
+                        />
+                        <span className="font-medium truncate flex-1">{entry.name}:</span>
+                        <span className="text-gray-600">{entry.percentage}%</span>
+                      </div>
+                    );
+                  })}
+                  {courseData.length > 5 && (
+                    <div className="text-xs text-gray-500 text-center">
+                      +{courseData.length - 5} kursus lainnya
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BookOpen className="h-12 w-12 mx-auto mb-2 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-sm">Belum ada data kursus</p>
               </div>
             )}
           </CardContent>
@@ -875,22 +985,22 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5" />
-              Sumber Referral Siswa
+              Sumber Referral
             </CardTitle>
             <CardDescription>
               {referralSummary?.period?.monthName && referralSummary?.period?.year 
-                ? `Data untuk ${referralSummary.period.monthName} ${referralSummary.period.year}`
+                ? `${referralSummary.period.monthName} ${referralSummary.period.year}`
                 : referralSummary?.period?.year 
-                ? `Data untuk tahun ${referralSummary.period.year}`
-                : 'Semua data siswa'
+                ? `Tahun ${referralSummary.period.year}`
+                : 'Semua data'
               }
             </CardDescription>
           </CardHeader>
           <CardContent>
             {referralData.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Pie Chart */}
-                <div className="h-80 w-full">
+                <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -898,8 +1008,8 @@ export default function AdminDashboard() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percentage }) => `${name} (${percentage}%)`}
-                        outerRadius={100}
+                        label={({ percentage }) => `${percentage}%`}
+                        outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
                       >
@@ -927,144 +1037,117 @@ export default function AdminDashboard() {
                           border: '1px solid #e5e7eb'
                         }}
                         formatter={(value: number, name: string) => [
-                          `${value} siswa (${referralData.find(d => d.name === name)?.percentage}%)`,
-                          'Jumlah'
+                          `${value} siswa`,
+                          name
                         ]}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
 
-                {/* Summary Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {referralSummary?.totalStudents || 0}
-                    </div>
-                    <div className="text-sm text-blue-800">Total Siswa</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {referralSummary?.totalSources || 0}
-                    </div>
-                    <div className="text-sm text-green-800">Sumber Aktif</div>
-                  </div>
-                </div>
-
                 {/* Top Source */}
                 {referralSummary?.topSource && (
-                  <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm text-purple-600 font-medium">Sumber Terpopuler</div>
-                        <div className="text-lg font-bold text-purple-900">
-                          {referralSummary.topSource.name}
-                        </div>
+                  <div className="p-2 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-center">
+                      <div className="text-xs text-purple-600 font-medium">Terpopuler</div>
+                      <div className="text-sm font-bold text-purple-900 truncate">
+                        {referralSummary.topSource.name}
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {referralSummary.topSource.count}
-                        </div>
-                        <div className="text-sm text-purple-700">
-                          {referralSummary.topSource.percentage}% dari total
-                        </div>
+                      <div className="text-xs text-purple-700">
+                        {referralSummary.topSource.count} siswa ({referralSummary.topSource.percentage}%)
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Legend */}
-                <div className="grid grid-cols-2 gap-2">
-                  {referralData.map((entry, index) => {
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {referralData.slice(0, 5).map((entry, index) => {
                     const colors = [
                       '#E91E63', // Instagram (Pink)
                       '#1877F2', // Facebook (Blue)
                       '#4285F4', // Google (Blue)
                       '#000000', // TikTok (Black)
-                      '#10B981', // Dari Teman (Green)
-                      '#6B7280'  // Lainnya (Gray)
+                      '#10B981'  // Dari Teman (Green)
                     ];
                     return (
-                      <div key={entry.name} className="flex items-center gap-2 text-sm">
+                      <div key={entry.name} className="flex items-center gap-2 text-xs">
                         <div 
-                          className="w-3 h-3 rounded-full"
+                          className="w-2 h-2 rounded-full"
                           style={{ backgroundColor: colors[index % colors.length] }}
                         />
-                        <span className="font-medium">{entry.name}:</span>
-                        <span className="text-gray-600">{entry.value} ({entry.percentage}%)</span>
+                        <span className="font-medium truncate flex-1">{entry.name}:</span>
+                        <span className="text-gray-600">{entry.percentage}%</span>
                       </div>
                     );
                   })}
+                  {referralData.length > 5 && (
+                    <div className="text-xs text-gray-500 text-center">
+                      +{referralData.length - 5} sumber lainnya
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <PieChartIcon className="h-16 w-16 mx-auto mb-4 opacity-50 text-gray-400" />
-                <p className="text-gray-500 text-lg">
-                  Belum ada data referral
-                </p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Data akan muncul ketika siswa mengisi sumber referral saat mendaftar
-                </p>
+              <div className="text-center py-8">
+                <PieChartIcon className="h-12 w-12 mx-auto mb-2 opacity-50 text-gray-400" />
+                <p className="text-gray-500 text-sm">Belum ada data referral</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Recent Students */}
-        <Card className="lg:col-span-2">
+        {/* Recent Students - Spans remaining columns */}
+        <Card className="xl:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
               Pendaftar Terbaru
             </CardTitle>
             <CardDescription>
-              5 siswa terakhir yang mendaftar
+              5 siswa terakhir
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {stats.recentStudents.length > 0 ? (
-                stats.recentStudents.map((student: any) => (
-                  <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <div className="font-medium">{student.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {student.course?.name} - {student.courseType}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {student.whatsapp}
-                      </div>
+                stats.recentStudents.slice(0, 3).map((student: any) => (
+                  <div key={student.id} className="p-2 bg-gray-50 rounded-lg">
+                    <div className="font-medium text-sm truncate">{student.name}</div>
+                    <div className="text-xs text-gray-600 truncate">
+                      {student.course?.name}
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center justify-between mt-1">
                       <Badge 
                         variant={student.status === 'confirmed' ? 'default' : 'secondary'}
+                        className="text-xs"
                       >
                         {student.status === 'pending' ? 'Menunggu' : 
                          student.status === 'confirmed' ? 'Dikonfirmasi' : 'Selesai'}
                       </Badge>
-                      <div className="text-sm font-medium mt-1">
-                        Rp {student.finalPrice.toLocaleString('id-ID')}
+                      <div className="text-xs font-medium">
+                        Rp {(student.finalPrice / 1000).toFixed(0)}k
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Belum ada siswa yang mendaftar</p>
+                <div className="text-center text-gray-500 py-4">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">Belum ada siswa</p>
                 </div>
               )}
             </div>
             
             {stats.recentStudents.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-3">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  size="sm"
+                  className="w-full text-xs"
                   onClick={() => window.location.href = '/admin/students'}
                 >
-                  Lihat Semua Siswa
+                  Lihat Semua
                 </Button>
               </div>
             )}
@@ -1072,7 +1155,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Full width below */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
