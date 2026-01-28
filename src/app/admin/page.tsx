@@ -11,8 +11,6 @@ import {
   BookOpen, 
   Users, 
   DollarSign, 
-  TrendingUp,
-  UserPlus,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -752,7 +750,7 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Gender Distribution Pie Chart */}
         <Card>
           <CardHeader>
@@ -1096,118 +1094,7 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
-
-        {/* Recent Students - Spans remaining columns */}
-        <Card className="xl:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Pendaftar Terbaru
-            </CardTitle>
-            <CardDescription>
-              5 siswa terakhir
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.recentStudents.length > 0 ? (
-                stats.recentStudents.slice(0, 3).map((student: any) => (
-                  <div key={student.id} className="p-2 bg-gray-50 rounded-lg">
-                    <div className="font-medium text-sm truncate">{student.name}</div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {student.course?.name}
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <Badge 
-                        variant={student.status === 'confirmed' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {student.status === 'pending' ? 'Menunggu' : 
-                         student.status === 'confirmed' ? 'Dikonfirmasi' : 'Selesai'}
-                      </Badge>
-                      <div className="text-xs font-medium">
-                        Rp {(student.finalPrice / 1000).toFixed(0)}k
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center text-gray-500 py-4">
-                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs">Belum ada siswa</p>
-                </div>
-              )}
-            </div>
-            
-            {stats.recentStudents.length > 0 && (
-              <div className="mt-3">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => window.location.href = '/admin/students'}
-                >
-                  Lihat Semua
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
-
-      {/* Quick Actions - Full width below */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Aksi Cepat
-          </CardTitle>
-          <CardDescription>
-            Akses cepat ke fitur-fitur utama
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button 
-              className="justify-start" 
-              variant="outline"
-              onClick={() => window.location.href = '/admin/courses'}
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Kelola Kursus
-            </Button>
-            
-            <Button 
-              className="justify-start" 
-              variant="outline"
-              onClick={() => window.location.href = '/admin/students'}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Kelola Siswa
-            </Button>
-            
-            {stats.pendingStudents > 0 && (
-              <Button 
-                className="justify-start" 
-                variant="outline"
-                onClick={() => window.location.href = '/admin/students'}
-              >
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Proses Pendaftaran ({stats.pendingStudents})
-              </Button>
-            )}
-            
-            <Button 
-              className="justify-start" 
-              variant="outline"
-              onClick={() => window.location.href = '/'}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Lihat Website
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
