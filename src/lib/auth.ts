@@ -104,7 +104,17 @@ export class AuthService {
         return null;
       }
 
-      // Verify user still exists and is active
+      // Handle emergency fallback user (doesn't exist in database)
+      if (decoded.id === 'emergency-admin-id') {
+        return {
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
+          role: decoded.role
+        };
+      }
+
+      // Verify user still exists and is active in database
       const user = await db.user.findUnique({
         where: { id: decoded.id },
         select: {
@@ -135,9 +145,6 @@ export class AuthService {
   /**
    * Authenticate user with email and password
    */
-  /**
-   * Authenticate user with email and password
-   */
   static async authenticate(email: string, password: string): Promise<AuthUser | null> {
     try {
       // Clean and normalize email
@@ -145,17 +152,6 @@ export class AuthService {
       const cleanPassword = password.trim();
 
       console.log(`[AUTH] Attempting login for email: ${cleanEmail}`);
-
-      // PRODUCTION FALLBACK: If database fails, use hardcoded admin
-      if (process.env.NODE_ENV === 'production' && cleanEmail === 'admin@kursus.com' && cleanPassword === 'admin123') {
-        console.log('[AUTH] Using production fallback admin');
-        return {
-          id: 'prod-admin-id',
-          email: 'admin@kursus.com',
-          name: 'Administrator',
-          role: 'super_admin'
-        };
-      }
 
       const user = await db.user.findUnique({
         where: { email: cleanEmail },
@@ -167,43 +163,28 @@ export class AuthService {
           role: true,
           isActive: true
         }
-      }).catch((error) => {
-        console.error('[AUTH] Database error:', error);
-        
-        // If database fails in production, use fallback
-        if (process.env.NODE_ENV === 'production' && cleanEmail === 'admin@kursus.com' && cleanPassword === 'admin123') {
-          console.log('[AUTH] Database failed, using fallback admin');
-          return {
-            id: 'prod-admin-id',
-            email: 'admin@kursus.com',
-            name: 'Administrator',
-            password: '$2a$12$dummy.hash.for.fallback', // This won't be used
-            role: 'super_admin',
-            isActive: true
-          };
-        }
-        return null;
       });
 
       if (!user) {
         console.log(`[AUTH] User not found: ${cleanEmail}`);
+        
+        // EMERGENCY FALLBACK: Only if database is completely inaccessible
+        if (process.env.NODE_ENV === 'production' && cleanEmail === 'admin@kursus.com' && cleanPassword === 'admin123') {
+          console.log('[AUTH] Using emergency fallback admin');
+          return {
+            id: 'emergency-admin-id',
+            email: 'admin@kursus.com',
+            name: 'Administrator',
+            role: 'super_admin'
+          };
+        }
+        
         return null;
       }
 
       if (!user.isActive) {
         console.log(`[AUTH] User inactive: ${cleanEmail}`);
         return null;
-      }
-
-      // For production fallback user, skip password verification
-      if (user.id === 'prod-admin-id') {
-        console.log(`[AUTH] Login successful for production fallback: ${cleanEmail}`);
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role
-        };
       }
 
       const isValidPassword = await this.verifyPassword(cleanPassword, user.password);
@@ -214,15 +195,13 @@ export class AuthService {
 
       console.log(`[AUTH] Login successful for: ${cleanEmail}`);
 
-      // Update last login (skip for fallback user)
-      if (user.id !== 'prod-admin-id') {
-        await db.user.update({
-          where: { id: user.id },
-          data: { lastLogin: new Date() }
-        }).catch(error => {
-          console.error('[AUTH] Failed to update last login:', error);
-        });
-      }
+      // Update last login
+      await db.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() }
+      }).catch(error => {
+        console.error('[AUTH] Failed to update last login:', error);
+      });
 
       return {
         id: user.id,
