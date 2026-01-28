@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AuthService } from '@/lib/auth';
+import { validateInput, announcementSchema, createErrorResponse } from '@/lib/validation';
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,25 +55,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, isActive, priority, targetRole } = body;
+    
+    // Validate input using Zod schema
+    const validation = validateInput(announcementSchema, body);
+    if (!validation.success) {
+      return createErrorResponse(validation.error, 400);
+    }
+    
+    const { title, content, isActive, priority, targetRole } = validation.data;
 
     console.log('📝 [ANNOUNCEMENTS] Creating new announcement:', { title, targetRole, isActive });
-
-    // Validate required fields
-    if (!title || !content) {
-      return NextResponse.json(
-        { error: 'Title and content are required' },
-        { status: 400 }
-      );
-    }
 
     const announcement = await db.announcement.create({
       data: {
         title,
         content,
-        isActive: isActive ?? true,
-        priority: priority ?? 1,
-        targetRole: targetRole ?? 'teacher',
+        isActive,
+        priority,
+        targetRole,
         createdBy: user.id
       }
     });

@@ -216,13 +216,17 @@ export default function LoginPage() {
               <h3 className="text-sm font-medium text-blue-900 mb-2">
                 Akun Default (Untuk Testing)
               </h3>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p><strong>Email:</strong> admin@kursus.com</p>
-                <p><strong>Password:</strong> admin123</p>
-                <p className="text-blue-600 mt-2">
-                  ⚠️ Harap ganti password setelah login pertama!
-                </p>
-              </div>
+              {/* Demo Credentials - Only show in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-blue-700 space-y-1">
+                  <p><strong>Demo Login:</strong></p>
+                  <p><strong>Email:</strong> admin@kursus.com</p>
+                  <p><strong>Password:</strong> admin123</p>
+                  <p className="text-blue-600 mt-2">
+                    ⚠️ Harap ganti password setelah login pertama!
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

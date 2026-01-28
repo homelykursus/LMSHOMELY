@@ -144,12 +144,14 @@ export default function TeacherLoginPage() {
               </p>
             </div>
 
-            {/* Demo Credentials */}
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600 font-medium mb-2">Demo Login:</p>
-              <p className="text-xs text-gray-500">WhatsApp: 081232123432</p>
-              <p className="text-xs text-gray-500">Password: guru123</p>
-            </div>
+            {/* Demo Credentials - Only show in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600 font-medium mb-2">Demo Login:</p>
+                <p className="text-xs text-gray-500">WhatsApp: 081232123432</p>
+                <p className="text-xs text-gray-500">Password: guru123</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
