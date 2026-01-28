@@ -90,11 +90,6 @@ const sidebarItems: SidebarItem[] = [
     icon: Award,
   },
   {
-    title: 'Kelola Pengumuman',
-    href: '/admin/announcements',
-    icon: Megaphone,
-  },
-  {
     title: 'Data Guru',
     href: '/admin/teachers',
     icon: UserCheck,
@@ -108,6 +103,11 @@ const sidebarItems: SidebarItem[] = [
     title: 'Data Kelas',
     href: '/admin/classes',
     icon: GraduationCap,
+  },
+  {
+    title: 'Kelola Pengumuman',
+    href: '/admin/announcements',
+    icon: Megaphone,
   },
   {
     title: 'Pengaturan',

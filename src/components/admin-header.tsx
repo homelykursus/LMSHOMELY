@@ -90,9 +90,6 @@ export function AdminHeader() {
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Logout Button */}
-          <LogoutButton />
-          
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
