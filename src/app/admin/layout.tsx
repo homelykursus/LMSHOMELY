@@ -19,7 +19,12 @@ export default function AdminLayout({
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        console.log('[AdminLayout] Checking authentication...');
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include' // Ensure cookies are sent
+        });
+        
+        console.log('[AdminLayout] Auth response:', response.status);
         
         if (response.ok) {
           const userData = await response.json();

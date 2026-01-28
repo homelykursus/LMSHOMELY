@@ -71,8 +71,10 @@ export default function LoginPage() {
         // Store user info in localStorage for client-side access
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to admin dashboard
-        router.push('/admin');
+        // Wait a bit for cookie to be set, then redirect
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 500);
       } else {
         console.error('Login failed:', data);
         setError(data.error || 'Login failed');
