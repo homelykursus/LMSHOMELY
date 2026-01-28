@@ -10,14 +10,22 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset",
+    "db:seed": "tsx scripts/ensure-production-admin.ts",
+    "db:studio": "prisma studio",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && next build",
     "test:pre-deploy": "tsx scripts/pre-deployment-test.ts",
+    "test:auth": "tsx scripts/test-authentication.ts",
+    "test:db": "tsx scripts/test-database-connection.ts",
+    "migrate:postgresql": "tsx scripts/migrate-to-postgresql.ts",
+    "setup:postgresql": "tsx scripts/setup-postgresql-environment.ts",
     "health:check": "curl http://localhost:3000/api/health",
     "health:check:prod": "curl https://daftar.homelykursus.com/api/health",
     "db:health": "tsx scripts/debug-production-login-issue.ts",
-    "setup:env": "tsx scripts/setup-environment.ts"
+    "setup:env": "tsx scripts/setup-environment.ts",
+    "deploy:production": "npm run test:pre-deploy && vercel --prod"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
