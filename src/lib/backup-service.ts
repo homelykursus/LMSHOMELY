@@ -29,6 +29,11 @@ export interface BackupData {
     users: any[];
     rooms: any[];
     classStudents: any[]; // Junction table for Class-Student relations
+    teacherAttendances: any[]; // Teacher attendance records
+    attendances: any[]; // Student attendance records
+    teacherCourses: any[]; // Teacher-Course relations
+    announcements: any[]; // System announcements
+    employeeAttendances: any[]; // Employee attendance records
   };
   assets?: {
     cloudinary_urls: string[];
@@ -52,7 +57,12 @@ export class BackupService {
         courses,
         users,
         rooms,
-        classStudents
+        classStudents,
+        teacherAttendances,
+        attendances,
+        teacherCourses,
+        announcements,
+        employeeAttendances
       ] = await Promise.all([
         db.student.findMany(),
         db.teacher.findMany(),
@@ -60,7 +70,12 @@ export class BackupService {
         db.course.findMany(),
         db.user.findMany(),
         db.room.findMany(),
-        db.classStudent.findMany()
+        db.classStudent.findMany(),
+        db.teacherAttendance.findMany(),
+        db.attendance.findMany(),
+        db.teacherCourse.findMany(),
+        db.announcement.findMany(),
+        db.employeeAttendance.findMany()
       ]);
 
       // Try to get other data if tables exist
@@ -108,13 +123,20 @@ export class BackupService {
         console.warn('⚠️  CoursePricing table not accessible');
       }
 
-      console.log(`🔗 ClassStudent relations found: ${classStudents.length}`);
+      console.log(`🔗 ClassStudent relations found: ${classStudents.length}`)
+      console.log(`👨‍🏫 TeacherAttendance records found: ${teacherAttendances.length}`)
+      console.log(`👨‍🎓 Student Attendance records found: ${attendances.length}`)
+      console.log(`📚 TeacherCourse relations found: ${teacherCourses.length}`)
+      console.log(`📢 Announcements found: ${announcements.length}`)
+      console.log(`👥 EmployeeAttendance records found: ${employeeAttendances.length}`);
 
       // Calculate total records
       const totalRecords = students.length + teachers.length + classes.length + 
                           courses.length + coursePricing.length + payments.length + paymentTransactions.length + 
                           certificates.length + certificateTemplates.length + users.length + 
-                          rooms.length + meetings.length + classStudents.length;
+                          rooms.length + meetings.length + classStudents.length + 
+                          teacherAttendances.length + attendances.length + teacherCourses.length + 
+                          announcements.length + employeeAttendances.length;
 
       // Create backup data structure
       const backupData: BackupData = {
@@ -141,7 +163,12 @@ export class BackupService {
             password: '[REDACTED]' // Don't backup passwords
           })),
           rooms,
-          classStudents
+          classStudents,
+          teacherAttendances,
+          attendances,
+          teacherCourses,
+          announcements,
+          employeeAttendances
         }
       };
 
@@ -280,6 +307,45 @@ export class BackupService {
           console.log('   ✅ Class-student relations cleared');
         } catch (e) {
           console.log('   ⚠️  Class-student relations table not found or empty');
+        }
+
+        // Clear attendance records before clearing students and meetings
+        try {
+          await tx.attendance.deleteMany();
+          console.log('   ✅ Student attendance cleared');
+        } catch (e) {
+          console.log('   ⚠️  Student attendance table not found or empty');
+        }
+
+        try {
+          await tx.teacherAttendance.deleteMany();
+          console.log('   ✅ Teacher attendance cleared');
+        } catch (e) {
+          console.log('   ⚠️  Teacher attendance table not found or empty');
+        }
+
+        // Clear teacher-course relations
+        try {
+          await tx.teacherCourse.deleteMany();
+          console.log('   ✅ Teacher-course relations cleared');
+        } catch (e) {
+          console.log('   ⚠️  Teacher-course relations table not found or empty');
+        }
+
+        // Clear announcements
+        try {
+          await tx.announcement.deleteMany();
+          console.log('   ✅ Announcements cleared');
+        } catch (e) {
+          console.log('   ⚠️  Announcements table not found or empty');
+        }
+
+        // Clear employee attendance
+        try {
+          await tx.employeeAttendance.deleteMany();
+          console.log('   ✅ Employee attendance cleared');
+        } catch (e) {
+          console.log('   ⚠️  Employee attendance table not found or empty');
         }
 
         try {
@@ -531,6 +597,86 @@ export class BackupService {
           }
         }
 
+        console.log('📝 Restoring teacher-course relations...');
+        if (backupData.data.teacherCourses?.length > 0) {
+          try {
+            for (const teacherCourse of backupData.data.teacherCourses) {
+              const { teacher, course, ...relationData } = teacherCourse;
+              
+              // Handle teacher-course relation data with proper field mapping
+              const processedRelation = {
+                ...relationData,
+                // Ensure required fields have proper values
+                isMain: relationData.isMain !== undefined ? relationData.isMain : false,
+                createdAt: relationData.createdAt ? new Date(relationData.createdAt) : new Date()
+              };
+              
+              await tx.teacherCourse.create({
+                data: processedRelation
+              });
+            }
+            console.log(`   ✅ ${backupData.data.teacherCourses.length} teacher-course relations restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring teacher-course relations:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring announcements...');
+        if (backupData.data.announcements?.length > 0) {
+          try {
+            for (const announcement of backupData.data.announcements) {
+              // Handle announcement data with proper field mapping
+              const processedAnnouncement = {
+                ...announcement,
+                // Ensure required fields have proper values
+                title: announcement.title || 'Untitled Announcement',
+                content: announcement.content || '',
+                isActive: announcement.isActive !== undefined ? announcement.isActive : true,
+                priority: announcement.priority || 1,
+                targetRole: announcement.targetRole || 'teacher',
+                createdAt: announcement.createdAt ? new Date(announcement.createdAt) : new Date(),
+                updatedAt: announcement.updatedAt ? new Date(announcement.updatedAt) : new Date()
+              };
+              
+              await tx.announcement.create({
+                data: processedAnnouncement
+              });
+            }
+            console.log(`   ✅ ${backupData.data.announcements.length} announcements restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring announcements:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring employee attendance...');
+        if (backupData.data.employeeAttendances?.length > 0) {
+          try {
+            for (const employeeAttendance of backupData.data.employeeAttendances) {
+              // Handle employee attendance data with proper field mapping
+              const processedAttendance = {
+                ...employeeAttendance,
+                // Ensure required fields have proper values
+                employeeName: employeeAttendance.employeeName || 'Unknown Employee',
+                employeeId: employeeAttendance.employeeId || 'UNKNOWN',
+                type: employeeAttendance.type || 'check_in',
+                status: employeeAttendance.status || 'success',
+                timestamp: employeeAttendance.timestamp ? new Date(employeeAttendance.timestamp) : new Date(),
+                createdAt: employeeAttendance.createdAt ? new Date(employeeAttendance.createdAt) : new Date()
+              };
+              
+              await tx.employeeAttendance.create({
+                data: processedAttendance
+              });
+            }
+            console.log(`   ✅ ${backupData.data.employeeAttendances.length} employee attendance records restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring employee attendance:', error);
+            throw error;
+          }
+        }
+
         console.log('📝 Restoring meetings...');
         if (backupData.data.meetings?.length > 0) {
           try {
@@ -555,6 +701,56 @@ export class BackupService {
             console.log(`   ✅ ${backupData.data.meetings.length} meetings restored`);
           } catch (error) {
             console.error('   ❌ Error restoring meetings:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring teacher attendance...');
+        if (backupData.data.teacherAttendances?.length > 0) {
+          try {
+            for (const teacherAttendance of backupData.data.teacherAttendances) {
+              const { classMeeting, teacher, ...attendanceData } = teacherAttendance;
+              
+              // Handle teacher attendance data with proper field mapping
+              const processedAttendance = {
+                ...attendanceData,
+                // Ensure required fields have proper values
+                status: attendanceData.status || 'HADIR',
+                markedAt: attendanceData.markedAt ? new Date(attendanceData.markedAt) : new Date()
+              };
+              
+              await tx.teacherAttendance.create({
+                data: processedAttendance
+              });
+            }
+            console.log(`   ✅ ${backupData.data.teacherAttendances.length} teacher attendance records restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring teacher attendance:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring student attendance...');
+        if (backupData.data.attendances?.length > 0) {
+          try {
+            for (const attendance of backupData.data.attendances) {
+              const { classMeeting, student, ...attendanceData } = attendance;
+              
+              // Handle student attendance data with proper field mapping
+              const processedAttendance = {
+                ...attendanceData,
+                // Ensure required fields have proper values
+                status: attendanceData.status || 'HADIR',
+                markedAt: attendanceData.markedAt ? new Date(attendanceData.markedAt) : new Date()
+              };
+              
+              await tx.attendance.create({
+                data: processedAttendance
+              });
+            }
+            console.log(`   ✅ ${backupData.data.attendances.length} student attendance records restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring student attendance:', error);
             throw error;
           }
         }
@@ -715,7 +911,7 @@ export class BackupService {
           console.log('   ✅ Admin user exists');
         }
       }, {
-        timeout: 30000 // 30 seconds timeout for large restore operations
+        timeout: 60000 // 60 seconds timeout for large restore operations with many tables
       });
 
       console.log('✅ Data restore completed successfully');
@@ -835,7 +1031,7 @@ export class BackupService {
         }
         
         // Check optional tables
-        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms', 'classStudents'];
+        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms', 'classStudents', 'teacherAttendances', 'attendances', 'teacherCourses', 'announcements', 'employeeAttendances'];
         for (const table of optionalTables) {
           if (backupData.data[table] && !Array.isArray(backupData.data[table])) {
             errors.push(`Invalid ${table} data format`);
