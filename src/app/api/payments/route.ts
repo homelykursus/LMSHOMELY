@@ -16,6 +16,7 @@ export async function GET() {
             status: true, // Tambahkan status siswa
             createdAt: true, // Tambahkan tanggal pendaftaran
             courseType: true, // Tambahkan courseType
+            dateOfBirth: true, // Tambahkan tanggal lahir untuk menghitung usia
             course: {
               select: {
                 name: true,
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
             lastEducation: true,
             discount: true,
             courseType: true, // Tambahkan courseType
+            dateOfBirth: true, // Tambahkan tanggal lahir untuk menghitung usia
             course: {
               select: {
                 name: true,

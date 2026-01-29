@@ -60,6 +60,7 @@ interface Payment {
     status: string; // Tambahkan status siswa
     createdAt: string; // Tanggal pendaftaran siswa
     courseType?: string; // Tambahkan courseType
+    dateOfBirth?: string | null; // Tambahkan tanggal lahir untuk menghitung usia
     course: {
       name: string;
       category: string;
@@ -842,6 +843,7 @@ export default function PaymentsManagement() {
           isOpen={showReminderModal}
           onClose={() => setShowReminderModal(false)}
           studentName={selectedReminderPayment.student.name}
+          studentDateOfBirth={selectedReminderPayment.student.dateOfBirth}
           courseName={selectedReminderPayment.student.course.name}
           remainingAmount={selectedReminderPayment.remainingAmount}
           whatsappNumber={selectedReminderPayment.student.whatsapp}

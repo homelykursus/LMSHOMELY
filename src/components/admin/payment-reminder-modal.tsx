@@ -11,6 +11,7 @@ interface PaymentReminderModalProps {
   isOpen: boolean;
   onClose: () => void;
   studentName: string;
+  studentDateOfBirth?: string | null; // Tambahkan tanggal lahir untuk menghitung usia
   courseName: string;
   remainingAmount: number;
   whatsappNumber: string;
@@ -22,6 +23,7 @@ export default function PaymentReminderModal({
   isOpen,
   onClose,
   studentName,
+  studentDateOfBirth,
   courseName,
   remainingAmount,
   whatsappNumber,
@@ -30,6 +32,35 @@ export default function PaymentReminderModal({
 }: PaymentReminderModalProps) {
   const [copying, setCopying] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+
+  // Function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string | null | undefined): number | null => {
+    if (!dateOfBirth) return null;
+    
+    try {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) return null;
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      // Adjust age if birthday hasn't occurred this year
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age >= 0 ? age : null;
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return null;
+    }
+  };
+
+  const age = calculateAge(studentDateOfBirth);
+  const displayName = age !== null ? `${studentName} (${age})` : studentName;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -43,7 +74,7 @@ export default function PaymentReminderModal({
 
 Mohon maaf Izin Mengingatkan untuk Sisa Pembayaran Kursus
 
-Kak *${studentName}*
+Kak *${displayName}*
 Program *${courseName}*
 masih tersisa *${formatCurrency(remainingAmount)}* ya kak. 🙏
 
@@ -163,7 +194,7 @@ _by Admin_`;
             Reminder Pembayaran
           </DialogTitle>
           <DialogDescription>
-            Template pesan reminder untuk {studentName}
+            Template pesan reminder untuk {displayName}
           </DialogDescription>
         </DialogHeader>
 
@@ -172,7 +203,7 @@ _by Admin_`;
           <div className="bg-gray-50 p-3 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">Siswa:</span>
-              <span className="font-semibold">{studentName}</span>
+              <span className="font-semibold">{displayName}</span>
             </div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">Program:</span>

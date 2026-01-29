@@ -160,7 +160,9 @@ export default function ViewStudentDialog({ student, open, onOpenChange }: ViewS
                   )}
                   
                   <div className="space-y-2">
-                    <h3 className="font-bold text-lg text-gray-900">{student.name}</h3>
+                    <h3 className="font-bold text-lg text-gray-900">
+                      {student.name} ({calculateAge(student.dateOfBirth)})
+                    </h3>
                     {getStatusBadge(student.status)}
                   </div>
                 </div>
