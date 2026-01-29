@@ -28,6 +28,7 @@ export interface BackupData {
     certificateTemplates: any[];
     users: any[];
     rooms: any[];
+    classStudents: any[]; // Junction table for Class-Student relations
   };
   assets?: {
     cloudinary_urls: string[];
@@ -50,14 +51,16 @@ export class BackupService {
         classes,
         courses,
         users,
-        rooms
+        rooms,
+        classStudents
       ] = await Promise.all([
         db.student.findMany(),
         db.teacher.findMany(),
         db.class.findMany(),
         db.course.findMany(),
         db.user.findMany(),
-        db.room.findMany()
+        db.room.findMany(),
+        db.classStudent.findMany()
       ]);
 
       // Try to get other data if tables exist
@@ -105,11 +108,13 @@ export class BackupService {
         console.warn('⚠️  CoursePricing table not accessible');
       }
 
+      console.log(`🔗 ClassStudent relations found: ${classStudents.length}`);
+
       // Calculate total records
       const totalRecords = students.length + teachers.length + classes.length + 
                           courses.length + coursePricing.length + payments.length + paymentTransactions.length + 
                           certificates.length + certificateTemplates.length + users.length + 
-                          rooms.length + meetings.length;
+                          rooms.length + meetings.length + classStudents.length;
 
       // Create backup data structure
       const backupData: BackupData = {
@@ -135,7 +140,8 @@ export class BackupService {
             ...user,
             password: '[REDACTED]' // Don't backup passwords
           })),
-          rooms
+          rooms,
+          classStudents
         }
       };
 
@@ -266,6 +272,14 @@ export class BackupService {
           console.log('   ✅ Class meetings cleared');
         } catch (e) {
           console.log('   ⚠️  Class meetings table not found or empty');
+        }
+
+        // Clear ClassStudent relations before clearing classes and students
+        try {
+          await tx.classStudent.deleteMany();
+          console.log('   ✅ Class-student relations cleared');
+        } catch (e) {
+          console.log('   ⚠️  Class-student relations table not found or empty');
         }
 
         try {
@@ -489,6 +503,30 @@ export class BackupService {
             console.log(`   ✅ ${backupData.data.classes.length} classes restored`);
           } catch (error) {
             console.error('   ❌ Error restoring classes:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring class-student relations...');
+        if (backupData.data.classStudents?.length > 0) {
+          try {
+            for (const classStudent of backupData.data.classStudents) {
+              const { class: classData, student, ...relationData } = classStudent;
+              
+              // Handle class-student relation data with proper field mapping
+              const processedRelation = {
+                ...relationData,
+                // Ensure required fields have proper values
+                joinedAt: relationData.joinedAt ? new Date(relationData.joinedAt) : new Date()
+              };
+              
+              await tx.classStudent.create({
+                data: processedRelation
+              });
+            }
+            console.log(`   ✅ ${backupData.data.classStudents.length} class-student relations restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring class-student relations:', error);
             throw error;
           }
         }
@@ -797,7 +835,7 @@ export class BackupService {
         }
         
         // Check optional tables
-        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms'];
+        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms', 'classStudents'];
         for (const table of optionalTables) {
           if (backupData.data[table] && !Array.isArray(backupData.data[table])) {
             errors.push(`Invalid ${table} data format`);
