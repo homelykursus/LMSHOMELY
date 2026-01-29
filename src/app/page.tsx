@@ -132,6 +132,18 @@ export default function RegistrationPage() {
     }).format(amount)
   }
 
+  // Function to convert text to proper case (capitalize first letter of each word)
+  const toProperCase = (text: string) => {
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map(word => {
+        if (word.length === 0) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
+  };
+
   const formatWhatsAppMessage = () => {
     const course = courses.find(c => c.id === formData.courseId)
     const finalPrice = calculatePrice()
@@ -324,7 +336,10 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => {
+                        const properCaseName = toProperCase(e.target.value);
+                        setFormData(prev => ({ ...prev, name: properCaseName }));
+                      }}
                       placeholder="Masukkan nama lengkap"
                       required
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"

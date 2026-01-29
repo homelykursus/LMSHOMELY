@@ -235,7 +235,7 @@ export class BackupService {
       console.log(`📊 Restoring backup from: ${backupData.metadata.created_at}`);
       console.log(`📋 Total records to restore: ${backupData.metadata.total_records}`);
 
-      // Clear existing data and restore (in transaction)
+      // Clear existing data and restore (in transaction with increased timeout)
       await db.$transaction(async (tx) => {
         console.log('🗑️  Clearing existing data...');
         
@@ -469,14 +469,13 @@ export class BackupService {
         if (backupData.data.classes?.length > 0) {
           try {
             for (const classData of backupData.data.classes) {
-              const { course, teacher, students, meetings, room, ...classInfo } = classData;
+              const { course, teacher, students, meetings, room, status, ...classInfo } = classData;
               
               // Handle class data with proper field mapping
               const processedClass = {
                 ...classInfo,
                 // Ensure required fields have proper values
                 name: classInfo.name || 'Unnamed Class',
-                status: classInfo.status || 'active',
                 createdAt: classInfo.createdAt ? new Date(classInfo.createdAt) : new Date(),
                 updatedAt: classInfo.updatedAt ? new Date(classInfo.updatedAt) : new Date(),
                 startDate: classInfo.startDate ? new Date(classInfo.startDate) : new Date(),
@@ -677,6 +676,8 @@ export class BackupService {
         } else {
           console.log('   ✅ Admin user exists');
         }
+      }, {
+        timeout: 30000 // 30 seconds timeout for large restore operations
       });
 
       console.log('✅ Data restore completed successfully');
