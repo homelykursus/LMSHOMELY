@@ -50,7 +50,10 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 name: true,
-                whatsapp: true
+                whatsapp: true,
+                dateOfBirth: true, // Added for age calculation
+                lastEducation: true, // Added for education column
+                gender: true // Added for gender column
               }
             }
           }

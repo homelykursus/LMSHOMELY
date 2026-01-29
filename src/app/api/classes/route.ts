@@ -47,7 +47,9 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 whatsapp: true,
-                dateOfBirth: true
+                dateOfBirth: true,
+                lastEducation: true,
+                gender: true
               }
             }
           }

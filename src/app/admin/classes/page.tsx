@@ -72,6 +72,9 @@ interface Class {
       id: string;
       name: string;
       whatsapp: string;
+      dateOfBirth?: string | null;
+      lastEducation?: string | null;
+      gender?: string | null;
     };
   }>;
 }
@@ -95,6 +98,32 @@ export default function ClassesManagement() {
   const [activePage, setActivePage] = useState<number>(1);
   const [completedPage, setCompletedPage] = useState<number>(1);
   const itemsPerPage = 10;
+
+  // Function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string | null | undefined): number | null => {
+    if (!dateOfBirth) return null;
+    
+    try {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) return null;
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      // Adjust age if birthday hasn't occurred this year
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age >= 0 ? age : null;
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     fetchClasses();
@@ -1288,25 +1317,41 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
                           <TableRow>
                             <TableHead className="w-12">No</TableHead>
                             <TableHead>Nama Siswa</TableHead>
+                            <TableHead>Usia</TableHead>
+                            <TableHead>Jenis Kelamin</TableHead>
+                            <TableHead>Pendidikan</TableHead>
                             <TableHead>WhatsApp</TableHead>
                             <TableHead>Tanggal Bergabung</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {viewClass.students.map((studentClass, index) => (
-                            <TableRow key={studentClass.id}>
-                              <TableCell className="font-medium">{index + 1}</TableCell>
-                              <TableCell className="font-medium">{studentClass.student.name}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm">{studentClass.student.whatsapp}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(studentClass.joinedAt).toLocaleDateString('id-ID')}
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {viewClass.students.map((studentClass, index) => {
+                            const age = calculateAge(studentClass.student.dateOfBirth);
+                            return (
+                              <TableRow key={studentClass.id}>
+                                <TableCell className="font-medium">{index + 1}</TableCell>
+                                <TableCell className="font-medium">{studentClass.student.name}</TableCell>
+                                <TableCell>
+                                  {age !== null ? `${age} tahun` : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  {studentClass.student.gender === 'male' || studentClass.student.gender === 'MALE' ? 'Laki-laki' : 
+                                   studentClass.student.gender === 'female' || studentClass.student.gender === 'FEMALE' ? 'Perempuan' : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  {studentClass.student.lastEducation || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm">{studentClass.student.whatsapp}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {new Date(studentClass.joinedAt).toLocaleDateString('id-ID')}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
