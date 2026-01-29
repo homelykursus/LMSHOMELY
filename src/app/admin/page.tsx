@@ -37,10 +37,6 @@ interface DashboardStats {
     completedRegistrations: number;
     totalRevenue: number;
     monthlyGrowth: number;
-    popularCourses: Array<{
-      name: string;
-      count: number;
-    }>;
   };
 }
 
@@ -59,8 +55,7 @@ export default function AdminDashboard() {
       confirmedRegistrations: 0,
       completedRegistrations: 0,
       totalRevenue: 0,
-      monthlyGrowth: 0,
-      popularCourses: []
+      monthlyGrowth: 0
     }
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -299,8 +294,7 @@ export default function AdminDashboard() {
         confirmedRegistrations: filteredStudents.filter((s: any) => s.status === 'active').length,
         completedRegistrations: filteredStudents.filter((s: any) => s.status === 'graduated').length,
         totalRevenue: filteredStudents.reduce((sum: number, student: any) => sum + student.finalPrice, 0),
-        monthlyGrowth: 0, // Will be calculated below
-        popularCourses: [] as Array<{ name: string; count: number }>
+        monthlyGrowth: 0 // Will be calculated below
       };
 
       // Calculate monthly growth (compare with previous month)
@@ -329,18 +323,6 @@ export default function AdminDashboard() {
           periodStats.monthlyGrowth = 100; // First month with registrations
         }
       }
-
-      // Calculate popular courses in the period
-      const courseCounts: { [key: string]: number } = {};
-      filteredStudents.forEach((student: any) => {
-        const courseName = student.course?.name || 'Unknown';
-        courseCounts[courseName] = (courseCounts[courseName] || 0) + 1;
-      });
-      
-      periodStats.popularCourses = Object.entries(courseCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 3);
 
       const totalRevenue = students.reduce((sum: number, student: any) => sum + student.finalPrice, 0);
       const recentStudents = students.slice(0, 5);
@@ -713,28 +695,6 @@ export default function AdminDashboard() {
 
 
 
-              {/* Popular Courses */}
-              {stats.periodStats.popularCourses.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Kursus Terpopuler {(filterMonth || filterYear) ? 'Periode Ini' : ''}
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {stats.periodStats.popularCourses.map((course, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <div className="font-medium">{course.name}</div>
-                          <div className="text-sm text-gray-600">{course.count} pendaftar</div>
-                        </div>
-                        <Badge variant="outline">
-                          #{index + 1}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
             <div className="text-center py-12">
