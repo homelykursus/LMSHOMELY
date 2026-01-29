@@ -1182,7 +1182,7 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
       {/* View Class Dialog */}
       {isViewDialogOpen && viewClass && (
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
@@ -1311,49 +1311,51 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
                 </CardHeader>
                 <CardContent>
                   {viewClass.students.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-12">No</TableHead>
-                            <TableHead>Nama Siswa</TableHead>
-                            <TableHead>Usia</TableHead>
-                            <TableHead>Jenis Kelamin</TableHead>
-                            <TableHead>Pendidikan</TableHead>
-                            <TableHead>WhatsApp</TableHead>
-                            <TableHead>Tanggal Bergabung</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {viewClass.students.map((studentClass, index) => {
-                            const age = calculateAge(studentClass.student.dateOfBirth);
-                            return (
-                              <TableRow key={studentClass.id}>
-                                <TableCell className="font-medium">{index + 1}</TableCell>
-                                <TableCell className="font-medium">{studentClass.student.name}</TableCell>
-                                <TableCell>
-                                  {age !== null ? `${age} tahun` : '-'}
-                                </TableCell>
-                                <TableCell>
-                                  {studentClass.student.gender === 'male' || studentClass.student.gender === 'MALE' ? 'Laki-laki' : 
-                                   studentClass.student.gender === 'female' || studentClass.student.gender === 'FEMALE' ? 'Perempuan' : '-'}
-                                </TableCell>
-                                <TableCell>
-                                  {studentClass.student.lastEducation || '-'}
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm">{studentClass.student.whatsapp}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  {new Date(studentClass.joinedAt).toLocaleDateString('id-ID')}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+                    <div className="overflow-x-auto -mx-6 px-6">
+                      <div className="min-w-full inline-block align-middle">
+                        <Table className="min-w-full">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-12 min-w-[3rem]">No</TableHead>
+                              <TableHead className="min-w-[12rem]">Nama Siswa</TableHead>
+                              <TableHead className="min-w-[5rem]">Usia</TableHead>
+                              <TableHead className="min-w-[7rem]">Jenis Kelamin</TableHead>
+                              <TableHead className="min-w-[8rem]">Pendidikan</TableHead>
+                              <TableHead className="min-w-[8rem]">WhatsApp</TableHead>
+                              <TableHead className="min-w-[8rem]">Tanggal Bergabung</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {viewClass.students.map((studentClass, index) => {
+                              const age = calculateAge(studentClass.student.dateOfBirth);
+                              return (
+                                <TableRow key={studentClass.id}>
+                                  <TableCell className="font-medium">{index + 1}</TableCell>
+                                  <TableCell className="font-medium">{studentClass.student.name}</TableCell>
+                                  <TableCell>
+                                    {age !== null ? `${age} tahun` : '-'}
+                                  </TableCell>
+                                  <TableCell>
+                                    {studentClass.student.gender === 'male' || studentClass.student.gender === 'MALE' ? 'Laki-laki' : 
+                                     studentClass.student.gender === 'female' || studentClass.student.gender === 'FEMALE' ? 'Perempuan' : '-'}
+                                  </TableCell>
+                                  <TableCell>
+                                    {studentClass.student.lastEducation || '-'}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm">{studentClass.student.whatsapp}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    {new Date(studentClass.joinedAt).toLocaleDateString('id-ID')}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8">
