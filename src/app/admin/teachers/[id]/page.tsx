@@ -274,10 +274,31 @@ export default function TeacherDetailPage() {
   const totalMeetings = attendanceRecords.length;
   const attendanceRate = totalMeetings > 0 ? Math.round((presentCount / totalMeetings) * 100) : 0;
 
-  // Calculate total commission from meetings
-  const totalCommission = meetings.reduce((sum, meeting) => {
-    return sum + (meeting.calculatedCommission || 0);
-  }, 0);
+  // Calculate total commission from teacher attendances (only HADIR)
+  // This should match the logic in teacher-commissions API
+  const [totalCommission, setTotalCommission] = useState(0);
+
+  useEffect(() => {
+    const calculateCommission = async () => {
+      if (!params.id) return;
+      
+      try {
+        // Fetch teacher attendances with commission data
+        const response = await fetch(`/api/teacher-commissions?teacherId=${params.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const teacherData = data.teachers.find((t: any) => t.teacher.id === params.id);
+          if (teacherData) {
+            setTotalCommission(teacherData.totalCommission);
+          }
+        }
+      } catch (error) {
+        console.error('Error calculating commission:', error);
+      }
+    };
+
+    calculateCommission();
+  }, [params.id]);
 
   if (loading) {
     return (
