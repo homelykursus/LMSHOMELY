@@ -5,7 +5,7 @@ import { AuthService, withRole } from '@/lib/auth';
 export const GET = withRole(['super_admin'], async (
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     const targetUser = await db.user.findUnique({
@@ -42,7 +42,7 @@ export const GET = withRole(['super_admin'], async (
 export const PUT = withRole(['super_admin'], async (
   request: NextRequest,
   currentUser: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     const { email, name, role, isActive, password } = await request.json();
@@ -139,7 +139,7 @@ export const PUT = withRole(['super_admin'], async (
 export const DELETE = withRole(['super_admin'], async (
   request: NextRequest,
   currentUser: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     // Prevent self-deletion

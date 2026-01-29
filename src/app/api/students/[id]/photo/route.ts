@@ -5,7 +5,7 @@ import { join } from 'path';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const studentId = params.id;

@@ -3,10 +3,10 @@ import { db } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const alumniId = params.id;
+    const { id: alumniId } = await params;
     console.log('Fetching attendance for alumni ID:', alumniId);
 
     // First verify this is actually an alumni

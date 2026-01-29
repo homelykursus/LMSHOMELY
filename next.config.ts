@@ -1,24 +1,67 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Basic optimizations
+  experimental: {
+    optimizePackageImports: [
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-select', 
+      '@radix-ui/react-tabs',
+      'lucide-react',
+      'recharts'
+    ]
+  },
+
+  // Server external packages (for Word processing)
+  serverExternalPackages: [
+    'mammoth',
+    'docxtemplater',
+    'pizzip',
+    'libreoffice-convert',
+    'sharp'
+  ],
+
+  // Webpack optimization
+  webpack: (config, { isServer }) => {
+    // Handle Word processing dependencies
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      stream: false,
+      crypto: false,
+      buffer: false,
+    };
+
+    // Optimize module resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+
+    return config;
+  },
+
+  // Image optimization
+  images: {
+    domains: ['res.cloudinary.com'],
+    formats: ['image/webp', 'image/avif'],
+  },
+
+  // Basic settings
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
+
+  // TypeScript configuration
   typescript: {
     ignoreBuildErrors: true,
   },
-  // 禁用 Next.js 热重载，由 nodemon 处理重编译
-  reactStrictMode: false,
-  webpack: (config, { dev }) => {
-    if (dev) {
-      // 禁用 webpack 的热模块替换
-      config.watchOptions = {
-        ignored: ['**/*'], // 忽略所有文件变化
-      };
-    }
-    return config;
-  },
+
+  // ESLint configuration
   eslint: {
-    // 构建时忽略ESLint错误
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 };
 

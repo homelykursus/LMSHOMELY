@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 // GET - Get templates by course ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {

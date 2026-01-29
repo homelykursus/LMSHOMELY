@@ -29,7 +29,11 @@
     "health:check:prod": "curl https://daftar.homelykursus.com/api/health",
     "db:health": "tsx scripts/debug-production-login-issue.ts",
     "setup:env": "tsx scripts/setup-environment.ts",
-    "deploy:production": "npm run test:pre-deploy && vercel --prod"
+    "deploy:production": "npm run test:pre-deploy && vercel --prod",
+    "build:clean": "rm -rf .next && npm run build",
+    "build:analyze": "ANALYZE=true npm run build",
+    "dev:turbo": "next dev --turbo",
+    "dev:clean": "rm -rf .next && npm run dev"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

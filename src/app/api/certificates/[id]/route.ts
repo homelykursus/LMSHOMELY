@@ -7,7 +7,7 @@ import path from 'path';
 // DELETE - Delete certificate
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {
@@ -97,7 +97,7 @@ export async function DELETE(
 // GET - Get certificate details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {

@@ -7,7 +7,7 @@ import path from 'path';
 // GET - Get template by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {
@@ -47,7 +47,7 @@ export async function GET(
 // PUT - Update template metadata
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {
@@ -98,7 +98,7 @@ export async function PUT(
 // DELETE - Delete template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   return withAuth(async (req, user) => {
     try {

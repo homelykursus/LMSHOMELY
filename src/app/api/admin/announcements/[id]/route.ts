@@ -4,9 +4,10 @@ import { AuthService } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Verify admin authentication
     const user = await AuthService.getUserFromRequest(request);
     if (!user) {
@@ -15,8 +16,6 @@ export async function PUT(
         { status: 401 }
       );
     }
-
-    const { id } = params;
     const body = await request.json();
     const { title, content, isActive, priority, targetRole } = body;
 
@@ -67,9 +66,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Verify admin authentication
     const user = await AuthService.getUserFromRequest(request);
     if (!user) {
@@ -78,8 +78,6 @@ export async function DELETE(
         { status: 401 }
       );
     }
-
-    const { id } = params;
 
     console.log(`🗑️ [ANNOUNCEMENTS] Deleting announcement: ${id}`);
 
