@@ -20,6 +20,7 @@ export interface BackupData {
     teachers: any[];
     classes: any[];
     courses: any[];
+    coursePricing: any[];
     meetings: any[];
     payments: any[];
     paymentTransactions: any[];
@@ -65,6 +66,7 @@ export class BackupService {
       let certificates: any[] = [];
       let certificateTemplates: any[] = [];
       let meetings: any[] = [];
+      let coursePricing: any[] = [];
 
       try {
         payments = await db.payment.findMany();
@@ -96,9 +98,16 @@ export class BackupService {
         console.warn('⚠️  ClassMeeting table not accessible');
       }
 
+      try {
+        coursePricing = await db.coursePricing.findMany();
+        console.log(`📊 CoursePricing records found: ${coursePricing.length}`);
+      } catch (e) {
+        console.warn('⚠️  CoursePricing table not accessible');
+      }
+
       // Calculate total records
       const totalRecords = students.length + teachers.length + classes.length + 
-                          courses.length + payments.length + paymentTransactions.length + 
+                          courses.length + coursePricing.length + payments.length + paymentTransactions.length + 
                           certificates.length + certificateTemplates.length + users.length + 
                           rooms.length + meetings.length;
 
@@ -116,6 +125,7 @@ export class BackupService {
           teachers,
           classes,
           courses,
+          coursePricing,
           meetings,
           payments,
           paymentTransactions,
@@ -287,6 +297,13 @@ export class BackupService {
         }
 
         try {
+          await tx.coursePricing.deleteMany();
+          console.log('   ✅ Course pricing cleared');
+        } catch (e) {
+          console.log('   ⚠️  Course pricing table not found or empty');
+        }
+
+        try {
           await tx.course.deleteMany();
           console.log('   ✅ Courses cleared');
         } catch (e) {
@@ -329,6 +346,30 @@ export class BackupService {
             console.log(`   ✅ ${backupData.data.courses.length} courses restored`);
           } catch (error) {
             console.error('   ❌ Error restoring courses:', error);
+            throw error;
+          }
+        }
+
+        console.log('📝 Restoring course pricing...');
+        if (backupData.data.coursePricing?.length > 0) {
+          try {
+            for (const pricing of backupData.data.coursePricing) {
+              const { course, ...pricingData } = pricing;
+              await tx.coursePricing.create({
+                data: {
+                  ...pricingData,
+                  // Ensure required fields have default values
+                  basePrice: pricingData.basePrice || 0,
+                  discountRate: pricingData.discountRate || 0,
+                  isActive: pricingData.isActive !== undefined ? pricingData.isActive : true,
+                  createdAt: pricingData.createdAt ? new Date(pricingData.createdAt) : new Date(),
+                  updatedAt: pricingData.updatedAt ? new Date(pricingData.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.coursePricing.length} course pricing restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring course pricing:', error);
             throw error;
           }
         }
@@ -755,7 +796,7 @@ export class BackupService {
         }
         
         // Check optional tables
-        const optionalTables = ['payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms'];
+        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms'];
         for (const table of optionalTables) {
           if (backupData.data[table] && !Array.isArray(backupData.data[table])) {
             errors.push(`Invalid ${table} data format`);
