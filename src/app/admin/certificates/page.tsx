@@ -207,9 +207,14 @@ export default function CertificatesPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getPlaceholders = (placeholdersJson: string) => {
+  const getPlaceholders = (placeholdersJson: string): string[] => {
     try {
-      return JSON.parse(placeholdersJson);
+      const parsed = JSON.parse(placeholdersJson);
+      // Ensure we return an array of unique strings
+      if (Array.isArray(parsed)) {
+        return [...new Set(parsed.filter(item => typeof item === 'string'))];
+      }
+      return [];
     } catch {
       return [];
     }
@@ -248,7 +253,7 @@ export default function CertificatesPage() {
                 <strong>Peringatan:</strong>
                 <ul className="list-disc list-inside mt-1">
                   {uploadResult.warnings.map((warning, index) => (
-                    <li key={index} className="text-sm">{warning}</li>
+                    <li key={`warning-${index}`} className="text-sm">{warning}</li>
                   ))}
                 </ul>
               </div>
@@ -416,8 +421,8 @@ export default function CertificatesPage() {
                   <div>
                     <strong>Placeholder:</strong>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {getPlaceholders(template.placeholders).map((placeholder: string) => (
-                        <Badge key={placeholder} variant="outline" className="text-xs">
+                      {getPlaceholders(template.placeholders).map((placeholder: string, index: number) => (
+                        <Badge key={`${template.id}-${placeholder}-${index}`} variant="outline" className="text-xs">
                           {`{{${placeholder}}}`}
                         </Badge>
                       ))}
