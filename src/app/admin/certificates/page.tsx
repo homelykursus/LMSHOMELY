@@ -272,6 +272,28 @@ export default function CertificatesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Sample Template Download */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-900 mb-1">Template Contoh</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Download template contoh yang sudah berisi semua placeholder yang diperlukan. 
+                    Anda bisa mengedit desainnya di Microsoft Word.
+                  </p>
+                  <a 
+                    href="/sample-certificate-template.docx" 
+                    download="sample-certificate-template.docx"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Template Contoh
+                  </a>
+                </div>
+              </div>
+            </div>
+
             <form onSubmit={handleUpload} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
