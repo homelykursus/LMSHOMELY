@@ -53,7 +53,7 @@ export default function CertificatesPage() {
   const [uploadForm, setUploadForm] = useState({
     name: '',
     description: '',
-    courseId: '',
+    courseId: 'all',
     category: 'course_completion',
     file: null as File | null
   });
@@ -135,7 +135,7 @@ export default function CertificatesPage() {
       formData.append('file', uploadForm.file);
       formData.append('name', uploadForm.name);
       formData.append('description', uploadForm.description);
-      formData.append('courseId', uploadForm.courseId);
+      formData.append('courseId', uploadForm.courseId === 'all' ? '' : uploadForm.courseId);
       formData.append('category', uploadForm.category);
       formData.append('createdBy', 'admin'); // TODO: Get from auth
 
@@ -155,7 +155,7 @@ export default function CertificatesPage() {
         setUploadForm({
           name: '',
           description: '',
-          courseId: '',
+          courseId: 'all',
           category: 'course_completion',
           file: null
         });
@@ -291,7 +291,7 @@ export default function CertificatesPage() {
                       <SelectValue placeholder="Pilih kursus" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Semua Kursus</SelectItem>
+                      <SelectItem value="all">Semua Kursus</SelectItem>
                       {courses.map(course => (
                         <SelectItem key={course.id} value={course.id}>
                           {course.name}
