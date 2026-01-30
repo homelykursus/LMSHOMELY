@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { 
   Award, 
   Upload, 
@@ -399,10 +400,10 @@ export default function CertificatesPage() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Memuat...</span>
-      </div>
+      <LoadingSpinner 
+        message="Loading..."
+        subMessage="Data sertifikat sedang dimuat"
+      />
     );
   }
 
