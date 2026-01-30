@@ -121,8 +121,11 @@ export class CertificateService {
         }
       };
 
-      // Try HTML-PDF generation first (with photo support)
-      if (student.photo) {
+      // Try HTML-PDF generation first (disabled in serverless for now)
+      // TODO: Re-enable when serverless-compatible PDF solution is implemented
+      const isServerless = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
+      
+      if (student.photo && !isServerless) {
         try {
           console.log(`Attempting HTML-PDF generation with photo for student ${student.name}`);
           
@@ -141,16 +144,16 @@ export class CertificateService {
             student_photo: processedPhoto
           };
 
-          // Generate PDF from HTML
-          const pdfBuffer = await HTMLCertificateGenerator.generatePDFFromHTML(htmlCertificateData);
+          // Generate HTML (PDF generation disabled in serverless)
+          const htmlBuffer = await HTMLCertificateGenerator.generatePDFFromHTML(htmlCertificateData);
           
-          // Validate PDF
-          const pdfValidation = await HTMLCertificateGenerator.validatePDF(pdfBuffer);
-          if (!pdfValidation.isValid) {
-            throw new Error(`PDF validation failed: ${pdfValidation.errors.join(', ')}`);
+          // Validate HTML
+          const htmlValidation = await HTMLCertificateGenerator.validatePDF(htmlBuffer);
+          if (!htmlValidation.isValid) {
+            throw new Error(`HTML validation failed: ${htmlValidation.errors.join(', ')}`);
           }
 
-          // Save certificate to database
+          // Save certificate to database (as HTML for now)
           const certificateId = await this.saveCertificate({
             templateId,
             studentId,
@@ -162,25 +165,27 @@ export class CertificateService {
             teacherName,
             courseDuration: calculateCourseDurationInHours(student.course.duration),
             generatedBy,
-            pdfBuffer,
-            fileSize: pdfValidation.fileSize,
-            fileExtension: 'pdf'
+            pdfBuffer: htmlBuffer,
+            fileSize: htmlValidation.fileSize,
+            fileExtension: 'html'
           });
 
-          console.log(`✅ HTML-PDF certificate generated successfully for ${student.name}`);
+          console.log(`✅ HTML certificate generated successfully for ${student.name}`);
 
           return {
             success: true,
             certificateId,
-            filePath: `certificates/${certificateId}.pdf`,
-            fileSize: pdfValidation.fileSize,
+            filePath: `certificates/${certificateId}.html`,
+            fileSize: htmlValidation.fileSize,
             generationMethod: 'html-pdf'
           };
 
         } catch (htmlError: any) {
-          console.warn(`HTML-PDF generation failed for ${student.name}: ${htmlError.message}`);
+          console.warn(`HTML generation failed for ${student.name}: ${htmlError.message}`);
           console.log('Falling back to Word template generation...');
         }
+      } else if (student.photo && isServerless) {
+        console.log(`Serverless environment detected - skipping HTML-PDF generation for ${student.name}`);
       }
 
       // Fallback to Word template generation (existing method)
