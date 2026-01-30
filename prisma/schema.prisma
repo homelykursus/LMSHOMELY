@@ -327,7 +327,8 @@ model CertificateTemplate {
   category          String   @default("course_completion") // 'course_completion', 'graduation', 'achievement'
   courseId          String?  // relasi ke course (opsional untuk template umum)
   originalFileName  String   // nama file Word asli
-  filePath          String   // path ke file Word template
+  filePath          String?  // path ke file Word template (deprecated, use templateData)
+  templateData      Bytes?   // binary data template Word (for serverless compatibility)
   placeholders      String   // JSON array placeholder yang ditemukan
   fileSize          Int      // ukuran file dalam bytes
   fileType          String   // 'docx' atau 'doc'

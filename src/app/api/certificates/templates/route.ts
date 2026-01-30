@@ -96,22 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create templates directory if it doesn't exist
-    const templatesDir = path.join(process.cwd(), 'public', 'certificate-templates');
-    if (!existsSync(templatesDir)) {
-      await mkdir(templatesDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const sanitizedName = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const fileName = `${sanitizedName}_${timestamp}.docx`;
-    const filePath = path.join(templatesDir, fileName);
-
-    // Save file to disk
-    await writeFile(filePath, buffer);
-
-    // Save template to database
+    // Save template to database (no file system operations)
     const template = await prisma.certificateTemplate.create({
       data: {
         name,
@@ -119,7 +104,8 @@ export async function POST(request: NextRequest) {
         category,
         courseId: courseId || null,
         originalFileName: file.name,
-        filePath: `public/certificate-templates/${fileName}`,
+        filePath: null, // No longer using file system
+        templateData: buffer, // Store binary data in database
         placeholders: JSON.stringify(validation.placeholders),
         fileSize: file.size,
         fileType: 'docx',
@@ -178,14 +164,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete file from disk
-    const { existsSync, unlinkSync } = await import('fs');
-    const filePath = path.join(process.cwd(), template.filePath);
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
-    }
-
-    // Delete from database
+    // Delete from database (no file cleanup needed)
     await prisma.certificateTemplate.delete({
       where: { id: templateId }
     });

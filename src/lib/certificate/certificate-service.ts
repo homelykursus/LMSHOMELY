@@ -118,18 +118,15 @@ export class CertificateService {
         student_photo: student.photo || undefined
       };
 
-      // Load template file
-      const { existsSync, readFileSync } = await import('fs');
-      const templatePath = path.join(process.cwd(), template.filePath);
-      
-      if (!existsSync(templatePath)) {
+      // Load template data from database
+      if (!template.templateData) {
         return {
           success: false,
-          errors: ['Template file not found on disk']
+          errors: ['Template data not found in database']
         };
       }
 
-      const templateBuffer = readFileSync(templatePath);
+      const templateBuffer = template.templateData;
 
       // Process Word template
       const processedWordBuffer = await WordProcessor.processTemplate(

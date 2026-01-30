@@ -118,22 +118,11 @@ export async function PUT(
       // Generate new filename
       const timestamp = Date.now();
       const sanitizedName = (name || existingTemplate.name).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      const fileName = `${sanitizedName}_${timestamp}.docx`;
-      const filePath = path.join(process.cwd(), 'public', 'certificate-templates', fileName);
 
-      // Save new file
-      await writeFile(filePath, buffer);
-
-      // Delete old file
-      const { existsSync, unlinkSync } = await import('fs');
-      const oldFilePath = path.join(process.cwd(), existingTemplate.filePath);
-      if (existsSync(oldFilePath)) {
-        unlinkSync(oldFilePath);
-      }
-
-      // Update file-related fields
+      // Update file-related fields (store in database)
       updateData.originalFileName = file.name;
-      updateData.filePath = `public/certificate-templates/${fileName}`;
+      updateData.filePath = null; // No longer using file system
+      updateData.templateData = buffer; // Store binary data in database
       updateData.placeholders = JSON.stringify(validation.placeholders);
       updateData.fileSize = file.size;
       updateData.updatedAt = new Date();
@@ -200,14 +189,7 @@ export async function DELETE(
       );
     }
 
-    // Delete file from disk
-    const { existsSync, unlinkSync } = await import('fs');
-    const filePath = path.join(process.cwd(), template.filePath);
-    if (existsSync(filePath)) {
-      unlinkSync(filePath);
-    }
-
-    // Delete from database
+    // Delete from database (no file cleanup needed)
     await prisma.certificateTemplate.delete({
       where: { id: params.id }
     });
