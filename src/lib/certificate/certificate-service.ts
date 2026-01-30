@@ -8,6 +8,8 @@
 import { WordProcessor, WordTemplateData } from './word-processor';
 import { PDFGenerator, PDFGenerationOptions } from './pdf-generator';
 import { PrismaClient } from '@prisma/client';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -205,9 +207,6 @@ export class CertificateService {
     fileSize: number;
     fileExtension: string;
   }): Promise<string> {
-    const { existsSync, mkdirSync, writeFileSync } = await import('fs');
-    const path = await import('path');
-
     // Create certificate record
     const certificate = await prisma.certificate.create({
       data: {
@@ -227,13 +226,13 @@ export class CertificateService {
     });
 
     // Save file with correct extension
-    const certificatesDir = path.default.join(process.cwd(), 'public', 'generated-certificates');
+    const certificatesDir = path.join(process.cwd(), 'public', 'generated-certificates');
     if (!existsSync(certificatesDir)) {
       mkdirSync(certificatesDir, { recursive: true });
     }
 
     const fileName = `${certificate.id}.${data.fileExtension}`;
-    const filePath = path.default.join(certificatesDir, fileName);
+    const filePath = path.join(certificatesDir, fileName);
     writeFileSync(filePath, data.pdfBuffer);
 
     // Update certificate with file path

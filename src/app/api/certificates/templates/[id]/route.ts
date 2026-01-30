@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { CertificateService } from '@/lib/certificate/certificate-service';
-import { writeFile } from 'fs/promises';
-import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -114,10 +112,6 @@ export async function PUT(
           { status: 400 }
         );
       }
-
-      // Generate new filename
-      const timestamp = Date.now();
-      const sanitizedName = (name || existingTemplate.name).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
       // Update file-related fields (store in database)
       updateData.originalFileName = file.name;

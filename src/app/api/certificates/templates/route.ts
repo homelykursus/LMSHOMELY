@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { CertificateService } from '@/lib/certificate/certificate-service';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -104,7 +101,7 @@ export async function POST(request: NextRequest) {
         category,
         courseId: courseId || null,
         originalFileName: file.name,
-        filePath: null, // No longer using file system
+        filePath: null as string | null, // No longer using file system
         templateData: buffer, // Store binary data in database
         placeholders: JSON.stringify(validation.placeholders),
         fileSize: file.size,

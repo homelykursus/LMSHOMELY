@@ -5,8 +5,9 @@
  * Optimized for Vercel serverless environment
  */
 
-// Note: docx-pdf has compatibility issues with serverless environments
-// We'll implement a fallback approach using alternative methods
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
 
 export interface PDFGenerationOptions {
   quality?: 'high' | 'medium' | 'low';
@@ -63,13 +64,9 @@ export class PDFGenerator {
     return new Promise(async (resolve, reject) => {
       try {
         // Create temporary file paths (cross-platform)
-        const os = await import('os');
-        const path = await import('path');
-        const fs = await import('fs');
-        
         const tempDir = os.tmpdir();
-        const inputPath = path.default.join(tempDir, `input-${Date.now()}.docx`);
-        const outputPath = path.default.join(tempDir, `output-${Date.now()}.pdf`);
+        const inputPath = path.join(tempDir, `input-${Date.now()}.docx`);
+        const outputPath = path.join(tempDir, `output-${Date.now()}.pdf`);
 
         // Write Word buffer to temporary file
         fs.writeFileSync(inputPath, wordBuffer);
