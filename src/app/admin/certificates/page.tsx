@@ -52,6 +52,8 @@ interface Student {
     id: string;
     name: string;
   };
+  classCount?: number;
+  teachers?: string[];
 }
 
 export default function CertificatesPage() {
@@ -125,18 +127,21 @@ export default function CertificatesPage() {
 
   const loadStudents = async () => {
     try {
-      const response = await fetch('/api/students');
+      // Load only students who have classes (eligible for certificates)
+      const response = await fetch('/api/students/with-classes');
       const students = await response.json();
       
       // Transform the data to match our interface
       const transformedStudents = students.map((student: any) => ({
         id: student.id,
         name: student.name,
-        studentNumber: student.studentId || student.studentNumber,
+        studentNumber: student.studentNumber,
         course: {
-          id: student.courseId,
-          name: student.courseName
-        }
+          id: student.course.id,
+          name: student.course.name
+        },
+        classCount: student.classCount,
+        teachers: student.teachers
       }));
       
       setStudents(transformedStudents);
@@ -828,7 +833,10 @@ export default function CertificatesPage() {
               <div className="border rounded-lg max-h-60 overflow-y-auto">
                 {students.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">
-                    Tidak ada data siswa
+                    <div className="mb-2">Tidak ada siswa yang memiliki kelas</div>
+                    <div className="text-xs text-gray-400">
+                      Siswa harus terdaftar di kelas untuk dapat membuat sertifikat
+                    </div>
                   </div>
                 ) : (
                   students
@@ -856,6 +864,11 @@ export default function CertificatesPage() {
                           <div className="text-sm text-gray-500">
                             {student.studentNumber} • {student.course.name}
                           </div>
+                          {student.classCount && student.classCount > 0 && (
+                            <div className="text-xs text-green-600">
+                              ✓ {student.classCount} kelas • Guru: {student.teachers?.join(', ') || 'Tidak ada'}
+                            </div>
+                          )}
                         </label>
                       </div>
                     ))
