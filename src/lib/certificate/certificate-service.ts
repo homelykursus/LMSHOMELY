@@ -106,11 +106,24 @@ export class CertificateService {
       // Get teacher name (from first class or default)
       const teacherName = student.classes[0]?.class?.teacher?.name || 'Instruktur';
 
+      // Calculate course duration: duration * 90 minutes converted to hours
+      const calculateCourseDurationInHours = (duration: number): string => {
+        const totalMinutes = duration * 90;
+        const hours = totalMinutes / 60;
+        
+        // Format to show decimal if needed, otherwise show whole number
+        if (hours % 1 === 0) {
+          return `${hours} Jam`;
+        } else {
+          return `${hours.toFixed(1)} Jam`;
+        }
+      };
+
       const certificateData: WordTemplateData = {
         student_name: student.name,
         student_id: student.studentNumber,
         course_name: student.course.name,
-        course_duration: `${student.course.duration} Jam`,
+        course_duration: calculateCourseDurationInHours(student.course.duration),
         teacher_name: teacherName,
         certificate_number: certificateNumber,
         certificate_date: certificateDate,
@@ -126,7 +139,7 @@ export class CertificateService {
         };
       }
 
-      const templateBuffer = template.templateData;
+      const templateBuffer = Buffer.from(template.templateData);
 
       // Process Word template
       const processedWordBuffer = await WordProcessor.processTemplate(
@@ -151,7 +164,7 @@ export class CertificateService {
 
       // Save certificate to database and file system
       // Determine correct file extension based on content
-      const pdfHeader = pdfBuffer.slice(0, 4).toString();
+      const pdfHeader = pdfBuffer.subarray(0, 4).toString();
       const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
       
       const certificateId = await this.saveCertificate({
@@ -174,8 +187,7 @@ export class CertificateService {
         success: true,
         certificateId,
         filePath: `certificates/${certificateId}.${fileExtension}`,
-        fileSize: pdfValidation.fileSize,
-        fileType: fileExtension
+        fileSize: pdfValidation.fileSize
       };
 
     } catch (error: any) {
