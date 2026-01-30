@@ -19,7 +19,7 @@ export interface WordTemplateData {
   certificate_number: string;
   certificate_date: string;
   certificate_month_year?: string; // Roman numeral format
-  student_photo?: Buffer; // Image buffer for embedding
+  student_photo?: Buffer | string; // Image buffer for embedding or text fallback
 }
 
 export interface TemplateValidationResult {
@@ -82,57 +82,104 @@ export class WordProcessor {
       // Load the docx file as binary content
       const zip = new PizZip(templateBuffer);
       
-      // Configure image module for photo embedding
-      const imageModule = new ImageModule({
-        centered: false,
-        getImage: (tagValue: any) => {
-          // tagValue should be a Buffer containing the image data
-          return tagValue;
-        },
-        getSize: () => {
-          // Return standard certificate photo size
-          return [150, 200]; // width, height in pixels
-        }
-      });
-      
-      // Create docxtemplater instance with image module
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
-        delimiters: {
-          start: '{{',
-          end: '}}'
-        },
-        modules: [imageModule]
-      });
-
-      // Set template data using new API
-      try {
-        doc.render(data);
-      } catch (error: any) {
-        // Handle template rendering errors
-        if (error.properties && error.properties.errors instanceof Array) {
-          const errorMessages = error.properties.errors.map((err: any) => {
-            return `${err.name}: ${err.message} at ${err.properties?.id || 'unknown location'}`;
-          }).join(', ');
-          throw new Error(`Template rendering failed: ${errorMessages}`);
-        }
-        throw new Error(`Template rendering failed: ${error.message}`);
-      }
-
-      // Generate the processed document buffer
-      const buffer = doc.getZip().generate({
-        type: 'nodebuffer',
-        compression: 'DEFLATE',
-        compressionOptions: {
-          level: 6
-        }
-      });
-
-      return buffer;
+      // For now, always use text-only processing to prevent file corruption
+      // Image embedding will be re-enabled once we resolve compatibility issues
+      return await this.processTemplateTextOnly(zip, data);
     } catch (error: any) {
       throw new Error(`Word processing failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Process template with image module
+   */
+  private static async processTemplateWithImage(
+    zip: PizZip,
+    data: WordTemplateData
+  ): Promise<Buffer> {
+    // Configure image module for photo embedding
+    const imageModule = new ImageModule({
+      centered: false,
+      getImage: (tagValue: any) => {
+        // tagValue should be a Buffer containing the image data
+        return tagValue;
+      },
+      getSize: () => {
+        // Return standard certificate photo size
+        return [150, 200]; // width, height in pixels
+      }
+    });
+    
+    // Create docxtemplater instance with image module
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+      delimiters: {
+        start: '{{',
+        end: '}}'
+      },
+      modules: [imageModule]
+    });
+
+    // Set template data
+    doc.render(data);
+
+    // Generate the processed document buffer
+    return doc.getZip().generate({
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+      compressionOptions: {
+        level: 6
+      }
+    });
+  }
+
+  /**
+   * Process template without image module (text only)
+   */
+  private static async processTemplateTextOnly(
+    zip: PizZip,
+    data: WordTemplateData
+  ): Promise<Buffer> {
+    // Create docxtemplater instance without image module
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+      delimiters: {
+        start: '{{',
+        end: '}}'
+      }
+    });
+
+    // Remove photo placeholder or replace with text
+    const processedData = { ...data };
+    if (processedData.student_photo) {
+      // Replace photo with placeholder text
+      processedData.student_photo = '[Foto Siswa]' as any;
+    }
+
+    // Set template data
+    try {
+      doc.render(processedData);
+    } catch (error: any) {
+      // Handle template rendering errors
+      if (error.properties && error.properties.errors instanceof Array) {
+        const errorMessages = error.properties.errors.map((err: any) => {
+          return `${err.name}: ${err.message} at ${err.properties?.id || 'unknown location'}`;
+        }).join(', ');
+        throw new Error(`Template rendering failed: ${errorMessages}`);
+      }
+      throw new Error(`Template rendering failed: ${error.message}`);
+    }
+
+    // Generate the processed document buffer
+    return doc.getZip().generate({
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+      compressionOptions: {
+        level: 6
+      }
+    });
   }
 
   /**

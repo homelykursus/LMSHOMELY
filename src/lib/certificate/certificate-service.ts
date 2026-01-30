@@ -120,14 +120,19 @@ export class CertificateService {
       };
 
       // Process student photo for embedding
-      let processedPhoto: Buffer | undefined;
+      let processedPhoto: Buffer | string | undefined;
       if (student.photo) {
         try {
-          processedPhoto = await WordProcessor.processStudentPhoto(student.photo);
+          // For now, use text placeholder instead of image embedding
+          // This prevents file corruption while we debug image module issues
+          processedPhoto = '[Foto Siswa Tersedia]';
+          console.log(`Photo placeholder added for student ${student.name}`);
         } catch (error: any) {
           console.warn(`Failed to process photo for student ${student.name}: ${error.message}`);
-          // Continue without photo
+          processedPhoto = '[Foto Tidak Tersedia]';
         }
+      } else {
+        processedPhoto = '[Foto Tidak Tersedia]';
       }
 
       const certificateData: WordTemplateData = {
