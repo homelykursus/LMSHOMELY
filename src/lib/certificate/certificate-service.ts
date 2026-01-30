@@ -99,7 +99,7 @@ export class CertificateService {
       }
 
       // Prepare certificate data
-      const certificateNumber = WordProcessor.generateCertificateNumber();
+      const certificateNumber = WordProcessor.generateCertificateNumber(student.studentNumber);
       const certificateDate = WordProcessor.formatCertificateDate();
       const certificateMonthYear = WordProcessor.formatMonthYearRoman();
 
@@ -254,8 +254,8 @@ export class CertificateService {
   /**
    * Generate certificate number
    */
-  static generateCertificateNumber(): string {
-    return WordProcessor.generateCertificateNumber();
+  static generateCertificateNumber(studentId?: string): string {
+    return WordProcessor.generateCertificateNumber(studentId);
   }
 
   /**

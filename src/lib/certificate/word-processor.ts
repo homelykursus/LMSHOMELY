@@ -197,14 +197,19 @@ export class WordProcessor {
   }
 
   /**
-   * Generate certificate number in format: CERT-YYYYMM-RANDOM
+   * Generate certificate number in format: CERT-YYYYMM-STUDENT_ID
    */
-  static generateCertificateNumber(): string {
+  static generateCertificateNumber(studentId?: string): string {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     
+    if (studentId) {
+      return `CERT-${year}${month}-${studentId}`;
+    }
+    
+    // Fallback to random if no student ID provided
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `CERT-${year}${month}-${random}`;
   }
 
