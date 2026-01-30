@@ -45,6 +45,19 @@ export interface CertificateGenerationResult {
   generationMethod?: 'html-pdf' | 'word-docx';
 }
 
+export interface BatchCertificateGenerationResult {
+  success: boolean;
+  batchId?: string;
+  filePath?: string;
+  downloadUrl?: string;
+  fileSize?: number;
+  certificateCount?: number;
+  certificateIds?: string[];
+  errors?: string[];
+  warnings?: string[];
+  generationMethod?: 'html-pdf' | 'word-docx';
+}
+
 export class CertificateService {
   /**
    * Generate certificate from Word template
@@ -390,18 +403,206 @@ export class CertificateService {
   }
 
   /**
-   * Get active templates
+   * Generate multiple certificates in one document (batch generation)
    */
-  static async getActiveTemplates(courseId?: string) {
-    return await prisma.certificateTemplate.findMany({
-      where: {
-        isActive: true,
-        ...(courseId && { courseId })
-      },
-      include: {
-        course: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  static async generateBatchCertificates(
+    templateId: string,
+    studentIds: string[],
+    generatedBy: string,
+    options: PDFGenerationOptions = {}
+  ): Promise<BatchCertificateGenerationResult> {
+    try {
+      if (studentIds.length === 0) {
+        return {
+          success: false,
+          errors: ['No students provided for batch generation']
+        };
+      }
+
+      console.log(`🔄 Starting batch certificate generation for ${studentIds.length} students`);
+
+      // Get template from database
+      const template = await prisma.certificateTemplate.findUnique({
+        where: { id: templateId },
+        include: { course: true }
+      });
+
+      if (!template) {
+        return {
+          success: false,
+          errors: ['Template not found']
+        };
+      }
+
+      if (!template.isActive) {
+        return {
+          success: false,
+          errors: ['Template is not active']
+        };
+      }
+
+      if (!template.templateData) {
+        return {
+          success: false,
+          errors: ['Template data not found in database']
+        };
+      }
+
+      // Get all students data
+      const students = await prisma.student.findMany({
+        where: { 
+          id: { in: studentIds }
+        },
+        include: { 
+          course: true,
+          classes: {
+            include: {
+              class: {
+                include: {
+                  teacher: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (students.length === 0) {
+        return {
+          success: false,
+          errors: ['No valid students found']
+        };
+      }
+
+      console.log(`✅ Found ${students.length} students for batch generation`);
+
+      // Prepare certificate data for all students
+      const certificateDataArray: WordTemplateData[] = [];
+      const certificateNumbers: string[] = [];
+      
+      const certificateDate = WordProcessor.formatCertificateDate();
+      const certificateMonthYear = WordProcessor.formatMonthYearRoman();
+
+      // Calculate course duration helper
+      const calculateCourseDurationInHours = (duration: number): string => {
+        const totalMinutes = duration * 90;
+        const hours = totalMinutes / 60;
+        
+        if (hours % 1 === 0) {
+          return `${hours} Jam`;
+        } else {
+          return `${hours.toFixed(1)} Jam`;
+        }
+      };
+
+      for (const student of students) {
+        const certificateNumber = WordProcessor.generateCertificateNumber(student.studentNumber);
+        const teacherName = student.classes[0]?.class?.teacher?.name || 'Instruktur';
+        
+        // Process student photo (text placeholder for now)
+        let processedPhoto: Buffer | string | undefined;
+        if (student.photo) {
+          processedPhoto = '[Foto Siswa Tersedia]';
+        } else {
+          processedPhoto = '[Foto Tidak Tersedia]';
+        }
+
+        const certificateData: WordTemplateData = {
+          student_name: student.name,
+          student_id: student.studentNumber,
+          course_name: student.course.name,
+          course_duration: calculateCourseDurationInHours(student.course.duration),
+          teacher_name: teacherName,
+          certificate_number: certificateNumber,
+          certificate_date: certificateDate,
+          certificate_month_year: certificateMonthYear,
+          student_photo: processedPhoto
+        };
+
+        certificateDataArray.push(certificateData);
+        certificateNumbers.push(certificateNumber);
+      }
+
+      console.log(`📄 Processing ${certificateDataArray.length} certificates into one document`);
+
+      // Load template buffer
+      const templateBuffer = Buffer.from(template.templateData);
+
+      // Combine all certificates into one Word document
+      const combinedWordBuffer = await WordProcessor.combineWordDocuments(
+        templateBuffer,
+        certificateDataArray
+      );
+
+      // Convert to PDF (currently returns DOCX)
+      const pdfBuffer = await PDFGenerator.convertWordToPDF(
+        combinedWordBuffer,
+        options
+      );
+
+      // Validate PDF
+      const pdfValidation = await PDFGenerator.validatePDF(pdfBuffer);
+      if (!pdfValidation.isValid) {
+        return {
+          success: false,
+          errors: pdfValidation.errors
+        };
+      }
+
+      // Determine file extension
+      const pdfHeader = pdfBuffer.subarray(0, 4).toString();
+      const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
+
+      // Generate batch filename
+      const batchId = `BATCH-${Date.now()}`;
+      const fileName = `${batchId}-${students.length}certificates.${fileExtension}`;
+
+      // Save individual certificate records to database
+      const certificateIds: string[] = [];
+      
+      for (let i = 0; i < students.length; i++) {
+        const student = students[i];
+        const certificateNumber = certificateNumbers[i];
+        const teacherName = student.classes[0]?.class?.teacher?.name || 'Instruktur';
+
+        const certificateId = await this.saveCertificate({
+          templateId,
+          studentId: student.id,
+          teacherId: student.classes[0]?.class?.teacher?.id,
+          courseId: student.courseId,
+          certificateNumber,
+          courseName: student.course.name,
+          studentName: student.name,
+          teacherName,
+          courseDuration: calculateCourseDurationInHours(student.course.duration),
+          generatedBy,
+          pdfBuffer, // Same combined file for all
+          fileSize: pdfValidation.fileSize,
+          fileExtension
+        });
+
+        certificateIds.push(certificateId);
+      }
+
+      console.log(`✅ Batch certificate generation completed successfully`);
+      console.log(`📊 Generated ${students.length} certificates in one ${fileExtension.toUpperCase()} file`);
+
+      return {
+        success: true,
+        batchId,
+        filePath: `certificates/${fileName}`,
+        fileSize: pdfValidation.fileSize,
+        certificateCount: students.length,
+        certificateIds,
+        generationMethod: 'word-docx'
+      };
+
+    } catch (error: any) {
+      console.error('Batch certificate generation failed:', error);
+      return {
+        success: false,
+        errors: [`Batch certificate generation failed: ${error.message}`]
+      };
+    }
   }
 }

@@ -91,6 +91,85 @@ export class WordProcessor {
   }
 
   /**
+   * Combine multiple Word documents into one document with multiple pages
+   */
+  static async combineWordDocuments(
+    templateBuffer: Buffer,
+    dataArray: WordTemplateData[]
+  ): Promise<Buffer> {
+    try {
+      if (dataArray.length === 0) {
+        throw new Error('No certificate data provided');
+      }
+
+      console.log(`Combining ${dataArray.length} certificates into one document`);
+
+      // Process first certificate
+      const firstCertificateBuffer = await this.processTemplate(templateBuffer, dataArray[0]);
+      
+      if (dataArray.length === 1) {
+        return firstCertificateBuffer;
+      }
+
+      // Load the first processed document
+      const combinedZip = new PizZip(firstCertificateBuffer);
+      let combinedDocumentXml = combinedZip.files['word/document.xml']?.asText();
+      
+      if (!combinedDocumentXml) {
+        throw new Error('Failed to read document XML from first certificate');
+      }
+
+      // Process remaining certificates and combine them
+      for (let i = 1; i < dataArray.length; i++) {
+        console.log(`Processing certificate ${i + 1} of ${dataArray.length}`);
+        
+        // Process the next certificate
+        const nextCertificateBuffer = await this.processTemplate(templateBuffer, dataArray[i]);
+        const nextZip = new PizZip(nextCertificateBuffer);
+        const nextDocumentXml = nextZip.files['word/document.xml']?.asText();
+        
+        if (!nextDocumentXml) {
+          console.warn(`Failed to read document XML from certificate ${i + 1}, skipping`);
+          continue;
+        }
+
+        // Extract the body content from the next document
+        const bodyMatch = nextDocumentXml.match(/<w:body[^>]*>(.*?)<\/w:body>/s);
+        if (bodyMatch && bodyMatch[1]) {
+          const nextBodyContent = bodyMatch[1];
+          
+          // Add page break before the next certificate
+          const pageBreak = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+          
+          // Insert the next certificate content before the closing body tag
+          combinedDocumentXml = combinedDocumentXml.replace(
+            '</w:body>',
+            `${pageBreak}${nextBodyContent}</w:body>`
+          );
+        }
+      }
+
+      // Update the combined document XML
+      combinedZip.file('word/document.xml', combinedDocumentXml);
+
+      // Generate the combined document buffer
+      const combinedBuffer = combinedZip.generate({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: {
+          level: 6
+        }
+      });
+
+      console.log(`✅ Successfully combined ${dataArray.length} certificates into one document`);
+      return combinedBuffer;
+
+    } catch (error: any) {
+      throw new Error(`Failed to combine Word documents: ${error.message}`);
+    }
+  }
+
+  /**
    * Process template with image module
    */
   private static async processTemplateWithImage(

@@ -328,9 +328,9 @@ export default function CertificatesPage() {
           alert(data.error || 'Gagal membuat sertifikat');
         }
       } else {
-        // Batch certificate generation
-        const response = await fetch('/api/certificates/generate', {
-          method: 'PUT',
+        // Batch certificate generation (multiple certificates in one document)
+        const response = await fetch('/api/certificates/batch', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
@@ -344,38 +344,19 @@ export default function CertificatesPage() {
         const data = await response.json();
         
         if (data.success) {
-          const { successful, failed } = data.summary;
-          let message = `Berhasil membuat ${successful} sertifikat`;
-          if (failed > 0) {
-            message += `, ${failed} gagal`;
-          }
-          alert(message);
+          alert(`Berhasil membuat ${data.certificateCount} sertifikat dalam 1 file Word!`);
           
-          // Download all successful certificates
-          if (data.results && data.results.length > 0) {
-            data.results.forEach((result: any, index: number) => {
-              if (result.success && result.downloadUrl) {
-                setTimeout(() => {
-                  const filename = result.downloadUrl.split('/').pop();
-                  const downloadApiUrl = `/api/certificates/download/${filename}`;
-                  
-                  const link = document.createElement('a');
-                  link.href = downloadApiUrl;
-                  link.download = `${result.certificate.certificateNumber}.pdf`;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }, index * 500); // Stagger downloads by 500ms
-              }
-            });
-          }
-          
-          // Show detailed results if there are errors
-          if (data.errors && data.errors.length > 0) {
-            console.log('Generation errors:', data.errors);
+          // Download the combined certificate file
+          if (data.downloadUrl) {
+            const link = document.createElement('a');
+            link.href = data.downloadUrl;
+            link.download = `batch-certificates-${data.certificateCount}students.docx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
           }
         } else {
-          alert(data.error || 'Gagal membuat sertifikat');
+          alert(data.error || 'Gagal membuat sertifikat batch');
         }
       }
 
@@ -807,6 +788,11 @@ export default function CertificatesPage() {
               <p className="text-sm text-blue-700">
                 {selectedTemplate.course?.name || 'Semua Kursus'}
               </p>
+              {selectedStudents.length > 1 && (
+                <p className="text-xs text-blue-600 mt-1">
+                  💡 Tip: Memilih beberapa siswa akan menghasilkan 1 file Word dengan {selectedStudents.length} halaman sertifikat
+                </p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -896,7 +882,10 @@ export default function CertificatesPage() {
                 ) : (
                   <>
                     <Award className="h-4 w-4 mr-2" />
-                    Generate {selectedStudents.length} Sertifikat
+                    {selectedStudents.length === 1 
+                      ? 'Generate 1 Sertifikat' 
+                      : `Generate ${selectedStudents.length} Sertifikat (1 File)`
+                    }
                   </>
                 )}
               </Button>
