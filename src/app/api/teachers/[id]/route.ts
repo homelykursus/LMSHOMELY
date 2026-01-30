@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AuthService } from '@/lib/auth';
+import { CloudinaryService } from '@/lib/cloudinary';
 
 export async function GET(
   request: NextRequest,
@@ -133,7 +134,6 @@ export async function PUT(
       const buffer = Buffer.from(bytes);
 
       // Upload ke Cloudinary
-      const { CloudinaryService } = await import('@/lib/cloudinary');
       const uploadResult = await CloudinaryService.uploadTeacherPhoto(
         buffer,
         params.id,

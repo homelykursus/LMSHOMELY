@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AuthService } from '@/lib/auth';
+import { CloudinaryService } from '@/lib/cloudinary';
 
 export async function GET() {
   try {
@@ -106,9 +107,6 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(bytes);
 
       // Upload ke Cloudinary
-      const { CloudinaryService } = await import('@/lib/cloudinary');
-      
-      // Generate temporary teacher ID for Cloudinary upload
       const tempTeacherId = `temp_${Date.now()}`;
       
       const uploadResult = await CloudinaryService.uploadTeacherPhoto(
@@ -160,8 +158,6 @@ export async function POST(request: NextRequest) {
     // If we uploaded a photo with temporary ID, update it with the real teacher ID
     if (photo && photo.size > 0 && photoUrl) {
       try {
-        const { CloudinaryService } = await import('@/lib/cloudinary');
-        
         // Upload again with the correct teacher ID
         const bytes = await photo.arrayBuffer();
         const buffer = Buffer.from(bytes);
