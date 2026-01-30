@@ -54,47 +54,53 @@ export class PDFGenerator {
     let docxPdf: any;
     
     try {
-      docxPdf = require('docx-pdf');
+      const docxPdfModule = await import('docx-pdf');
+      docxPdf = docxPdfModule.default || docxPdfModule;
     } catch (error) {
       throw new Error('docx-pdf library not available');
     }
 
-    return new Promise((resolve, reject) => {
-      // Create temporary file paths (cross-platform)
-      const os = require('os');
-      const path = require('path');
-      const tempDir = os.tmpdir();
-      const inputPath = path.join(tempDir, `input-${Date.now()}.docx`);
-      const outputPath = path.join(tempDir, `output-${Date.now()}.pdf`);
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Create temporary file paths (cross-platform)
+        const os = await import('os');
+        const path = await import('path');
+        const fs = await import('fs');
+        
+        const tempDir = os.tmpdir();
+        const inputPath = path.default.join(tempDir, `input-${Date.now()}.docx`);
+        const outputPath = path.default.join(tempDir, `output-${Date.now()}.pdf`);
 
-      // Write Word buffer to temporary file
-      const fs = require('fs');
-      fs.writeFileSync(inputPath, wordBuffer);
+        // Write Word buffer to temporary file
+        fs.writeFileSync(inputPath, wordBuffer);
 
-      // Convert to PDF
-      docxPdf(inputPath, outputPath, (err: any, result: any) => {
-        try {
-          if (err) {
-            reject(new Error(`docx-pdf conversion error: ${err.message}`));
-            return;
-          }
-
-          // Read the generated PDF
-          const pdfBuffer = fs.readFileSync(outputPath);
-
-          // Clean up temporary files
+        // Convert to PDF
+        docxPdf(inputPath, outputPath, (err: any, result: any) => {
           try {
-            fs.unlinkSync(inputPath);
-            fs.unlinkSync(outputPath);
-          } catch (cleanupError) {
-            console.warn('Failed to clean up temporary files:', cleanupError);
-          }
+            if (err) {
+              reject(new Error(`docx-pdf conversion error: ${err.message}`));
+              return;
+            }
 
-          resolve(pdfBuffer);
-        } catch (processError) {
-          reject(new Error(`PDF processing error: ${processError}`));
-        }
-      });
+            // Read the generated PDF
+            const pdfBuffer = fs.readFileSync(outputPath);
+
+            // Clean up temporary files
+            try {
+              fs.unlinkSync(inputPath);
+              fs.unlinkSync(outputPath);
+            } catch (cleanupError) {
+              console.warn('Failed to clean up temporary files:', cleanupError);
+            }
+
+            resolve(pdfBuffer);
+          } catch (processError) {
+            reject(new Error(`PDF processing error: ${processError}`));
+          }
+        });
+      } catch (importError) {
+        reject(new Error(`Import error: ${importError}`));
+      }
     });
   }
 

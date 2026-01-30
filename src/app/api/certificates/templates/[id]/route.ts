@@ -125,10 +125,10 @@ export async function PUT(
       await writeFile(filePath, buffer);
 
       // Delete old file
-      const fs = require('fs');
+      const { existsSync, unlinkSync } = await import('fs');
       const oldFilePath = path.join(process.cwd(), existingTemplate.filePath);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
+      if (existsSync(oldFilePath)) {
+        unlinkSync(oldFilePath);
       }
 
       // Update file-related fields
@@ -201,10 +201,10 @@ export async function DELETE(
     }
 
     // Delete file from disk
-    const fs = require('fs');
+    const { existsSync, unlinkSync } = await import('fs');
     const filePath = path.join(process.cwd(), template.filePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
     }
 
     // Delete from database

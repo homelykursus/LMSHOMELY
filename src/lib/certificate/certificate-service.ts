@@ -119,18 +119,17 @@ export class CertificateService {
       };
 
       // Load template file
-      const fs = require('fs');
-      const path = require('path');
+      const { existsSync, readFileSync } = await import('fs');
       const templatePath = path.join(process.cwd(), template.filePath);
       
-      if (!fs.existsSync(templatePath)) {
+      if (!existsSync(templatePath)) {
         return {
           success: false,
           errors: ['Template file not found on disk']
         };
       }
 
-      const templateBuffer = fs.readFileSync(templatePath);
+      const templateBuffer = readFileSync(templatePath);
 
       // Process Word template
       const processedWordBuffer = await WordProcessor.processTemplate(
@@ -209,8 +208,8 @@ export class CertificateService {
     fileSize: number;
     fileExtension: string;
   }): Promise<string> {
-    const fs = require('fs');
-    const path = require('path');
+    const { existsSync, mkdirSync, writeFileSync } = await import('fs');
+    const path = await import('path');
 
     // Create certificate record
     const certificate = await prisma.certificate.create({
@@ -231,14 +230,14 @@ export class CertificateService {
     });
 
     // Save file with correct extension
-    const certificatesDir = path.join(process.cwd(), 'public', 'generated-certificates');
-    if (!fs.existsSync(certificatesDir)) {
-      fs.mkdirSync(certificatesDir, { recursive: true });
+    const certificatesDir = path.default.join(process.cwd(), 'public', 'generated-certificates');
+    if (!existsSync(certificatesDir)) {
+      mkdirSync(certificatesDir, { recursive: true });
     }
 
     const fileName = `${certificate.id}.${data.fileExtension}`;
-    const filePath = path.join(certificatesDir, fileName);
-    fs.writeFileSync(filePath, data.pdfBuffer);
+    const filePath = path.default.join(certificatesDir, fileName);
+    writeFileSync(filePath, data.pdfBuffer);
 
     // Update certificate with file path
     await prisma.certificate.update({

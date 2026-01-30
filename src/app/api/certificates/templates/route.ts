@@ -179,10 +179,10 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete file from disk
-    const fs = require('fs');
+    const { existsSync, unlinkSync } = await import('fs');
     const filePath = path.join(process.cwd(), template.filePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
     }
 
     // Delete from database
