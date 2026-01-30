@@ -7,6 +7,7 @@
 
 import { WordProcessor, WordTemplateData } from './word-processor';
 import { PDFGenerator, PDFGenerationOptions } from './pdf-generator';
+import { HTMLCertificateGenerator, HTMLCertificateData } from './html-certificate-generator';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -41,6 +42,7 @@ export interface CertificateGenerationResult {
   fileSize?: number;
   errors?: string[];
   warnings?: string[];
+  generationMethod?: 'html-pdf' | 'word-docx';
 }
 
 export class CertificateService {
@@ -119,18 +121,76 @@ export class CertificateService {
         }
       };
 
-      // Process student photo for embedding
-      let processedPhoto: Buffer | string | undefined;
+      // Try HTML-PDF generation first (with photo support)
       if (student.photo) {
         try {
-          // For now, use text placeholder instead of image embedding
-          // This prevents file corruption while we debug image module issues
-          processedPhoto = '[Foto Siswa Tersedia]';
-          console.log(`Photo placeholder added for student ${student.name}`);
-        } catch (error: any) {
-          console.warn(`Failed to process photo for student ${student.name}: ${error.message}`);
-          processedPhoto = '[Foto Tidak Tersedia]';
+          console.log(`Attempting HTML-PDF generation with photo for student ${student.name}`);
+          
+          // Process student photo for HTML embedding
+          const processedPhoto = await HTMLCertificateGenerator.processPhotoForHTML(student.photo);
+          
+          const htmlCertificateData: HTMLCertificateData = {
+            student_name: student.name,
+            student_id: student.studentNumber,
+            course_name: student.course.name,
+            course_duration: calculateCourseDurationInHours(student.course.duration),
+            teacher_name: teacherName,
+            certificate_number: certificateNumber,
+            certificate_date: certificateDate,
+            certificate_month_year: certificateMonthYear,
+            student_photo: processedPhoto
+          };
+
+          // Generate PDF from HTML
+          const pdfBuffer = await HTMLCertificateGenerator.generatePDFFromHTML(htmlCertificateData);
+          
+          // Validate PDF
+          const pdfValidation = await HTMLCertificateGenerator.validatePDF(pdfBuffer);
+          if (!pdfValidation.isValid) {
+            throw new Error(`PDF validation failed: ${pdfValidation.errors.join(', ')}`);
+          }
+
+          // Save certificate to database
+          const certificateId = await this.saveCertificate({
+            templateId,
+            studentId,
+            teacherId: student.classes[0]?.class?.teacher?.id,
+            courseId: student.courseId,
+            certificateNumber,
+            courseName: student.course.name,
+            studentName: student.name,
+            teacherName,
+            courseDuration: calculateCourseDurationInHours(student.course.duration),
+            generatedBy,
+            pdfBuffer,
+            fileSize: pdfValidation.fileSize,
+            fileExtension: 'pdf'
+          });
+
+          console.log(`✅ HTML-PDF certificate generated successfully for ${student.name}`);
+
+          return {
+            success: true,
+            certificateId,
+            filePath: `certificates/${certificateId}.pdf`,
+            fileSize: pdfValidation.fileSize,
+            generationMethod: 'html-pdf'
+          };
+
+        } catch (htmlError: any) {
+          console.warn(`HTML-PDF generation failed for ${student.name}: ${htmlError.message}`);
+          console.log('Falling back to Word template generation...');
         }
+      }
+
+      // Fallback to Word template generation (existing method)
+      console.log(`Using Word template generation for student ${student.name}`);
+
+      // Process student photo for Word embedding (text placeholder)
+      let processedPhoto: Buffer | string | undefined;
+      if (student.photo) {
+        processedPhoto = '[Foto Siswa Tersedia]';
+        console.log(`Photo placeholder added for student ${student.name}`);
       } else {
         processedPhoto = '[Foto Tidak Tersedia]';
       }
@@ -163,7 +223,7 @@ export class CertificateService {
         certificateData
       );
 
-      // Convert to PDF
+      // Convert to PDF (currently returns DOCX)
       const pdfBuffer = await PDFGenerator.convertWordToPDF(
         processedWordBuffer,
         options
@@ -178,7 +238,6 @@ export class CertificateService {
         };
       }
 
-      // Save certificate to database and file system
       // Determine correct file extension based on content
       const pdfHeader = pdfBuffer.subarray(0, 4).toString();
       const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
@@ -192,18 +251,21 @@ export class CertificateService {
         courseName: student.course.name,
         studentName: student.name,
         teacherName,
-        courseDuration: `${student.course.duration} Jam`,
+        courseDuration: calculateCourseDurationInHours(student.course.duration),
         generatedBy,
         pdfBuffer,
         fileSize: pdfValidation.fileSize,
         fileExtension
       });
 
+      console.log(`✅ Word template certificate generated for ${student.name}`);
+
       return {
         success: true,
         certificateId,
         filePath: `certificates/${certificateId}.${fileExtension}`,
-        fileSize: pdfValidation.fileSize
+        fileSize: pdfValidation.fileSize,
+        generationMethod: 'word-docx'
       };
 
     } catch (error: any) {
