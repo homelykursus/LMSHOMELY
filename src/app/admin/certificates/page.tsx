@@ -295,7 +295,7 @@ export default function CertificatesPage() {
 
     try {
       if (selectedStudents.length === 1) {
-        // Single certificate generation
+        // Single certificate generation - direct file download
         const response = await fetch('/api/certificates/generate', {
           method: 'POST',
           headers: {
@@ -308,27 +308,29 @@ export default function CertificatesPage() {
           })
         });
 
-        const data = await response.json();
-        
-        if (data.success) {
-          alert('Sertifikat berhasil dibuat!');
-          if (data.downloadUrl) {
-            // Extract filename and use download API
-            const filename = data.downloadUrl.split('/').pop();
-            const downloadApiUrl = `/api/certificates/download/${filename}`;
-            
-            const link = document.createElement('a');
-            link.href = downloadApiUrl;
-            link.download = `${data.certificate.certificateNumber}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }
+        if (response.ok) {
+          // Get filename from response headers
+          const contentDisposition = response.headers.get('content-disposition');
+          const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || 'certificate.docx';
+          
+          // Download the file
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
+          alert('Sertifikat berhasil dibuat dan didownload!');
         } else {
-          alert(data.error || 'Gagal membuat sertifikat');
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          alert(errorData.error || 'Gagal membuat sertifikat');
         }
       } else {
-        // Batch certificate generation (multiple certificates in one document)
+        // Batch certificate generation - direct file download
         const response = await fetch('/api/certificates/batch', {
           method: 'POST',
           headers: {
@@ -341,22 +343,26 @@ export default function CertificatesPage() {
           })
         });
 
-        const data = await response.json();
-        
-        if (data.success) {
-          alert(`Berhasil membuat ${data.certificateCount} sertifikat dalam 1 file Word!`);
+        if (response.ok) {
+          // Get filename from response headers
+          const contentDisposition = response.headers.get('content-disposition');
+          const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || `batch-certificates-${selectedStudents.length}students.docx`;
           
-          // Download the combined certificate file
-          if (data.downloadUrl) {
-            const link = document.createElement('a');
-            link.href = data.downloadUrl;
-            link.download = `batch-certificates-${data.certificateCount}students.docx`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }
+          // Download the file
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          
+          alert(`Berhasil membuat ${selectedStudents.length} sertifikat dalam 1 file Word!`);
         } else {
-          alert(data.error || 'Gagal membuat sertifikat batch');
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          alert(errorData.error || 'Gagal membuat sertifikat batch');
         }
       }
 
@@ -389,138 +395,6 @@ export default function CertificatesPage() {
     } catch {
       return [];
     }
-  };
-
-  // Component for Generated Certificates List
-  const GeneratedCertificatesList = () => {
-    const [generatedCerts, setGeneratedCerts] = useState<any[]>([]);
-    const [loadingCerts, setLoadingCerts] = useState(true);
-
-    useEffect(() => {
-      loadGeneratedCertificates();
-    }, []);
-
-    const loadGeneratedCertificates = async () => {
-      try {
-        // For now, we'll fetch from database directly
-        // In a real app, you'd have an API endpoint for this
-        const response = await fetch('/api/certificates/generated');
-        if (response.ok) {
-          const data = await response.json();
-          setGeneratedCerts(data.certificates || []);
-        }
-      } catch (error) {
-        console.error('Failed to load generated certificates:', error);
-      } finally {
-        setLoadingCerts(false);
-      }
-    };
-
-    const handleDownloadCertificate = (cert: any) => {
-      if (cert.downloadUrl) {
-        // Extract filename from download URL
-        const filename = cert.downloadUrl.split('/').pop();
-        const downloadApiUrl = `/api/certificates/download/${filename}`;
-        
-        const link = document.createElement('a');
-        link.href = downloadApiUrl;
-        link.download = `${cert.certificateNumber}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    };
-
-    const handlePreviewCertificate = (cert: any) => {
-      if (cert.downloadUrl) {
-        window.open(cert.downloadUrl, '_blank');
-      }
-    };
-
-    const handleDeleteCertificate = async (cert: any) => {
-      if (!confirm(`Apakah Anda yakin ingin menghapus sertifikat ${cert.certificateNumber}?`)) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/certificates/${cert.id}`, {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          alert('Sertifikat berhasil dihapus');
-          loadGeneratedCertificates(); // Reload the list
-        } else {
-          alert(data.error || 'Gagal menghapus sertifikat');
-        }
-      } catch (error: any) {
-        alert(`Gagal menghapus sertifikat: ${error.message}`);
-      }
-    };
-
-    if (loadingCerts) {
-      return (
-        <div className="flex items-center justify-center p-4">
-          <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Memuat sertifikat...</span>
-        </div>
-      );
-    }
-
-    if (generatedCerts.length === 0) {
-      return (
-        <div className="text-center p-8 text-gray-500">
-          <Award className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <p>Belum ada sertifikat yang dibuat</p>
-          <p className="text-sm">Generate sertifikat pertama Anda menggunakan template di atas</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {generatedCerts.map((cert) => (
-          <div key={cert.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-            <div className="flex-1">
-              <div className="font-medium">{cert.studentName}</div>
-              <div className="text-sm text-gray-500">
-                {cert.certificateNumber} • {cert.courseName}
-              </div>
-              <div className="text-xs text-gray-400">
-                Generated: {new Date(cert.generatedAt).toLocaleDateString('id-ID')}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handlePreviewCertificate(cert)}
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                Preview
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleDownloadCertificate(cert)}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Download
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleDeleteCertificate(cert)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
   };
 
   if (loading) {
@@ -893,62 +767,6 @@ export default function CertificatesPage() {
           </div>
         </div>
       )}
-
-      {/* Generated Certificates List */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-green-600" />
-            Sertifikat yang Sudah Dibuat
-          </CardTitle>
-          <CardDescription>
-            Daftar sertifikat yang sudah di-generate dan siap didownload
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GeneratedCertificatesList />
-        </CardContent>
-      </Card>
-
-      {/* System Status */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            Status Sistem
-          </CardTitle>
-          <CardDescription>
-            Sistem cetak sertifikat Word template sudah aktif
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div>
-                <h4 className="font-medium text-green-900">Word Processing</h4>
-                <p className="text-sm text-green-700">docxtemplater + pizzip</p>
-              </div>
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div>
-                <h4 className="font-medium text-blue-900">Template Management</h4>
-                <p className="text-sm text-blue-700">Upload & validation</p>
-              </div>
-              <CheckCircle className="h-5 w-5 text-blue-600" />
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-              <div>
-                <h4 className="font-medium text-yellow-900">PDF Generation</h4>
-                <p className="text-sm text-yellow-700">In development</p>
-              </div>
-              <Settings className="h-5 w-5 text-yellow-600" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

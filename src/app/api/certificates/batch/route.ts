@@ -49,15 +49,17 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Batch certificate generation completed successfully`);
     console.log(`📊 Generated ${result.certificateCount} certificates in one document`);
 
-    return NextResponse.json({
-      success: true,
-      batchId: result.batchId,
-      filePath: result.filePath,
-      downloadUrl: `/api/certificates/download/${result.filePath?.split('/').pop()}`,
-      fileSize: result.fileSize,
-      certificateCount: result.certificateCount,
-      certificateIds: result.certificateIds,
-      generationMethod: result.generationMethod
+    // Return the combined file directly
+    return new NextResponse(result.fileBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': result.contentType,
+        'Content-Disposition': `attachment; filename="${result.fileName}"`,
+        'Content-Length': result.fileSize?.toString() || '0',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
   } catch (error: any) {

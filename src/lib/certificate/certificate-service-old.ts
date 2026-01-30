@@ -2,7 +2,7 @@
  * Certificate Service - Word Template Implementation
  * 
  * Production-ready certificate generation using Word templates
- * Designed for direct download without database storage
+ * Designed for Vercel serverless environment with format preservation
  */
 
 import { WordProcessor, WordTemplateData } from './word-processor';
@@ -36,13 +36,10 @@ export interface WordCertificateTemplate {
 
 export interface CertificateGenerationResult {
   success: boolean;
-  certificateNumber?: string;
-  studentName?: string;
-  courseName?: string;
-  fileBuffer?: Buffer;
-  fileName?: string;
+  certificateId?: string;
+  filePath?: string;
+  downloadUrl?: string;
   fileSize?: number;
-  contentType?: string;
   errors?: string[];
   warnings?: string[];
   generationMethod?: 'html-pdf' | 'word-docx';
@@ -51,15 +48,11 @@ export interface CertificateGenerationResult {
 export interface BatchCertificateGenerationResult {
   success: boolean;
   batchId?: string;
-  fileName?: string;
-  fileBuffer?: Buffer;
+  filePath?: string;
+  downloadUrl?: string;
   fileSize?: number;
   certificateCount?: number;
-  contentType?: string;
-  certificates?: Array<{
-    studentName: string;
-    certificateNumber: string;
-  }>;
+  certificateIds?: string[];
   errors?: string[];
   warnings?: string[];
   generationMethod?: 'html-pdf' | 'word-docx';
@@ -141,6 +134,76 @@ export class CertificateService {
         }
       };
 
+      // Try HTML-PDF generation first (disabled in serverless for now)
+      // TODO: Re-enable when serverless-compatible PDF solution is implemented
+      const isServerless = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
+      
+      if (student.photo && !isServerless) {
+        try {
+          console.log(`Attempting HTML-PDF generation with photo for student ${student.name}`);
+          
+          // Process student photo for HTML embedding
+          const processedPhoto = await HTMLCertificateGenerator.processPhotoForHTML(student.photo);
+          
+          const htmlCertificateData: HTMLCertificateData = {
+            student_name: student.name,
+            student_id: student.studentNumber,
+            course_name: student.course.name,
+            course_duration: calculateCourseDurationInHours(student.course.duration),
+            teacher_name: teacherName,
+            certificate_number: certificateNumber,
+            certificate_date: certificateDate,
+            certificate_month_year: certificateMonthYear,
+            student_photo: processedPhoto
+          };
+
+          // Generate HTML (PDF generation disabled in serverless)
+          const htmlBuffer = await HTMLCertificateGenerator.generatePDFFromHTML(htmlCertificateData);
+          
+          // Validate HTML
+          const htmlValidation = await HTMLCertificateGenerator.validatePDF(htmlBuffer);
+          if (!htmlValidation.isValid) {
+            throw new Error(`HTML validation failed: ${htmlValidation.errors.join(', ')}`);
+          }
+
+          // Save certificate to database (as HTML for now)
+          const certificateId = await this.saveCertificate({
+            templateId,
+            studentId,
+            teacherId: student.classes[0]?.class?.teacher?.id,
+            courseId: student.courseId,
+            certificateNumber,
+            courseName: student.course.name,
+            studentName: student.name,
+            teacherName,
+            courseDuration: calculateCourseDurationInHours(student.course.duration),
+            generatedBy,
+            pdfBuffer: htmlBuffer,
+            fileSize: htmlValidation.fileSize,
+            fileExtension: 'html'
+          });
+
+          console.log(`✅ HTML certificate generated successfully for ${student.name}`);
+
+          return {
+            success: true,
+            certificateId,
+            filePath: `certificates/${certificateId}.html`,
+            fileSize: htmlValidation.fileSize,
+            generationMethod: 'html-pdf'
+          };
+
+        } catch (htmlError: any) {
+          console.warn(`HTML generation failed for ${student.name}: ${htmlError.message}`);
+          console.log('Falling back to Word template generation...');
+        }
+      } else if (student.photo && isServerless) {
+        console.log(`Serverless environment detected - skipping HTML-PDF generation for ${student.name}`);
+      }
+
+      // Fallback to Word template generation (existing method)
+      console.log(`Using Word template generation for student ${student.name}`);
+
       // Process student photo for Word embedding (text placeholder)
       let processedPhoto: Buffer | string | undefined;
       if (student.photo) {
@@ -193,10 +256,6 @@ export class CertificateService {
         };
       }
 
-      // Determine correct file extension based on content
-      const pdfHeader = pdfBuffer.subarray(0, 4).toString();
-      const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
-
       // Return certificate data directly without saving to database
       console.log(`✅ Word template certificate generated for ${student.name}`);
 
@@ -220,6 +279,40 @@ export class CertificateService {
       };
     }
   }
+
+  /**
+   * Validate Word template
+   */
+  static async validateWordTemplate(templateBuffer: Buffer): Promise<{
+    isValid: boolean;
+    placeholders: string[];
+    errors: string[];
+    warnings: string[];
+  }> {
+    return await WordProcessor.validateTemplate(templateBuffer);
+  }
+
+  /**
+   * Extract placeholders from Word template
+   */
+  static async extractPlaceholders(templateBuffer: Buffer): Promise<string[]> {
+    return await WordProcessor.extractPlaceholders(templateBuffer);
+  }
+
+  /**
+   * Generate certificate number
+   */
+  static generateCertificateNumber(studentId?: string): string {
+    return WordProcessor.generateCertificateNumber(studentId);
+  }
+
+  /**
+   * Format certificate date
+   */
+  static formatCertificateDate(date?: Date): string {
+    return WordProcessor.formatCertificateDate(date);
+  }
+}
 
   /**
    * Generate multiple certificates in one document (batch generation)
@@ -401,38 +494,5 @@ export class CertificateService {
         errors: [`Batch certificate generation failed: ${error.message}`]
       };
     }
-  }
-
-  /**
-   * Validate Word template
-   */
-  static async validateWordTemplate(templateBuffer: Buffer): Promise<{
-    isValid: boolean;
-    placeholders: string[];
-    errors: string[];
-    warnings: string[];
-  }> {
-    return await WordProcessor.validateTemplate(templateBuffer);
-  }
-
-  /**
-   * Extract placeholders from Word template
-   */
-  static async extractPlaceholders(templateBuffer: Buffer): Promise<string[]> {
-    return await WordProcessor.extractPlaceholders(templateBuffer);
-  }
-
-  /**
-   * Generate certificate number
-   */
-  static generateCertificateNumber(studentId?: string): string {
-    return WordProcessor.generateCertificateNumber(studentId);
-  }
-
-  /**
-   * Format certificate date
-   */
-  static formatCertificateDate(date?: Date): string {
-    return WordProcessor.formatCertificateDate(date);
   }
 }

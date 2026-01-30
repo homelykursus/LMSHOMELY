@@ -18,28 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if certificate already exists for this student and template
-    const existingCertificate = await prisma.certificate.findFirst({
-      where: {
-        templateId,
-        studentId
-      }
-    });
-
-    if (existingCertificate) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Certificate already exists for this student and template',
-          existingCertificate: {
-            id: existingCertificate.id,
-            certificateNumber: existingCertificate.certificateNumber,
-            generatedAt: existingCertificate.generatedAt
-          }
-        },
-        { status: 400 }
-      );
-    }
+    console.log(`🔄 Starting certificate generation for student: ${studentId}`);
 
     // Generate certificate
     const result = await CertificateService.generateCertificate(
@@ -56,13 +35,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the generated certificate details
-    const certificate = await CertificateService.getCertificate(result.certificateId!);
+    console.log(`✅ Certificate generated successfully for ${result.studentName}`);
 
-    return NextResponse.json({
-      success: true,
-      certificate,
-      downloadUrl: certificate?.downloadUrl
+    // Return the file directly
+    return new NextResponse(result.fileBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': result.contentType,
+        'Content-Disposition': `attachment; filename="${result.fileName}"`,
+        'Content-Length': result.fileSize?.toString() || '0',
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
   } catch (error: any) {
