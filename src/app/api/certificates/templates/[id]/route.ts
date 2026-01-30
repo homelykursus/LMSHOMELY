@@ -1,158 +1,227 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import fs from 'fs/promises';
+import { PrismaClient } from '@prisma/client';
+import { CertificateService } from '@/lib/certificate/certificate-service';
+import { writeFile } from 'fs/promises';
 import path from 'path';
+
+const prisma = new PrismaClient();
 
 // GET - Get template by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  return withAuth(async (req, user) => {
-    try {
-      const template = await db.certificateTemplate.findUnique({
-        where: { id: params.id },
-        include: {
-          _count: {
-            select: {
-              certificates: true
-            }
+  try {
+    const template = await prisma.certificateTemplate.findUnique({
+      where: { id: params.id },
+      include: {
+        course: {
+          select: {
+            id: true,
+            name: true
           }
         }
-      });
-
-      if (!template) {
-        return NextResponse.json(
-          { error: 'Template tidak ditemukan' },
-          { status: 404 }
-        );
       }
+    });
 
-      return NextResponse.json({
-        ...template,
-        placeholders: JSON.parse(template.placeholders || '[]'),
-        certificateCount: template._count.certificates
-      });
-    } catch (error) {
-      console.error('Error fetching template:', error);
+    if (!template) {
       return NextResponse.json(
-        { error: 'Gagal mengambil data template' },
-        { status: 500 }
+        { success: false, error: 'Template not found' },
+        { status: 404 }
       );
     }
-  })(request);
+
+    return NextResponse.json({
+      success: true,
+      template
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch template:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch template' },
+      { status: 500 }
+    );
+  }
 }
 
-// PUT - Update template metadata
+// PUT - Update template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  return withAuth(async (req, user) => {
-    try {
-      const body = await req.json();
-      const { name, description, category, isActive } = body;
+  try {
+    const formData = await request.formData();
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const courseId = formData.get('courseId') as string;
+    const category = formData.get('category') as string;
+    const isActive = formData.get('isActive') as string;
+    const file = formData.get('file') as File | null;
 
-      // Check if template exists
-      const existingTemplate = await db.certificateTemplate.findUnique({
-        where: { id: params.id }
-      });
+    // Get existing template
+    const existingTemplate = await prisma.certificateTemplate.findUnique({
+      where: { id: params.id }
+    });
 
-      if (!existingTemplate) {
+    if (!existingTemplate) {
+      return NextResponse.json(
+        { success: false, error: 'Template not found' },
+        { status: 404 }
+      );
+    }
+
+    let updateData: any = {};
+
+    // Update basic fields
+    if (name) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (courseId !== undefined) updateData.courseId = courseId || null;
+    if (category) updateData.category = category;
+    if (isActive !== undefined) updateData.isActive = isActive === 'true';
+
+    // Handle file update
+    if (file) {
+      // Validate file type
+      if (!file.name.endsWith('.docx')) {
         return NextResponse.json(
-          { error: 'Template tidak ditemukan' },
-          { status: 404 }
+          { success: false, error: 'Only .docx files are supported' },
+          { status: 400 }
         );
       }
 
-      // Update template
-      const updatedTemplate = await db.certificateTemplate.update({
-        where: { id: params.id },
-        data: {
-          name: name || existingTemplate.name,
-          description: description !== undefined ? description : existingTemplate.description,
-          category: category || existingTemplate.category,
-          isActive: isActive !== undefined ? isActive : existingTemplate.isActive,
-          updatedAt: new Date()
-        }
-      });
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        return NextResponse.json(
+          { success: false, error: 'File size must be less than 10MB' },
+          { status: 400 }
+        );
+      }
 
-      return NextResponse.json({
-        message: 'Template berhasil diperbarui',
-        template: {
-          ...updatedTemplate,
-          placeholders: JSON.parse(updatedTemplate.placeholders || '[]')
-        }
-      });
-    } catch (error) {
-      console.error('Error updating template:', error);
-      return NextResponse.json(
-        { error: 'Gagal memperbarui template' },
-        { status: 500 }
-      );
+      // Convert file to buffer
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      // Validate Word template
+      const validation = await CertificateService.validateWordTemplate(buffer);
+      if (!validation.isValid) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Template validation failed',
+            errors: validation.errors,
+            warnings: validation.warnings
+          },
+          { status: 400 }
+        );
+      }
+
+      // Generate new filename
+      const timestamp = Date.now();
+      const sanitizedName = (name || existingTemplate.name).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      const fileName = `${sanitizedName}_${timestamp}.docx`;
+      const filePath = path.join(process.cwd(), 'public', 'certificate-templates', fileName);
+
+      // Save new file
+      await writeFile(filePath, buffer);
+
+      // Delete old file
+      const fs = require('fs');
+      const oldFilePath = path.join(process.cwd(), existingTemplate.filePath);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+
+      // Update file-related fields
+      updateData.originalFileName = file.name;
+      updateData.filePath = `public/certificate-templates/${fileName}`;
+      updateData.placeholders = JSON.stringify(validation.placeholders);
+      updateData.fileSize = file.size;
+      updateData.updatedAt = new Date();
     }
-  })(request);
+
+    // Update template in database
+    const updatedTemplate = await prisma.certificateTemplate.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        course: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      template: updatedTemplate
+    });
+
+  } catch (error: any) {
+    console.error('Template update failed:', error);
+    return NextResponse.json(
+      { success: false, error: `Template update failed: ${error.message}` },
+      { status: 500 }
+    );
+  }
 }
 
 // DELETE - Delete template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  return withAuth(async (req, user) => {
-    try {
-      // Check if template exists
-      const template = await db.certificateTemplate.findUnique({
-        where: { id: params.id },
-        include: {
-          _count: {
-            select: {
-              certificates: true
-            }
-          }
-        }
-      });
+  try {
+    // Get template to delete file
+    const template = await prisma.certificateTemplate.findUnique({
+      where: { id: params.id }
+    });
 
-      if (!template) {
-        return NextResponse.json(
-          { error: 'Template tidak ditemukan' },
-          { status: 404 }
-        );
-      }
-
-      // Note: Safety check removed - templates can now be deleted even if used
-      // This allows administrators to delete any template as requested
-
-      // Delete file from filesystem
-      const filePath = path.join(process.cwd(), 'public', 'uploads', 'certificates', template.filePath);
-      try {
-        await fs.unlink(filePath);
-        console.log(`Deleted template file: ${filePath}`);
-      } catch (fileError) {
-        console.warn('Warning: Could not delete template file:', fileError);
-        // Continue with database deletion even if file deletion fails
-      }
-
-      // Delete from database
-      await db.certificateTemplate.delete({
-        where: { id: params.id }
-      });
-
-      return NextResponse.json({
-        message: 'Template berhasil dihapus',
-        deletedTemplate: {
-          id: template.id,
-          name: template.name,
-          certificateCount: template._count.certificates
-        }
-      });
-    } catch (error) {
-      console.error('Error deleting template:', error);
+    if (!template) {
       return NextResponse.json(
-        { error: 'Gagal menghapus template' },
-        { status: 500 }
+        { success: false, error: 'Template not found' },
+        { status: 404 }
       );
     }
-  })(request);
+
+    // Check if template is being used
+    const certificateCount = await prisma.certificate.count({
+      where: { templateId: params.id }
+    });
+
+    if (certificateCount > 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Cannot delete template. It is being used by ${certificateCount} certificate(s).` 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Delete file from disk
+    const fs = require('fs');
+    const filePath = path.join(process.cwd(), template.filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    await prisma.certificateTemplate.delete({
+      where: { id: params.id }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Template deleted successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Template deletion failed:', error);
+    return NextResponse.json(
+      { success: false, error: `Template deletion failed: ${error.message}` },
+      { status: 500 }
+    );
+  }
 }

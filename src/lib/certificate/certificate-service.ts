@@ -1,294 +1,89 @@
-import { db } from '@/lib/db';
-import { WordTemplateProcessor, StudentData } from './word-template-processor';
-import { PDFGenerator } from './pdf-generator';
-import { RomanNumeralConverter } from '@/lib/roman-numeral-converter';
-import { ImageProcessor } from './image-processor';
-import fs from 'fs/promises';
-import path from 'path';
+/**
+ * Certificate Service - Word Template Implementation
+ * 
+ * Production-ready certificate generation using Word templates
+ * Designed for Vercel serverless environment with format preservation
+ */
 
-export interface CertificateRequest {
-  templateId: string;
-  studentId: string;
-  additionalData?: Record<string, any>;
+import { WordProcessor, WordTemplateData } from './word-processor';
+import { PDFGenerator, PDFGenerationOptions } from './pdf-generator';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export interface CertificateGenerationData {
+  student_name: string;
+  student_id: string;
+  course_name: string;
+  course_duration: string;
+  teacher_name: string;
+  certificate_number?: string;
+  certificate_date?: string;
+  certificate_month_year?: string;
+  student_photo?: string;
 }
 
-export interface BulkCertificateRequest {
-  templateId: string;
-  studentIds: string[];
-  additionalData?: Record<string, any>;
-}
-
-export interface GenerationResult {
-  certificateId: string;
-  certificateNumber: string;
-  downloadUrl: string;
-  generatedAt: Date;
+export interface WordCertificateTemplate {
+  id: string;
+  name: string;
   filePath: string;
+  placeholders: string[];
+  originalFileName: string;
+  fileSize: number;
+  isActive: boolean;
 }
 
-export interface BulkGenerationResult {
-  totalGenerated: number;
-  successful: GenerationResult[];
-  failed: GenerationError[];
-  zipDownloadUrl?: string;
-}
-
-export interface GenerationError {
-  studentId: string;
-  studentName: string;
-  error: string;
-}
-
-export interface PreviewRequest {
-  templateId: string;
-  studentId: string;
-}
-
-export interface PreviewData {
-  previewUrl: string;
-  studentData: StudentData;
-  templateName: string;
+export interface CertificateGenerationResult {
+  success: boolean;
+  certificateId?: string;
+  filePath?: string;
+  downloadUrl?: string;
+  fileSize?: number;
+  errors?: string[];
+  warnings?: string[];
 }
 
 export class CertificateService {
-  private wordProcessor: WordTemplateProcessor;
-  private pdfGenerator: PDFGenerator;
-  private uploadsDir: string;
-  private certificatesDir: string;
-
-  constructor() {
-    this.wordProcessor = new WordTemplateProcessor();
-    this.pdfGenerator = new PDFGenerator();
-    this.uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
-    this.certificatesDir = path.join(process.cwd(), 'public', 'certificates');
-    
-    // Ensure directories exist
-    this.ensureDirectories();
-  }
-
-  private async ensureDirectories(): Promise<void> {
-    try {
-      await fs.mkdir(this.uploadsDir, { recursive: true });
-      await fs.mkdir(this.certificatesDir, { recursive: true });
-    } catch (error) {
-      console.error('Error creating directories:', error);
-    }
-  }
-
   /**
-   * Generate single certificate
+   * Generate certificate from Word template
    */
-  async generateCertificate(request: CertificateRequest, generatedBy: string): Promise<GenerationResult> {
+  static async generateCertificate(
+    templateId: string,
+    studentId: string,
+    generatedBy: string,
+    options: PDFGenerationOptions = {}
+  ): Promise<CertificateGenerationResult> {
     try {
-      // Get student data first to determine course
-      const student = await db.student.findUnique({
-        where: { id: request.studentId },
-        include: {
-          course: true,
-          classes: {
-            include: {
-              class: {
-                select: {
-                  id: true,
-                  name: true,
-                  totalMeetings: true,
-                  isActive: true,
-                  teacher: {
-                    select: {
-                      id: true,
-                      name: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-
-      if (!student) {
-        throw new Error('Data siswa tidak ditemukan');
-      }
-
-      // Get template - prioritize course-specific template, fallback to general
-      let template = await db.certificateTemplate.findFirst({
-        where: { 
-          id: request.templateId,
-          isActive: true,
-          OR: [
-            { courseId: student.courseId }, // Course-specific
-            { courseId: null } // General template
-          ]
-        }
-      });
-
-      // If no template found with the given ID, try to find any suitable template for this course
-      if (!template) {
-        template = await db.certificateTemplate.findFirst({
-          where: {
-            isActive: true,
-            OR: [
-              { courseId: student.courseId }, // Course-specific first
-              { courseId: null } // General template as fallback
-            ]
-          },
-          orderBy: [
-            { courseId: 'asc' }, // Course-specific templates first
-            { createdAt: 'desc' }
-          ]
-        });
-      }
-
-      if (!template) {
-        throw new Error(`Tidak ada template yang tersedia untuk course "${student.course.name}"`);
-      }
-
-      // Generate certificate number
-      const certificateNumber = WordTemplateProcessor.generateCertificateNumber();
-
-      // Prepare student data for template
-      const studentData = await this.prepareStudentData(student, request.additionalData, certificateNumber);
-
-      // Process template with student data (preserving formatting)
-      const templatePath = path.join(this.uploadsDir, template.filePath);
-      const processedWordBuffer = await this.wordProcessor.populateTemplate(templatePath, studentData);
-
-      // Save processed Word document temporarily
-      const tempWordPath = path.join(this.certificatesDir, `temp_${certificateNumber}.docx`);
-      await fs.writeFile(tempWordPath, processedWordBuffer);
-
-      // Generate PDF from processed Word document
-      const pdfBuffer = await this.pdfGenerator.generateFromWordTemplate(
-        tempWordPath,
-        studentData // This is now mainly for fallback scenarios
-      );
-
-      // Clean up temporary Word file
-      try {
-        await fs.unlink(tempWordPath);
-      } catch (cleanupError) {
-        console.warn('Failed to clean up temporary Word file:', cleanupError);
-      }
-
-      // Save PDF file
-      const pdfFileName = `${certificateNumber}.pdf`;
-      const pdfFilePath = path.join(this.certificatesDir, pdfFileName);
-      await fs.writeFile(pdfFilePath, pdfBuffer);
-
-      // Get teacher info (from first class if available)
-      const firstClass = student.classes[0]?.class;
-      const teacher = firstClass?.teacher;
-
-      // Save certificate record to database
-      const certificate = await db.certificate.create({
-        data: {
-          certificateNumber,
-          templateId: template.id,
-          studentId: request.studentId,
-          teacherId: teacher?.id,
-          courseId: student.courseId,
-          courseName: student.course.name,
-          studentName: student.name,
-          teacherName: teacher?.name,
-          courseDuration: `${student.course.duration} jam`,
-          generatedAt: new Date(),
-          filePath: pdfFileName,
-          downloadUrl: `/certificates/${pdfFileName}`,
-          fileSize: pdfBuffer.length,
-          status: 'generated',
-          generatedBy,
-          metadata: JSON.stringify({
-            templateName: template.name,
-            templateId: template.id,
-            courseSpecific: template.courseId !== null,
-            additionalData: request.additionalData
-          })
-        }
-      });
-
-      return {
-        certificateId: certificate.id,
-        certificateNumber: certificate.certificateNumber,
-        downloadUrl: certificate.downloadUrl || '',
-        generatedAt: certificate.generatedAt,
-        filePath: certificate.filePath
-      };
-    } catch (error) {
-      throw new Error(`Gagal generate sertifikat: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Generate bulk certificates
-   */
-  async generateBulkCertificates(request: BulkCertificateRequest, generatedBy: string): Promise<BulkGenerationResult> {
-    const successful: GenerationResult[] = [];
-    const failed: GenerationError[] = [];
-
-    for (const studentId of request.studentIds) {
-      try {
-        const result = await this.generateCertificate({
-          templateId: request.templateId,
-          studentId,
-          additionalData: request.additionalData
-        }, generatedBy);
-        
-        successful.push(result);
-      } catch (error) {
-        // Get student name for error reporting
-        const student = await db.student.findUnique({
-          where: { id: studentId },
-          select: { name: true }
-        });
-
-        failed.push({
-          studentId,
-          studentName: student?.name || 'Unknown',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
-
-    return {
-      totalGenerated: successful.length,
-      successful,
-      failed
-    };
-  }
-
-  /**
-   * Preview certificate with sample data
-   */
-  async previewCertificate(request: PreviewRequest): Promise<PreviewData> {
-    try {
-      // Get template
-      const template = await db.certificateTemplate.findUnique({
-        where: { id: request.templateId, isActive: true }
+      // Get template from database
+      const template = await prisma.certificateTemplate.findUnique({
+        where: { id: templateId },
+        include: { course: true }
       });
 
       if (!template) {
-        throw new Error('Template tidak ditemukan');
+        return {
+          success: false,
+          errors: ['Template not found']
+        };
+      }
+
+      if (!template.isActive) {
+        return {
+          success: false,
+          errors: ['Template is not active']
+        };
       }
 
       // Get student data
-      const student = await db.student.findUnique({
-        where: { id: request.studentId },
-        include: {
+      const student = await prisma.student.findUnique({
+        where: { id: studentId },
+        include: { 
           course: true,
           classes: {
             include: {
               class: {
-                select: {
-                  id: true,
-                  name: true,
-                  totalMeetings: true,
-                  isActive: true,
-                  teacher: {
-                    select: {
-                      id: true,
-                      name: true
-                    }
-                  }
+                include: {
+                  teacher: true
                 }
               }
             }
@@ -297,65 +92,197 @@ export class CertificateService {
       });
 
       if (!student) {
-        throw new Error('Data siswa tidak ditemukan');
+        return {
+          success: false,
+          errors: ['Student not found']
+        };
       }
 
-      // Generate certificate number for photo processing
-      const certificateNumber = WordTemplateProcessor.generateCertificateNumber();
+      // Prepare certificate data
+      const certificateNumber = WordProcessor.generateCertificateNumber();
+      const certificateDate = WordProcessor.formatCertificateDate();
+      const certificateMonthYear = WordProcessor.formatMonthYearRoman();
 
-      // Prepare student data
-      const studentData = await this.prepareStudentData(student, undefined, certificateNumber);
+      // Get teacher name (from first class or default)
+      const teacherName = student.classes[0]?.class?.teacher?.name || 'Instruktur';
 
-      // Process template with student data (preserving formatting)
-      const templatePath = path.join(this.uploadsDir, template.filePath);
-      const processedWordBuffer = await this.wordProcessor.populateTemplate(templatePath, studentData);
+      const certificateData: WordTemplateData = {
+        student_name: student.name,
+        student_id: student.studentNumber,
+        course_name: student.course.name,
+        course_duration: `${student.course.duration} Jam`,
+        teacher_name: teacherName,
+        certificate_number: certificateNumber,
+        certificate_date: certificateDate,
+        certificate_month_year: certificateMonthYear,
+        student_photo: student.photo || undefined
+      };
 
-      // Save processed Word document temporarily
-      const tempWordPath = path.join(this.certificatesDir, `temp_preview_${Date.now()}.docx`);
-      await fs.writeFile(tempWordPath, processedWordBuffer);
+      // Load template file
+      const fs = require('fs');
+      const path = require('path');
+      const templatePath = path.join(process.cwd(), template.filePath);
+      
+      if (!fs.existsSync(templatePath)) {
+        return {
+          success: false,
+          errors: ['Template file not found on disk']
+        };
+      }
 
-      // Generate preview PDF from processed Word document
-      const previewBuffer = await this.pdfGenerator.generateFromWordTemplate(
-        tempWordPath,
-        studentData
+      const templateBuffer = fs.readFileSync(templatePath);
+
+      // Process Word template
+      const processedWordBuffer = await WordProcessor.processTemplate(
+        templateBuffer,
+        certificateData
       );
 
-      // Clean up temporary Word file
-      try {
-        await fs.unlink(tempWordPath);
-      } catch (cleanupError) {
-        console.warn('Failed to clean up temporary Word file:', cleanupError);
+      // Convert to PDF
+      const pdfBuffer = await PDFGenerator.convertWordToPDF(
+        processedWordBuffer,
+        options
+      );
+
+      // Validate PDF
+      const pdfValidation = await PDFGenerator.validatePDF(pdfBuffer);
+      if (!pdfValidation.isValid) {
+        return {
+          success: false,
+          errors: pdfValidation.errors
+        };
       }
 
-      // Save temporary preview file
-      const previewFileName = `preview_${Date.now()}.pdf`;
-      const previewPath = path.join(this.certificatesDir, previewFileName);
-      await fs.writeFile(previewPath, previewBuffer);
-
-      // Schedule cleanup after 1 hour
-      setTimeout(async () => {
-        try {
-          await fs.unlink(previewPath);
-        } catch (error) {
-          console.error('Error cleaning up preview file:', error);
-        }
-      }, 60 * 60 * 1000);
+      // Save certificate to database and file system
+      const certificateId = await this.saveCertificate({
+        templateId,
+        studentId,
+        teacherId: student.classes[0]?.class?.teacher?.id,
+        courseId: student.courseId,
+        certificateNumber,
+        courseName: student.course.name,
+        studentName: student.name,
+        teacherName,
+        courseDuration: `${student.course.duration} Jam`,
+        generatedBy,
+        pdfBuffer,
+        fileSize: pdfValidation.fileSize
+      });
 
       return {
-        previewUrl: `/certificates/${previewFileName}`,
-        studentData,
-        templateName: template.name
+        success: true,
+        certificateId,
+        filePath: `certificates/${certificateId}.pdf`,
+        fileSize: pdfValidation.fileSize
       };
-    } catch (error) {
-      throw new Error(`Gagal membuat preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+    } catch (error: any) {
+      console.error('Certificate generation failed:', error);
+      return {
+        success: false,
+        errors: [`Certificate generation failed: ${error.message}`]
+      };
     }
+  }
+
+  /**
+   * Save certificate to database and file system
+   */
+  private static async saveCertificate(data: {
+    templateId: string;
+    studentId: string;
+    teacherId?: string;
+    courseId: string;
+    certificateNumber: string;
+    courseName: string;
+    studentName: string;
+    teacherName: string;
+    courseDuration: string;
+    generatedBy: string;
+    pdfBuffer: Buffer;
+    fileSize: number;
+  }): Promise<string> {
+    const fs = require('fs');
+    const path = require('path');
+
+    // Create certificate record
+    const certificate = await prisma.certificate.create({
+      data: {
+        certificateNumber: data.certificateNumber,
+        templateId: data.templateId,
+        studentId: data.studentId,
+        teacherId: data.teacherId,
+        courseId: data.courseId,
+        courseName: data.courseName,
+        studentName: data.studentName,
+        teacherName: data.teacherName,
+        courseDuration: data.courseDuration,
+        filePath: '', // Will be updated after file save
+        fileSize: data.fileSize,
+        generatedBy: data.generatedBy
+      }
+    });
+
+    // Save PDF file
+    const certificatesDir = path.join(process.cwd(), 'public', 'generated-certificates');
+    if (!fs.existsSync(certificatesDir)) {
+      fs.mkdirSync(certificatesDir, { recursive: true });
+    }
+
+    const fileName = `${certificate.id}.pdf`;
+    const filePath = path.join(certificatesDir, fileName);
+    fs.writeFileSync(filePath, data.pdfBuffer);
+
+    // Update certificate with file path
+    await prisma.certificate.update({
+      where: { id: certificate.id },
+      data: {
+        filePath: `public/generated-certificates/${fileName}`,
+        downloadUrl: `/generated-certificates/${fileName}`
+      }
+    });
+
+    return certificate.id;
+  }
+
+  /**
+   * Validate Word template
+   */
+  static async validateWordTemplate(templateBuffer: Buffer): Promise<{
+    isValid: boolean;
+    placeholders: string[];
+    errors: string[];
+    warnings: string[];
+  }> {
+    return await WordProcessor.validateTemplate(templateBuffer);
+  }
+
+  /**
+   * Extract placeholders from Word template
+   */
+  static async extractPlaceholders(templateBuffer: Buffer): Promise<string[]> {
+    return await WordProcessor.extractPlaceholders(templateBuffer);
+  }
+
+  /**
+   * Generate certificate number
+   */
+  static generateCertificateNumber(): string {
+    return WordProcessor.generateCertificateNumber();
+  }
+
+  /**
+   * Format certificate date
+   */
+  static formatCertificateDate(date?: Date): string {
+    return WordProcessor.formatCertificateDate(date);
   }
 
   /**
    * Get certificate by ID
    */
-  async getCertificate(certificateId: string): Promise<any> {
-    const certificate = await db.certificate.findUnique({
+  static async getCertificate(certificateId: string) {
+    return await prisma.certificate.findUnique({
       where: { id: certificateId },
       include: {
         template: true,
@@ -364,106 +291,35 @@ export class CertificateService {
         course: true
       }
     });
-
-    if (!certificate) {
-      throw new Error('Sertifikat tidak ditemukan');
-    }
-
-    return certificate;
   }
 
   /**
-   * List certificates with filters
+   * Get certificates by student
    */
-  async listCertificates(filters?: {
-    templateId?: string;
-    studentId?: string;
-    status?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<any[]> {
-    const where: any = {};
-    
-    if (filters?.templateId) where.templateId = filters.templateId;
-    if (filters?.studentId) where.studentId = filters.studentId;
-    if (filters?.status) where.status = filters.status;
-
-    const certificates = await db.certificate.findMany({
-      where,
+  static async getCertificatesByStudent(studentId: string) {
+    return await prisma.certificate.findMany({
+      where: { studentId },
       include: {
         template: true,
-        student: true,
-        teacher: true,
         course: true
       },
-      orderBy: { generatedAt: 'desc' },
-      take: filters?.limit || 50,
-      skip: filters?.offset || 0
+      orderBy: { generatedAt: 'desc' }
     });
-
-    return certificates;
   }
 
   /**
-   * Prepare student data for template population
+   * Get active templates
    */
-  private async prepareStudentData(student: any, additionalData?: Record<string, any>, certificateNumber?: string): Promise<StudentData> {
-    // Get teacher from first class (if available)
-    const firstClass = student.classes[0]?.class;
-    const teacher = firstClass?.teacher;
-
-    // Format certificate date
-    const certificateDate = new Date().toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+  static async getActiveTemplates(courseId?: string) {
+    return await prisma.certificateTemplate.findMany({
+      where: {
+        isActive: true,
+        ...(courseId && { courseId })
+      },
+      include: {
+        course: true
+      },
+      orderBy: { createdAt: 'desc' }
     });
-
-    // Format certificate month/year in Roman numeral (e.g., "I/2026")
-    const certificateMonthYear = RomanNumeralConverter.getCurrentMonthYearRoman();
-
-    // Calculate course duration based on total meetings * 1.5 hours
-    let courseDurationHours = student.course.duration; // Default fallback
-    
-    // Get total meetings from the student's classes
-    if (student.classes && student.classes.length > 0) {
-      // Use the first active class or any class if no active class
-      const activeClass = student.classes.find(cs => cs.class.isActive);
-      const classToUse = activeClass || student.classes[0];
-      
-      if (classToUse && classToUse.class.totalMeetings) {
-        courseDurationHours = classToUse.class.totalMeetings * 1.5;
-      }
-    }
-
-    // Process student photo for certificate
-    let studentPhotoPath: string | undefined;
-    if (certificateNumber) {
-      try {
-        studentPhotoPath = await ImageProcessor.getPhotoForCertificate(
-          {
-            photo: student.photo,
-            studentNumber: student.studentNumber,
-            name: student.name
-          },
-          certificateNumber
-        );
-      } catch (error) {
-        console.warn('Error processing student photo:', error);
-        studentPhotoPath = undefined;
-      }
-    }
-
-    return {
-      student_name: student.name,
-      student_id: student.studentNumber, // Use studentNumber instead of database ID
-      course_name: student.course.name,
-      teacher_name: teacher?.name || 'Tidak ada guru',
-      course_duration: `${courseDurationHours} jam`,
-      certificate_date: certificateDate,
-      certificate_month_year: certificateMonthYear, // Roman numeral month/year
-      student_photo: studentPhotoPath, // Path to processed student photo
-      ...additionalData
-    };
   }
 }

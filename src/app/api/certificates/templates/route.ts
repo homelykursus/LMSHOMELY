@@ -1,215 +1,205 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { WordTemplateProcessor } from '@/lib/certificate/word-template-processor';
-import formidable from 'formidable';
-import fs from 'fs/promises';
+import { PrismaClient } from '@prisma/client';
+import { CertificateService } from '@/lib/certificate/certificate-service';
+import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import path from 'path';
+
+const prisma = new PrismaClient();
 
 // GET - List all templates
 export async function GET(request: NextRequest) {
-  return withAuth(async (req, user) => {
-    console.log('✅ [TEMPLATE UPLOAD] Authentication passed');
-    console.log('👤 [TEMPLATE UPLOAD] User:', { id: user.id, email: user.email, role: user.role });
-    try {
-      console.log('📁 [TEMPLATE UPLOAD] Creating uploads directory...');
-      const { searchParams } = new URL(req.url);
-      const category = searchParams.get('category');
-      const courseId = searchParams.get('courseId');
-      const isActive = searchParams.get('isActive');
+  try {
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get('courseId');
+    const isActive = searchParams.get('isActive');
 
-      const where: any = {};
-      if (category) where.category = category;
-      if (courseId) where.courseId = courseId;
-      if (isActive !== null) where.isActive = isActive === 'true';
-
-      const templates = await db.certificateTemplate.findMany({
-        where,
-        include: {
-          course: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          _count: {
-            select: {
-              certificates: true
-            }
+    const templates = await prisma.certificateTemplate.findMany({
+      where: {
+        ...(courseId && { courseId }),
+        ...(isActive !== null && { isActive: isActive === 'true' })
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            name: true
           }
-        },
-        orderBy: { createdAt: 'desc' }
-      });
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
-      // Parse placeholders JSON
-      const templatesWithParsedPlaceholders = templates.map(template => ({
-        ...template,
-        placeholders: JSON.parse(template.placeholders || '[]'),
-        certificateCount: template._count.certificates
-      }));
-
-      return NextResponse.json(templatesWithParsedPlaceholders);
-    } catch (error) {
-      console.log('❌ [TEMPLATE UPLOAD] Main error:', error);
-      console.log('❌ [TEMPLATE UPLOAD] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      console.error('Error fetching templates:', error);
-      return NextResponse.json(
-        { error: 'Gagal mengambil data template' },
-        { status: 500 }
-      );
-    }
-  })(request);
+    return NextResponse.json({
+      success: true,
+      templates
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch templates:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch templates' },
+      { status: 500 }
+    );
+  }
 }
 
 // POST - Upload new template
 export async function POST(request: NextRequest) {
-  console.log('🚀 [TEMPLATE UPLOAD] Starting upload process...');
-  console.log('🔍 [TEMPLATE UPLOAD] Request URL:', request.url);
-  console.log('🔍 [TEMPLATE UPLOAD] Request method:', request.method);
-  return withAuth(async (req, user) => {
-    try {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'certificates');
-      await fs.mkdir(uploadsDir, { recursive: true });
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const courseId = formData.get('courseId') as string;
+    const category = formData.get('category') as string || 'course_completion';
+    const createdBy = formData.get('createdBy') as string;
 
-      // Parse form data
-      console.log('📋 [TEMPLATE UPLOAD] Parsing form data...');
-      const formData = await req.formData();
-      console.log('✅ [TEMPLATE UPLOAD] Form data parsed successfully');
-      const file = formData.get('file') as File;
-      console.log('📄 [TEMPLATE UPLOAD] File info:', {
-        name: file?.name,
-        size: file?.size,
-        type: file?.type
-      });
-      const name = formData.get('name') as string;
-      const description = formData.get('description') as string;
-      const category = formData.get('category') as string || 'course_completion';
-      const courseId = formData.get('courseId') as string;
-
-      if (!file) {
-        console.log('❌ [TEMPLATE UPLOAD] No file provided');
-        return NextResponse.json(
-          { error: 'File template harus diupload' },
-          { status: 400 }
-        );
-      }
-
-      if (!name) {
-        console.log('❌ [TEMPLATE UPLOAD] No name provided');
-        return NextResponse.json(
-          { error: 'Nama template harus diisi' },
-          { status: 400 }
-        );
-      }
-
-      // Validate file type
-      const allowedTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
-      console.log('🔍 [TEMPLATE UPLOAD] Validating file type:', file.type);
-      if (!allowedTypes.includes(file.type)) {
-        console.log('❌ [TEMPLATE UPLOAD] Invalid file type:', file.type);
-        return NextResponse.json(
-          { error: 'Format file tidak didukung. Hanya mendukung .docx dan .doc' },
-          { status: 400 }
-        );
-      }
-
-      // Validate file size (max 10MB)
-      console.log('📏 [TEMPLATE UPLOAD] Validating file size:', file.size);
-      if (file.size > 10 * 1024 * 1024) {
-        console.log('❌ [TEMPLATE UPLOAD] File too large:', file.size);
-        return NextResponse.json(
-          { error: 'Ukuran file maksimal 10MB' },
-          { status: 400 }
-        );
-      }
-
-      // Generate unique filename
-      const fileExt = path.extname(file.name);
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}${fileExt}`;
-      const filePath = path.join(uploadsDir, fileName);
-
-      // Save file
-      console.log('🔄 [TEMPLATE UPLOAD] Converting file to buffer...');
-      const buffer = Buffer.from(await file.arrayBuffer());
-      console.log('✅ [TEMPLATE UPLOAD] Buffer created, size:', buffer.length);
-      console.log('💾 [TEMPLATE UPLOAD] Saving file to:', filePath);
-      await fs.writeFile(filePath, buffer);
-      console.log('✅ [TEMPLATE UPLOAD] File saved successfully');
-
-      try {
-        // Process template
-        console.log('🔧 [TEMPLATE UPLOAD] Creating template processor...');
-      const processor = new WordTemplateProcessor();
-      console.log('✅ [TEMPLATE UPLOAD] Processor created');
-        console.log('📖 [TEMPLATE UPLOAD] Parsing template...');
-      const templateData = await processor.parseTemplate(filePath);
-      console.log('✅ [TEMPLATE UPLOAD] Template parsed:', {
-        placeholders: templateData.placeholders.length,
-        fileSize: templateData.metadata.fileSize
-      });
-        
-        // Validate template
-        console.log('🔍 [TEMPLATE UPLOAD] Validating template...');
-      const validation = await processor.validateTemplate(templateData);
-      console.log('📋 [TEMPLATE UPLOAD] Validation result:', {
-        isValid: validation.isValid,
-        errors: validation.errors,
-        warnings: validation.warnings
-      });
-        if (!validation.isValid) {
-        console.log('❌ [TEMPLATE UPLOAD] Template validation failed');
-          // Delete uploaded file if validation fails
-          await fs.unlink(filePath);
-          return NextResponse.json(
-            { 
-              error: 'Template tidak valid', 
-              details: validation.errors 
-            },
-            { status: 400 }
-          );
-        }
-
-        // Save template to database
-        console.log('💾 [TEMPLATE UPLOAD] Saving to database...');
-      const template = await db.certificateTemplate.create({
-          data: {
-            name,
-            description,
-            category,
-            courseId: courseId || null,
-            originalFileName: file.name,
-            filePath: fileName,
-            placeholders: JSON.stringify(templateData.placeholders),
-            fileSize: file.size,
-            fileType: templateData.metadata.fileType,
-            createdBy: user.id,
-            isActive: true
-          }
-        });
-
-        console.log('✅ [TEMPLATE UPLOAD] Template saved successfully');
-      return NextResponse.json({
-          message: 'Template berhasil diupload',
-          template: {
-            ...template,
-            placeholders: templateData.placeholders,
-            validation: validation.warnings.length > 0 ? { warnings: validation.warnings } : null
-          }
-        });
-
-      } catch (processingError) {
-        console.log('❌ [TEMPLATE UPLOAD] Processing error:', processingError);
-        // Delete uploaded file if processing fails
-        await fs.unlink(filePath);
-        throw processingError;
-      }
-
-    } catch (error) {
-      console.error('Error uploading template:', error);
+    // Validate required fields
+    if (!file || !name || !createdBy) {
       return NextResponse.json(
-        { error: 'Gagal mengupload template' },
-        { status: 500 }
+        { success: false, error: 'Missing required fields: file, name, createdBy' },
+        { status: 400 }
       );
     }
-  })(request);
+
+    // Validate file type
+    if (!file.name.endsWith('.docx')) {
+      return NextResponse.json(
+        { success: false, error: 'Only .docx files are supported' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { success: false, error: 'File size must be less than 10MB' },
+        { status: 400 }
+      );
+    }
+
+    // Convert file to buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Validate Word template
+    const validation = await CertificateService.validateWordTemplate(buffer);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Template validation failed',
+          errors: validation.errors,
+          warnings: validation.warnings
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create templates directory if it doesn't exist
+    const templatesDir = path.join(process.cwd(), 'public', 'certificate-templates');
+    if (!existsSync(templatesDir)) {
+      await mkdir(templatesDir, { recursive: true });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const fileName = `${sanitizedName}_${timestamp}.docx`;
+    const filePath = path.join(templatesDir, fileName);
+
+    // Save file to disk
+    await writeFile(filePath, buffer);
+
+    // Save template to database
+    const template = await prisma.certificateTemplate.create({
+      data: {
+        name,
+        description,
+        category,
+        courseId: courseId || null,
+        originalFileName: file.name,
+        filePath: `public/certificate-templates/${fileName}`,
+        placeholders: JSON.stringify(validation.placeholders),
+        fileSize: file.size,
+        fileType: 'docx',
+        createdBy
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      template,
+      validation: {
+        placeholders: validation.placeholders,
+        warnings: validation.warnings
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Template upload failed:', error);
+    return NextResponse.json(
+      { success: false, error: `Template upload failed: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete template
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const templateId = searchParams.get('id');
+
+    if (!templateId) {
+      return NextResponse.json(
+        { success: false, error: 'Template ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get template to delete file
+    const template = await prisma.certificateTemplate.findUnique({
+      where: { id: templateId }
+    });
+
+    if (!template) {
+      return NextResponse.json(
+        { success: false, error: 'Template not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete file from disk
+    const fs = require('fs');
+    const filePath = path.join(process.cwd(), template.filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    await prisma.certificateTemplate.delete({
+      where: { id: templateId }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Template deleted successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Template deletion failed:', error);
+    return NextResponse.json(
+      { success: false, error: `Template deletion failed: ${error.message}` },
+      { status: 500 }
+    );
+  }
 }
