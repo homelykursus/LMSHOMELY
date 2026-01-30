@@ -44,12 +44,27 @@ interface Course {
   name: string;
 }
 
+interface Student {
+  id: string;
+  name: string;
+  studentNumber: string;
+  course: {
+    id: string;
+    name: string;
+  };
+}
+
 export default function CertificatesPage() {
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [uploadForm, setUploadForm] = useState({
     name: '',
     description: '',
@@ -67,6 +82,7 @@ export default function CertificatesPage() {
   useEffect(() => {
     loadTemplates();
     loadCourses();
+    loadStudents();
   }, []);
 
   const loadTemplates = async () => {
@@ -85,13 +101,47 @@ export default function CertificatesPage() {
 
   const loadCourses = async () => {
     try {
-      const response = await fetch('/api/admin/courses');
-      const data = await response.json();
-      if (data.success) {
-        setCourses(data.courses);
-      }
+      // For now, we'll extract courses from students data
+      // In the future, we can create a dedicated courses API
+      const response = await fetch('/api/students');
+      const students = await response.json();
+      
+      // Extract unique courses from students
+      const coursesMap = new Map();
+      students.forEach((student: any) => {
+        if (student.courseId && student.courseName) {
+          coursesMap.set(student.courseId, {
+            id: student.courseId,
+            name: student.courseName
+          });
+        }
+      });
+      
+      setCourses(Array.from(coursesMap.values()));
     } catch (error) {
       console.error('Failed to load courses:', error);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const response = await fetch('/api/students');
+      const students = await response.json();
+      
+      // Transform the data to match our interface
+      const transformedStudents = students.map((student: any) => ({
+        id: student.id,
+        name: student.name,
+        studentNumber: student.studentId || student.studentNumber,
+        course: {
+          id: student.courseId,
+          name: student.courseName
+        }
+      }));
+      
+      setStudents(transformedStudents);
+    } catch (error) {
+      console.error('Failed to load students:', error);
     }
   };
 
@@ -199,6 +249,141 @@ export default function CertificatesPage() {
     }
   };
 
+  const handleGenerateCertificate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setSelectedStudents([]);
+      setShowGenerateModal(true);
+    }
+  };
+
+  const handlePreviewTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      // Open template file for preview
+      const templatePath = template.originalFileName;
+      alert(`Preview template: ${template.name}\n\nFile: ${templatePath}\n\nNote: Template preview akan dibuka di aplikasi Word/Office yang terinstall.`);
+      
+      // In a real implementation, you might want to:
+      // 1. Generate a sample certificate with dummy data
+      // 2. Show it in a modal or new tab
+      // 3. Or download the original template file
+    }
+  };
+
+  const handleStudentSelection = (studentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(prev => [...prev, studentId]);
+    } else {
+      setSelectedStudents(prev => prev.filter(id => id !== studentId));
+    }
+  };
+
+  const handleGenerateSelected = async () => {
+    if (!selectedTemplate || selectedStudents.length === 0) {
+      alert('Pilih minimal satu siswa untuk generate sertifikat');
+      return;
+    }
+
+    setGenerating(true);
+
+    try {
+      if (selectedStudents.length === 1) {
+        // Single certificate generation
+        const response = await fetch('/api/certificates/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            templateId: selectedTemplate.id,
+            studentId: selectedStudents[0],
+            generatedBy: 'admin' // TODO: Get from auth
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('Sertifikat berhasil dibuat!');
+          if (data.downloadUrl) {
+            // Extract filename and use download API
+            const filename = data.downloadUrl.split('/').pop();
+            const downloadApiUrl = `/api/certificates/download/${filename}`;
+            
+            const link = document.createElement('a');
+            link.href = downloadApiUrl;
+            link.download = `${data.certificate.certificateNumber}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        } else {
+          alert(data.error || 'Gagal membuat sertifikat');
+        }
+      } else {
+        // Batch certificate generation
+        const response = await fetch('/api/certificates/generate', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            templateId: selectedTemplate.id,
+            studentIds: selectedStudents,
+            generatedBy: 'admin' // TODO: Get from auth
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          const { successful, failed } = data.summary;
+          let message = `Berhasil membuat ${successful} sertifikat`;
+          if (failed > 0) {
+            message += `, ${failed} gagal`;
+          }
+          alert(message);
+          
+          // Download all successful certificates
+          if (data.results && data.results.length > 0) {
+            data.results.forEach((result: any, index: number) => {
+              if (result.success && result.downloadUrl) {
+                setTimeout(() => {
+                  const filename = result.downloadUrl.split('/').pop();
+                  const downloadApiUrl = `/api/certificates/download/${filename}`;
+                  
+                  const link = document.createElement('a');
+                  link.href = downloadApiUrl;
+                  link.download = `${result.certificate.certificateNumber}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }, index * 500); // Stagger downloads by 500ms
+              }
+            });
+          }
+          
+          // Show detailed results if there are errors
+          if (data.errors && data.errors.length > 0) {
+            console.log('Generation errors:', data.errors);
+          }
+        } else {
+          alert(data.error || 'Gagal membuat sertifikat');
+        }
+      }
+
+      setShowGenerateModal(false);
+      setSelectedStudents([]);
+      setSelectedTemplate(null);
+    } catch (error: any) {
+      alert(`Gagal membuat sertifikat: ${error.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -218,6 +403,138 @@ export default function CertificatesPage() {
     } catch {
       return [];
     }
+  };
+
+  // Component for Generated Certificates List
+  const GeneratedCertificatesList = () => {
+    const [generatedCerts, setGeneratedCerts] = useState<any[]>([]);
+    const [loadingCerts, setLoadingCerts] = useState(true);
+
+    useEffect(() => {
+      loadGeneratedCertificates();
+    }, []);
+
+    const loadGeneratedCertificates = async () => {
+      try {
+        // For now, we'll fetch from database directly
+        // In a real app, you'd have an API endpoint for this
+        const response = await fetch('/api/certificates/generated');
+        if (response.ok) {
+          const data = await response.json();
+          setGeneratedCerts(data.certificates || []);
+        }
+      } catch (error) {
+        console.error('Failed to load generated certificates:', error);
+      } finally {
+        setLoadingCerts(false);
+      }
+    };
+
+    const handleDownloadCertificate = (cert: any) => {
+      if (cert.downloadUrl) {
+        // Extract filename from download URL
+        const filename = cert.downloadUrl.split('/').pop();
+        const downloadApiUrl = `/api/certificates/download/${filename}`;
+        
+        const link = document.createElement('a');
+        link.href = downloadApiUrl;
+        link.download = `${cert.certificateNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    };
+
+    const handlePreviewCertificate = (cert: any) => {
+      if (cert.downloadUrl) {
+        window.open(cert.downloadUrl, '_blank');
+      }
+    };
+
+    const handleDeleteCertificate = async (cert: any) => {
+      if (!confirm(`Apakah Anda yakin ingin menghapus sertifikat ${cert.certificateNumber}?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/certificates/${cert.id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          alert('Sertifikat berhasil dihapus');
+          loadGeneratedCertificates(); // Reload the list
+        } else {
+          alert(data.error || 'Gagal menghapus sertifikat');
+        }
+      } catch (error: any) {
+        alert(`Gagal menghapus sertifikat: ${error.message}`);
+      }
+    };
+
+    if (loadingCerts) {
+      return (
+        <div className="flex items-center justify-center p-4">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Memuat sertifikat...</span>
+        </div>
+      );
+    }
+
+    if (generatedCerts.length === 0) {
+      return (
+        <div className="text-center p-8 text-gray-500">
+          <Award className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <p>Belum ada sertifikat yang dibuat</p>
+          <p className="text-sm">Generate sertifikat pertama Anda menggunakan template di atas</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {generatedCerts.map((cert) => (
+          <div key={cert.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+            <div className="flex-1">
+              <div className="font-medium">{cert.studentName}</div>
+              <div className="text-sm text-gray-500">
+                {cert.certificateNumber} • {cert.courseName}
+              </div>
+              <div className="text-xs text-gray-400">
+                Generated: {new Date(cert.generatedAt).toLocaleDateString('id-ID')}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handlePreviewCertificate(cert)}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Preview
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleDownloadCertificate(cert)}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Download
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDeleteCertificate(cert)}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -409,11 +726,19 @@ export default function CertificatesPage() {
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handlePreviewTemplate(template.id)}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       Preview
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleGenerateCertificate(template.id)}
+                    >
                       <Award className="h-4 w-4 mr-1" />
                       Generate
                     </Button>
@@ -456,6 +781,132 @@ export default function CertificatesPage() {
           ))
         )}
       </div>
+
+      {/* Generate Certificate Modal */}
+      {showGenerateModal && selectedTemplate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Generate Sertifikat</h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowGenerateModal(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900">Template: {selectedTemplate.name}</h4>
+              <p className="text-sm text-blue-700">
+                {selectedTemplate.course?.name || 'Semua Kursus'}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <Label>Pilih Siswa ({selectedStudents.length} dipilih)</Label>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setSelectedStudents(students.map(s => s.id))}
+                  >
+                    Pilih Semua
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setSelectedStudents([])}
+                  >
+                    Batal Pilih
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="border rounded-lg max-h-60 overflow-y-auto">
+                {students.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Tidak ada data siswa
+                  </div>
+                ) : (
+                  students
+                    .filter(student => 
+                      !selectedTemplate.course || 
+                      selectedTemplate.course.id === student.course.id
+                    )
+                    .map(student => (
+                      <div 
+                        key={student.id} 
+                        className="flex items-center p-3 border-b last:border-b-0 hover:bg-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          id={`student-${student.id}`}
+                          checked={selectedStudents.includes(student.id)}
+                          onChange={(e) => handleStudentSelection(student.id, e.target.checked)}
+                          className="mr-3"
+                        />
+                        <label 
+                          htmlFor={`student-${student.id}`}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <div className="font-medium">{student.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {student.studentNumber} • {student.course.name}
+                          </div>
+                        </label>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowGenerateModal(false)}
+                disabled={generating}
+              >
+                Batal
+              </Button>
+              <Button 
+                onClick={handleGenerateSelected}
+                disabled={generating || selectedStudents.length === 0}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Membuat...
+                  </>
+                ) : (
+                  <>
+                    <Award className="h-4 w-4 mr-2" />
+                    Generate {selectedStudents.length} Sertifikat
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generated Certificates List */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Download className="h-5 w-5 text-green-600" />
+            Sertifikat yang Sudah Dibuat
+          </CardTitle>
+          <CardDescription>
+            Daftar sertifikat yang sudah di-generate dan siap didownload
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <GeneratedCertificatesList />
+        </CardContent>
+      </Card>
 
       {/* System Status */}
       <Card className="mt-8">

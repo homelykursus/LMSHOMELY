@@ -49,12 +49,9 @@ export class WordProcessor {
         }
       });
 
-      // Set template data
-      doc.setData(data);
-      
+      // Set template data using new API
       try {
-        // Render the document (replace placeholders)
-        doc.render();
+        doc.render(data);
       } catch (error: any) {
         // Handle template rendering errors
         if (error.properties && error.properties.errors instanceof Array) {

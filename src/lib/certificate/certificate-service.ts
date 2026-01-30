@@ -154,6 +154,10 @@ export class CertificateService {
       }
 
       // Save certificate to database and file system
+      // Determine correct file extension based on content
+      const pdfHeader = pdfBuffer.slice(0, 4).toString();
+      const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
+      
       const certificateId = await this.saveCertificate({
         templateId,
         studentId,
@@ -166,14 +170,16 @@ export class CertificateService {
         courseDuration: `${student.course.duration} Jam`,
         generatedBy,
         pdfBuffer,
-        fileSize: pdfValidation.fileSize
+        fileSize: pdfValidation.fileSize,
+        fileExtension
       });
 
       return {
         success: true,
         certificateId,
-        filePath: `certificates/${certificateId}.pdf`,
-        fileSize: pdfValidation.fileSize
+        filePath: `certificates/${certificateId}.${fileExtension}`,
+        fileSize: pdfValidation.fileSize,
+        fileType: fileExtension
       };
 
     } catch (error: any) {
@@ -201,6 +207,7 @@ export class CertificateService {
     generatedBy: string;
     pdfBuffer: Buffer;
     fileSize: number;
+    fileExtension: string;
   }): Promise<string> {
     const fs = require('fs');
     const path = require('path');
@@ -223,13 +230,13 @@ export class CertificateService {
       }
     });
 
-    // Save PDF file
+    // Save file with correct extension
     const certificatesDir = path.join(process.cwd(), 'public', 'generated-certificates');
     if (!fs.existsSync(certificatesDir)) {
       fs.mkdirSync(certificatesDir, { recursive: true });
     }
 
-    const fileName = `${certificate.id}.pdf`;
+    const fileName = `${certificate.id}.${data.fileExtension}`;
     const filePath = path.join(certificatesDir, fileName);
     fs.writeFileSync(filePath, data.pdfBuffer);
 
