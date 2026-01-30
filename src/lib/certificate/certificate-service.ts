@@ -119,6 +119,17 @@ export class CertificateService {
         }
       };
 
+      // Process student photo for embedding
+      let processedPhoto: Buffer | undefined;
+      if (student.photo) {
+        try {
+          processedPhoto = await WordProcessor.processStudentPhoto(student.photo);
+        } catch (error: any) {
+          console.warn(`Failed to process photo for student ${student.name}: ${error.message}`);
+          // Continue without photo
+        }
+      }
+
       const certificateData: WordTemplateData = {
         student_name: student.name,
         student_id: student.studentNumber,
@@ -128,7 +139,7 @@ export class CertificateService {
         certificate_number: certificateNumber,
         certificate_date: certificateDate,
         certificate_month_year: certificateMonthYear,
-        student_photo: student.photo || undefined
+        student_photo: processedPhoto
       };
 
       // Load template data from database

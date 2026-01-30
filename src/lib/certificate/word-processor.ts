@@ -3,10 +3,12 @@
  * 
  * Handles Word document template processing using docxtemplater
  * Preserves original document formatting while replacing placeholders
+ * Supports image embedding for student photos
  */
 
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
+import ImageModule from 'docxtemplater-image-module-free';
 
 export interface WordTemplateData {
   student_name: string;
@@ -17,7 +19,7 @@ export interface WordTemplateData {
   certificate_number: string;
   certificate_date: string;
   certificate_month_year?: string; // Roman numeral format
-  student_photo?: string; // Base64 or URL
+  student_photo?: Buffer; // Image buffer for embedding
 }
 
 export interface TemplateValidationResult {
@@ -29,6 +31,47 @@ export interface TemplateValidationResult {
 
 export class WordProcessor {
   /**
+   * Download image from URL and return as Buffer
+   */
+  static async downloadImage(imageUrl: string): Promise<Buffer> {
+    try {
+      const response = await fetch(imageUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (error: any) {
+      throw new Error(`Image download failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Process student photo for certificate embedding
+   */
+  static async processStudentPhoto(photoUrl?: string): Promise<Buffer | undefined> {
+    if (!photoUrl) {
+      return undefined;
+    }
+    
+    try {
+      // Download the image from URL
+      const imageBuffer = await this.downloadImage(photoUrl);
+      
+      // Validate image buffer
+      if (imageBuffer.length === 0) {
+        throw new Error('Downloaded image is empty');
+      }
+      
+      return imageBuffer;
+    } catch (error: any) {
+      console.warn(`Failed to process student photo: ${error.message}`);
+      return undefined; // Return undefined to skip photo embedding
+    }
+  }
+  /**
    * Process Word template with data
    */
   static async processTemplate(
@@ -39,14 +82,28 @@ export class WordProcessor {
       // Load the docx file as binary content
       const zip = new PizZip(templateBuffer);
       
-      // Create docxtemplater instance
+      // Configure image module for photo embedding
+      const imageModule = new ImageModule({
+        centered: false,
+        getImage: (tagValue: any) => {
+          // tagValue should be a Buffer containing the image data
+          return tagValue;
+        },
+        getSize: () => {
+          // Return standard certificate photo size
+          return [150, 200]; // width, height in pixels
+        }
+      });
+      
+      // Create docxtemplater instance with image module
       const doc = new Docxtemplater(zip, {
         paragraphLoop: true,
         linebreaks: true,
         delimiters: {
           start: '{{',
           end: '}}'
-        }
+        },
+        modules: [imageModule]
       });
 
       // Set template data using new API
