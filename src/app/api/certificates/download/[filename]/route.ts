@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -21,19 +21,29 @@ export async function GET(
       );
     }
 
-    // Construct file path
-    const filePath = join(process.cwd(), 'public', 'generated-certificates', filename);
+    // Find certificate by filename (stored in filePath field)
+    const certificate = await prisma.certificate.findFirst({
+      where: {
+        filePath: filename
+      }
+    });
     
-    // Check if file exists
-    if (!existsSync(filePath)) {
+    if (!certificate) {
       return NextResponse.json(
-        { error: 'File not found' },
+        { error: 'Certificate not found' },
         { status: 404 }
       );
     }
 
-    // Read file
-    const fileBuffer = await readFile(filePath);
+    // Check if certificate has binary data
+    if (!certificate.certificateData) {
+      return NextResponse.json(
+        { error: 'Certificate data not available' },
+        { status: 404 }
+      );
+    }
+
+    const fileBuffer = certificate.certificateData;
     
     // Determine content type based on actual file content
     let contentType = 'application/octet-stream';
@@ -74,5 +84,7 @@ export async function GET(
       { error: 'Failed to download file' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

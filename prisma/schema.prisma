@@ -361,6 +361,7 @@ model Certificate {
   filePath          String   // path ke file PDF hasil
   downloadUrl       String?  // URL download (optional)
   fileSize          Int?     // ukuran file PDF
+  certificateData   Bytes?   // binary data sertifikat (for serverless compatibility)
   status            String   @default("generated") // 'generated', 'downloaded'
   generatedBy       String   // user ID yang generate
   metadata          String?  // JSON metadata tambahan

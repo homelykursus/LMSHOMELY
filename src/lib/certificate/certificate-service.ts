@@ -8,8 +8,6 @@
 import { WordProcessor, WordTemplateData } from './word-processor';
 import { PDFGenerator, PDFGenerationOptions } from './pdf-generator';
 import { PrismaClient } from '@prisma/client';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -190,7 +188,7 @@ export class CertificateService {
   }
 
   /**
-   * Save certificate to database and file system
+   * Save certificate to database (serverless-compatible)
    */
   private static async saveCertificate(data: {
     templateId: string;
@@ -207,7 +205,10 @@ export class CertificateService {
     fileSize: number;
     fileExtension: string;
   }): Promise<string> {
-    // Create certificate record
+    // Generate filename for download
+    const fileName = `${data.certificateNumber}.${data.fileExtension}`;
+    
+    // Create certificate record with binary data (serverless-compatible)
     const certificate = await prisma.certificate.create({
       data: {
         certificateNumber: data.certificateNumber,
@@ -219,28 +220,12 @@ export class CertificateService {
         studentName: data.studentName,
         teacherName: data.teacherName,
         courseDuration: data.courseDuration,
-        filePath: '', // Will be updated after file save
+        filePath: fileName, // Store filename for reference
         fileSize: data.fileSize,
-        generatedBy: data.generatedBy
-      }
-    });
-
-    // Save file with correct extension
-    const certificatesDir = path.join(process.cwd(), 'public', 'generated-certificates');
-    if (!existsSync(certificatesDir)) {
-      mkdirSync(certificatesDir, { recursive: true });
-    }
-
-    const fileName = `${certificate.id}.${data.fileExtension}`;
-    const filePath = path.join(certificatesDir, fileName);
-    writeFileSync(filePath, data.pdfBuffer);
-
-    // Update certificate with file path
-    await prisma.certificate.update({
-      where: { id: certificate.id },
-      data: {
-        filePath: `public/generated-certificates/${fileName}`,
-        downloadUrl: `/generated-certificates/${fileName}`
+        generatedBy: data.generatedBy,
+        // Store certificate data as binary in database (production-ready)
+        certificateData: data.pdfBuffer,
+        downloadUrl: `/api/certificates/download/${fileName}`
       }
     });
 
