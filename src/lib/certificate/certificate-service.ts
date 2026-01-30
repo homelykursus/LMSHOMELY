@@ -312,9 +312,10 @@ export class CertificateService {
     pdfBuffer: Buffer;
     fileSize: number;
     fileExtension: string;
+    batchFileName?: string; // Optional batch filename for batch certificates
   }): Promise<string> {
     // Generate filename for download
-    const fileName = `${data.certificateNumber}.${data.fileExtension}`;
+    const fileName = data.batchFileName || `${data.certificateNumber}.${data.fileExtension}`;
     
     // Create certificate record with binary data (serverless-compatible)
     const certificate = await prisma.certificate.create({
@@ -338,6 +339,53 @@ export class CertificateService {
     });
 
     return certificate.id;
+  }
+
+  /**
+   * Save batch certificate record for easier download lookup
+   */
+  private static async saveBatchCertificate(data: {
+    batchId: string;
+    templateId: string;
+    studentIds: string[];
+    certificateNumbers: string[];
+    fileName: string;
+    generatedBy: string;
+    pdfBuffer: Buffer;
+    fileSize: number;
+    fileExtension: string;
+    certificateCount: number;
+  }): Promise<string> {
+    // Get the first student to use their courseId for the batch record
+    const firstStudent = await prisma.student.findUnique({
+      where: { id: data.studentIds[0] },
+      include: { course: true }
+    });
+    
+    if (!firstStudent) {
+      throw new Error('First student not found for batch certificate');
+    }
+    
+    // Create a special batch certificate record
+    const batchCertificate = await prisma.certificate.create({
+      data: {
+        certificateNumber: data.batchId,
+        templateId: data.templateId,
+        studentId: data.studentIds[0], // Use first student as reference
+        courseId: firstStudent.courseId, // Use valid courseId
+        courseName: `Batch Certificate (${data.certificateCount} students)`,
+        studentName: `Batch: ${data.certificateNumbers.join(', ')}`,
+        teacherName: 'Batch Generation',
+        courseDuration: 'Multiple',
+        filePath: data.fileName,
+        fileSize: data.fileSize,
+        generatedBy: data.generatedBy,
+        certificateData: data.pdfBuffer,
+        downloadUrl: `/api/certificates/download/${data.fileName}`
+      }
+    });
+
+    return batchCertificate.id;
   }
 
   /**
@@ -578,11 +626,26 @@ export class CertificateService {
           generatedBy,
           pdfBuffer, // Same combined file for all
           fileSize: pdfValidation.fileSize,
-          fileExtension
+          fileExtension,
+          batchFileName: fileName // Pass batch filename for proper download
         });
 
         certificateIds.push(certificateId);
       }
+
+      // Also create a single batch record for easier download lookup
+      const batchCertificateId = await this.saveBatchCertificate({
+        batchId,
+        templateId,
+        studentIds,
+        certificateNumbers,
+        fileName,
+        generatedBy,
+        pdfBuffer,
+        fileSize: pdfValidation.fileSize,
+        fileExtension,
+        certificateCount: students.length
+      });
 
       console.log(`✅ Batch certificate generation completed successfully`);
       console.log(`📊 Generated ${students.length} certificates in one ${fileExtension.toUpperCase()} file`);
