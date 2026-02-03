@@ -258,28 +258,74 @@ export default function BackupPage() {
 
       console.log('📡 Making restore request...');
 
-      const response = await fetch('/api/admin/backup/restore', {
-        method: 'POST',
-        headers,
-        body: formData,
-      });
+      let response;
+      try {
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+        response = await fetch('/api/admin/backup/restore', {
+          method: 'POST',
+          headers,
+          body: formData,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        console.log('❌ Fetch request failed:');
+        console.log('  - Error type:', typeof fetchError);
+        console.log('  - Error name:', fetchError instanceof Error ? fetchError.name : 'Unknown');
+        console.log('  - Error message:', fetchError instanceof Error ? fetchError.message : 'No message');
+        
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('Request timeout - server tidak merespons dalam 60 detik');
+        }
+        
+        throw new Error(`Gagal menghubungi server: ${fetchError instanceof Error ? fetchError.message : 'Network error'}`);
+      }
 
       console.log(`📊 Response status: ${response.status}`);
 
       if (!response.ok) {
         let errorMessage = 'Restore failed';
         let errorDetails = '';
+        
+        console.log(`❌ Response not OK: ${response.status} ${response.statusText}`);
+        
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
           errorDetails = errorData.details ? (Array.isArray(errorData.details) ? errorData.details.join(', ') : errorData.details) : '';
-          console.error('❌ Restore error:', errorData);
+          
+          // Log error data properly to avoid {} serialization
+          console.log('❌ Restore error (JSON):');
+          console.log('  - Message:', errorData.message || 'No message');
+          console.log('  - Error:', errorData.error || 'No error field');
+          console.log('  - Details:', errorData.details || 'No details');
+          console.log('  - Full response:', JSON.stringify(errorData, null, 2));
+          
+          // Special handling for authentication errors
+          if (response.status === 401 || errorData.error === 'Unauthorized') {
+            throw new Error('Sesi login telah berakhir. Silakan login ulang dan coba lagi.');
+          }
         } catch (e) {
-          const errorText = await response.text();
-          console.error('❌ Restore error (text):', errorText);
-          errorMessage = errorText || errorMessage;
+          console.log('❌ Failed to parse error response as JSON:');
+          console.log('  - Parse error:', e instanceof Error ? e.message : 'Unknown parse error');
+          try {
+            const errorText = await response.text();
+            console.log('❌ Restore error (text):', errorText);
+            errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+          } catch (textError) {
+            console.log('❌ Failed to read error response as text:');
+            console.log('  - Text error:', textError instanceof Error ? textError.message : 'Unknown text error');
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
         }
-        throw new Error(`${errorMessage}${errorDetails ? ` (${errorDetails})` : ''}`);
+        
+        const fullErrorMessage = `${errorMessage}${errorDetails ? ` (${errorDetails})` : ''}`;
+        console.log('❌ Final error message:', fullErrorMessage);
+        throw new Error(fullErrorMessage);
       }
 
       const result = await response.json();
@@ -309,14 +355,38 @@ export default function BackupPage() {
       });
 
     } catch (error) {
-      console.error('❌ Restore failed:', error);
+      console.log('❌ Restore failed:', error);
+      
+      // Extract meaningful error information
+      let errorMessage = 'Kesalahan tidak diketahui';
+      let errorDetails = '';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        console.log('❌ Error message:', error.message);
+        console.log('❌ Error name:', error.name);
+        if (error.stack) {
+          console.log('❌ Error stack:', error.stack);
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+        console.log('❌ String error:', error);
+      } else {
+        console.log('❌ Unknown error type:', typeof error);
+        console.log('❌ Error toString:', error?.toString?.() || 'Cannot convert to string');
+      }
+      
       toast({
         title: "❌ Restore Gagal",
         description: (
           <div className="space-y-2">
             <p className="font-medium">Terjadi kesalahan saat memulihkan data</p>
-            <p className="text-sm text-red-600">{error instanceof Error ? error.message : "Kesalahan tidak diketahui"}</p>
-            <p className="text-xs text-gray-600 mt-2">💡 Pastikan file backup valid dan coba lagi</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
+            {errorMessage.includes('login') || errorMessage.includes('Unauthorized') ? (
+              <p className="text-xs text-gray-600 mt-2">🔑 Silakan refresh halaman dan login ulang</p>
+            ) : (
+              <p className="text-xs text-gray-600 mt-2">💡 Pastikan file backup valid dan coba lagi</p>
+            )}
           </div>
         ),
         variant: "destructive",

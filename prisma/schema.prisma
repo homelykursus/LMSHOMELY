@@ -61,6 +61,7 @@ model Student {
   referralSource String? // sumber referral: Instagram, Facebook, Google, Tiktok, dari Teman, Lainnya
   status        String   @default("pending") // pending, confirmed, completed
   completedAt   DateTime? // tanggal selesai kursus
+  notes         String?  // catatan tambahan tentang siswa
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   

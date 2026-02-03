@@ -134,6 +134,7 @@ export async function PUT(
       const discount = parseInt(formData.get('discount') as string) || 0;
       const lastEducation = formData.get('lastEducation') as string | null;
       const referralSource = formData.get('referralSource') as string | null;
+      const notes = formData.get('notes') as string | null;
       const photo = formData.get('photo') as File | null;
 
       let photoUrl = student.photo; // Keep existing photo by default
@@ -189,7 +190,8 @@ export async function PUT(
           finalPrice,
           discount,
           lastEducation,
-          referralSource
+          referralSource,
+          notes
         },
         include: {
           course: {

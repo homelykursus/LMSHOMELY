@@ -53,6 +53,7 @@ interface Student {
   status: 'active' | 'inactive' | 'graduated';
   joinDate: string;
   referralSource?: string;
+  notes?: string;
   // Legacy fields for backward compatibility
   dateOfBirth?: string;
   whatsapp?: string;
@@ -921,6 +922,7 @@ export default function StudentsManagement() {
                   <TableHead>Biaya Kursus</TableHead>
                   <TableHead>Tanggal Bergabung</TableHead>
                   <TableHead>Tau dari mana?</TableHead>
+                  <TableHead>Catatan</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Aksi</TableHead>
                 </TableRow>
@@ -1018,6 +1020,17 @@ export default function StudentsManagement() {
                       <TableCell>
                         <div className="text-sm">
                           {student.referralSource || '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm max-w-xs">
+                          {student.notes ? (
+                            <div className="truncate" title={student.notes}>
+                              {student.notes}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>

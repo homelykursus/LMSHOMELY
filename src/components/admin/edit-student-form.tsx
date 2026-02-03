@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Calendar, Phone, Users, BookOpen, Camera, X, Edit, Upload } from 'lucide-react';
+import { Calculator, Calendar, Phone, Users, BookOpen, Camera, X, Edit, Upload, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Course {
@@ -35,6 +36,7 @@ interface Student {
   discount: number;
   lastEducation?: string | null;
   referralSource?: string | null;
+  notes?: string | null;
   status: 'pending' | 'confirmed' | 'completed';
   createdAt: string;
   course: {
@@ -72,7 +74,8 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
     participants: 1,
     discount: 0,
     lastEducation: '',
-    referralSource: ''
+    referralSource: '',
+    notes: ''
   });
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -117,7 +120,8 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
         participants: student.participants,
         discount: student.discount,
         lastEducation: student.lastEducation || '',
-        referralSource: student.referralSource || ''
+        referralSource: student.referralSource || '',
+        notes: student.notes || ''
       });
       setPhotoPreview(student.photo || null);
     }
@@ -504,6 +508,22 @@ export default function EditStudentForm({ student, open, onOpenChange, onStudent
                     <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Catatan</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Masukkan catatan tambahan tentang siswa (opsional)"
+                    className="pl-10 min-h-[80px]"
+                    rows={3}
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-1">Catatan khusus atau informasi tambahan tentang siswa</p>
               </div>
             </CardContent>
           </Card>

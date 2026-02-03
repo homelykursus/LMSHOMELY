@@ -85,6 +85,7 @@ export async function GET() {
         photo: student.photo,
         lastEducation: student.lastEducation,
         referralSource: student.referralSource,
+        notes: student.notes,
         // Legacy fields for backward compatibility
         dateOfBirth: student.dateOfBirth,
         whatsapp: student.whatsapp,
@@ -170,6 +171,7 @@ export async function POST(request: NextRequest) {
     let discount: number = 0;
     let lastEducation: string | null = null;
     let referralSource: string | null = null;
+    let notes: string | null = null;
     let photo: File | null = null;
     
     if (contentType?.includes('application/json')) {
@@ -185,6 +187,7 @@ export async function POST(request: NextRequest) {
       discount = jsonData.discount || 0;
       lastEducation = jsonData.lastEducation || null;
       referralSource = jsonData.referralSource || null;
+      notes = jsonData.notes || null;
     } else {
       // Handle FormData from admin panel
       const formData = await request.formData();
@@ -198,6 +201,7 @@ export async function POST(request: NextRequest) {
       discount = parseInt(formData.get('discount') as string) || 0;
       lastEducation = formData.get('lastEducation') as string | null;
       referralSource = formData.get('referralSource') as string | null;
+      notes = formData.get('notes') as string | null;
       photo = formData.get('photo') as File | null;
     }
 
@@ -250,7 +254,8 @@ export async function POST(request: NextRequest) {
         finalPrice,
         discount,
         lastEducation,
-        referralSource
+        referralSource,
+        notes
       },
       include: {
         course: {
