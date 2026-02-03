@@ -40,17 +40,17 @@ interface Class {
   commissionType: string;
   commissionAmount: number;
   schedule: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   totalMeetings: number;
   completedMeetings: number;
   isActive: boolean;
   createdAt: string;
-  updatedAt: string;
   course: {
     id: string;
     name: string;
     category: string;
+    duration: number;
   };
   teacher: {
     id: string;
@@ -58,7 +58,7 @@ interface Class {
     education: string;
     specialization?: string | null;
     status: string;
-  };
+  } | null;
   room: {
     id: string;
     name: string;
@@ -67,7 +67,6 @@ interface Class {
   };
   students: Array<{
     id: string;
-    joinedAt: string;
     student: {
       id: string;
       name: string;
@@ -78,6 +77,22 @@ interface Class {
     };
   }>;
 }
+
+// Helper function to determine class status
+const determineClassStatus = (classItem: Class): 'WAITING' | 'ONGOING' | 'COMPLETED' => {
+  // If class has endDate, it's completed
+  if (classItem.endDate) {
+    return 'COMPLETED';
+  }
+  
+  // If class has started (has startDate) and has completed meetings, it's ongoing
+  if (classItem.startDate && classItem.completedMeetings > 0) {
+    return 'ONGOING';
+  }
+  
+  // Otherwise, it's waiting to start
+  return 'WAITING';
+};
 
 export default function ClassesManagement() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -132,10 +147,24 @@ export default function ClassesManagement() {
   const fetchClasses = async () => {
     try {
       const response = await fetch('/api/classes');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setClasses(data);
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setClasses(data);
+      } else {
+        console.error('API returned non-array data:', data);
+        setClasses([]);
+        toast.error('Format data kelas tidak valid');
+      }
     } catch (error) {
       console.error('Error fetching classes:', error);
+      setClasses([]); // Ensure classes is always an array
       toast.error('Gagal memuat data kelas');
     } finally {
       setLoading(false);
@@ -143,7 +172,8 @@ export default function ClassesManagement() {
   };
 
   const deleteClass = async (classId: string) => {
-    const classData = classes.find(c => c.id === classId);
+    const safeClasses = Array.isArray(classes) ? classes : [];
+    const classData = safeClasses.find(c => c.id === classId);
     const className = classData?.name || 'kelas ini';
     
     if (!confirm(`Apakah Anda yakin ingin menghapus ${className}?`)) return;
@@ -265,56 +295,74 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
   };
 
   const getClassStatus = (classData: Class) => {
+    const status = determineClassStatus(classData);
     const currentStudents = classData.students.length;
     const maxStudents = classData.maxStudents;
-    const completedMeetings = classData.completedMeetings;
 
-    // Jika absensi sudah berjalan minimal 1 kali
-    if (completedMeetings > 0) {
-      return {
-        label: 'Sedang Berjalan',
-        variant: 'default' as const,
-        className: 'bg-green-100 text-green-800 border-green-200'
-      };
+    switch (status) {
+      case 'COMPLETED':
+        return {
+          label: 'Selesai',
+          variant: 'default' as const,
+          className: 'bg-gray-100 text-gray-800 border-gray-200'
+        };
+      
+      case 'ONGOING':
+        return {
+          label: 'Sedang Berjalan',
+          variant: 'default' as const,
+          className: 'bg-green-100 text-green-800 border-green-200'
+        };
+      
+      case 'WAITING':
+        // Check if class is full
+        if (currentStudents >= maxStudents) {
+          return {
+            label: 'Penuh',
+            variant: 'default' as const,
+            className: 'bg-blue-100 text-blue-800 border-blue-200'
+          };
+        }
+        
+        // Otherwise, waiting for students
+        return {
+          label: 'Menunggu',
+          variant: 'secondary' as const,
+          className: 'bg-orange-100 text-orange-800 border-orange-200'
+        };
+      
+      default:
+        return {
+          label: 'Tidak Diketahui',
+          variant: 'secondary' as const,
+          className: 'bg-gray-100 text-gray-800 border-gray-200'
+        };
     }
-
-    // Jika kuota siswa sudah penuh
-    if (currentStudents >= maxStudents) {
-      return {
-        label: 'Penuh',
-        variant: 'default' as const,
-        className: 'bg-blue-100 text-blue-800 border-blue-200'
-      };
-    }
-
-    // Jika kuota siswa belum penuh
-    return {
-      label: 'Menunggu',
-      variant: 'secondary' as const,
-      className: 'bg-orange-100 text-orange-800 border-orange-200'
-    };
   };
 
+  // Ensure classes is always an array before using filter methods
+  const safeClasses = Array.isArray(classes) ? classes : [];
+
   const stats = {
-    total: classes.length,
-    waiting: classes.filter(c => !c.endDate && c.completedMeetings === 0).length,
-    active: classes.filter(c => !c.endDate && c.completedMeetings > 0).length,
-    completed: classes.filter(c => c.endDate !== null).length,
-    totalStudents: classes.reduce((sum, c) => sum + c.students.length, 0),
-    waitingStudents: classes
-      .filter(c => !c.endDate && c.completedMeetings === 0) // Kelas menunggu
+    total: safeClasses.length,
+    waiting: safeClasses.filter(c => determineClassStatus(c) === 'WAITING').length,
+    active: safeClasses.filter(c => determineClassStatus(c) === 'ONGOING').length,
+    completed: safeClasses.filter(c => determineClassStatus(c) === 'COMPLETED').length,
+    totalStudents: safeClasses.reduce((sum, c) => sum + c.students.length, 0),
+    waitingStudents: safeClasses
+      .filter(c => determineClassStatus(c) === 'WAITING') // Kelas menunggu
       .reduce((sum, c) => sum + c.students.length, 0), // Jumlah siswa di kelas menunggu
-    activeStudents: classes
-      .filter(c => !c.endDate && c.completedMeetings > 0) // Kelas sedang berjalan
+    activeStudents: safeClasses
+      .filter(c => determineClassStatus(c) === 'ONGOING') // Kelas sedang berjalan
       .reduce((sum, c) => sum + c.students.length, 0), // Jumlah siswa di kelas berjalan
-    totalCommission: classes.reduce((sum, c) => sum + c.commissionAmount, 0),
-    availableQuota: classes
-      .filter(c => !c.endDate) // Kelas menunggu + kelas sedang berjalan (yang belum selesai)
+    totalCommission: safeClasses.reduce((sum, c) => sum + c.commissionAmount, 0),
+    availableQuota: safeClasses
+      .filter(c => determineClassStatus(c) !== 'COMPLETED') // Kelas menunggu + kelas sedang berjalan (yang belum selesai)
       .reduce((sum, c) => sum + (c.maxStudents - c.students.length), 0) // Jumlah kuota tersisa
   };
 
   // Filter classes into three categories with search functionality
-  const filteredClasses = classes.filter(classData => 
+  const filteredClasses = safeClasses.filter(classData => 
     classData.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     classData.course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (classData.teacher?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -323,13 +371,13 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
   );
 
   const waitingClasses = filteredClasses.filter(c => 
-    !c.endDate && c.completedMeetings === 0 // Kelas menunggu: belum selesai dan belum ada pertemuan
+    determineClassStatus(c) === 'WAITING' // Kelas menunggu: belum dimulai
   );
   const activeAndOngoingClasses = filteredClasses.filter(c => 
-    !c.endDate && c.completedMeetings > 0 // Kelas aktif: belum selesai tapi sudah ada pertemuan
+    determineClassStatus(c) === 'ONGOING' // Kelas aktif: sedang berjalan
   );
   const completedClasses = filteredClasses.filter(c => 
-    c.endDate !== null // Kelas selesai adalah yang sudah di-mark selesai (endDate terisi)
+    determineClassStatus(c) === 'COMPLETED' // Kelas selesai
   );
 
   // Pagination logic
@@ -456,22 +504,46 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
         </CardContent>
       </Card>
 
-      {/* Classes Tabs */}
+      {/* Classes Tabs - Mobile Responsive with Horizontal Scroll */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
-          <TabsTrigger value="waiting" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Kelas Menunggu ({stats.waiting})
-          </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Kelas Berjalan ({stats.active})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Kelas Selesai ({stats.completed})
-          </TabsTrigger>
-        </TabsList>
+        <div className="relative">
+          <TabsList className="w-full h-auto p-1 bg-gray-100 rounded-lg">
+            <div className="flex w-full overflow-x-auto scrollbar-hide">
+              <div className="flex space-x-1 min-w-full sm:min-w-0">
+                <TabsTrigger 
+                  value="waiting" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Menunggu</span>
+                  <span className="xs:hidden">Menunggu</span>
+                  <span className="ml-1">({stats.waiting})</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="active" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Berjalan</span>
+                  <span className="xs:hidden">Berjalan</span>
+                  <span className="ml-1">({stats.active})</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="completed" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Selesai</span>
+                  <span className="xs:hidden">Selesai</span>
+                  <span className="ml-1">({stats.completed})</span>
+                </TabsTrigger>
+              </div>
+            </div>
+          </TabsList>
+          
+          {/* Scroll indicator for mobile */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent pointer-events-none sm:hidden" />
+        </div>
 
         {/* Waiting Classes Tab */}
         <TabsContent value="waiting">

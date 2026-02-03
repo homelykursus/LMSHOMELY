@@ -15,12 +15,26 @@ export async function GET(request: NextRequest) {
 
     const classes = await db.class.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        schedule: true,
+        startDate: true,
+        endDate: true,
+        maxStudents: true,
+        totalMeetings: true,
+        completedMeetings: true,
+        commissionType: true,
+        commissionAmount: true,
+        isActive: true,
+        createdAt: true,
         course: {
           select: {
             id: true,
             name: true,
-            category: true
+            category: true,
+            duration: true
           }
         },
         teacher: {

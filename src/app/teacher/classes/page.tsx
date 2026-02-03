@@ -416,22 +416,46 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
         </CardContent>
       </Card>
 
-      {/* Classes Tabs */}
+      {/* Classes Tabs - Mobile Responsive with Horizontal Scroll */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
-          <TabsTrigger value="waiting" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Kelas Menunggu ({stats.waiting})
-          </TabsTrigger>
-          <TabsTrigger value="active" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Kelas Berjalan ({stats.active})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            Kelas Selesai ({stats.completed})
-          </TabsTrigger>
-        </TabsList>
+        <div className="relative">
+          <TabsList className="w-full h-auto p-1 bg-gray-100 rounded-lg">
+            <div className="flex w-full overflow-x-auto scrollbar-hide">
+              <div className="flex space-x-1 min-w-full sm:min-w-0">
+                <TabsTrigger 
+                  value="waiting" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Menunggu</span>
+                  <span className="xs:hidden">Menunggu</span>
+                  <span className="ml-1">({stats.waiting})</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="active" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Berjalan</span>
+                  <span className="xs:hidden">Berjalan</span>
+                  <span className="ml-1">({stats.active})</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="completed" 
+                  className="flex-shrink-0 min-w-[140px] sm:min-w-[160px] h-12 px-4 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="hidden xs:inline">Kelas Selesai</span>
+                  <span className="xs:hidden">Selesai</span>
+                  <span className="ml-1">({stats.completed})</span>
+                </TabsTrigger>
+              </div>
+            </div>
+          </TabsList>
+          
+          {/* Scroll indicator for mobile */}
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-100 to-transparent pointer-events-none sm:hidden" />
+        </div>
 
         {/* Waiting Classes Tab */}
         <TabsContent value="waiting">
