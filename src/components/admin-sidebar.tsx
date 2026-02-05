@@ -236,9 +236,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-h-screen">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-blue-600" />
               <div>
@@ -256,15 +256,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
             </Button>
           </div>
 
-          {/* Navigation */}
-          <ScrollArea className="flex-1 p-4">
-            <nav className="space-y-2">
-              {sidebarItems.map(item => renderSidebarItem(item))}
-            </nav>
-          </ScrollArea>
+          {/* Navigation - Scrollable Area */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <ScrollArea className="h-full">
+              <nav className="space-y-2 p-4">
+                {sidebarItems.map(item => renderSidebarItem(item))}
+              </nav>
+            </ScrollArea>
+          </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="p-4 border-t border-gray-200 space-y-2 flex-shrink-0">
             <Link
               href="/"
               className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
