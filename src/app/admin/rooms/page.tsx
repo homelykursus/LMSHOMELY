@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import AddRoomForm from '@/components/admin/add-room-form';
 import EditRoomForm from '@/components/admin/edit-room-form';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Room {
   id: string;
@@ -37,6 +38,9 @@ export default function RoomsManagement() {
   const [loading, setLoading] = useState<boolean>(true);
   const [editRoom, setEditRoom] = useState<Room | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Confirmation dialog hook
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   useEffect(() => {
     fetchRooms();
@@ -59,23 +63,30 @@ export default function RoomsManagement() {
     const room = rooms.find(r => r.id === roomId);
     const roomName = room?.name || 'ruangan ini';
     
-    if (!confirm(`Apakah Anda yakin ingin menghapus ${roomName}?`)) return;
+    showConfirmation({
+      title: 'Hapus Data Ruangan',
+      description: `Apakah Anda yakin ingin menghapus ${roomName}? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait ruangan tersebut.`,
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/rooms/${roomId}`, {
+            method: 'DELETE',
+          });
 
-    try {
-      const response = await fetch(`/api/rooms/${roomId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchRooms();
-        toast.success(`${roomName} berhasil dihapus`);
-      } else {
-        toast.error('Gagal menghapus ruangan');
+          if (response.ok) {
+            await fetchRooms();
+            toast.success(`${roomName} berhasil dihapus`);
+          } else {
+            toast.error('Gagal menghapus ruangan');
+          }
+        } catch (error) {
+          console.error('Error deleting room:', error);
+          toast.error('Terjadi kesalahan saat menghapus ruangan');
+        }
       }
-    } catch (error) {
-      console.error('Error deleting room:', error);
-      toast.error('Terjadi kesalahan saat menghapus ruangan');
-    }
+    });
   };
 
   const handleEditRoom = (room: Room) => {
@@ -278,6 +289,9 @@ export default function RoomsManagement() {
           onRoomUpdated={handleRoomUpdated}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog />
     </div>
   );
 }

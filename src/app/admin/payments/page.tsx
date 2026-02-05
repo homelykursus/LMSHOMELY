@@ -90,7 +90,7 @@ export default function PaymentsManagement() {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
   const [showAddTransaction, setShowAddTransaction] = useState<boolean>(false);
   const [attendanceData, setAttendanceData] = useState<{[key: string]: number}>({});
   const [reminderData, setReminderData] = useState<{[key: string]: any}>({});

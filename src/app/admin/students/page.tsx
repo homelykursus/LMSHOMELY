@@ -40,6 +40,7 @@ import {
 import { toast } from 'sonner';
 import AddStudentForm from '@/components/admin/add-student-form';
 import EditStudentForm from '@/components/admin/edit-student-form';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Student {
   id: string;
@@ -107,6 +108,9 @@ export default function StudentsManagement() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+
+  // Confirmation dialog hook
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   useEffect(() => {
     fetchStudents();
@@ -265,24 +269,31 @@ export default function StudentsManagement() {
     const student = students.find(s => s.id === studentId);
     const studentName = student?.name || 'siswa ini';
     
-    if (!confirm(`Apakah Anda yakin ingin menghapus data ${studentName}?`)) return;
+    showConfirmation({
+      title: 'Hapus Data Siswa',
+      description: `Apakah Anda yakin ingin menghapus data ${studentName}? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait siswa tersebut.`,
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/students?id=${studentId}`, {
+            method: 'DELETE',
+          });
 
-    try {
-      const response = await fetch(`/api/students?id=${studentId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchStudents();
-        toast.success(`Data ${studentName} berhasil dihapus`);
-      } else {
-        console.error('Failed to delete student');
-        toast.error('Gagal menghapus data siswa');
+          if (response.ok) {
+            await fetchStudents();
+            toast.success(`Data ${studentName} berhasil dihapus`);
+          } else {
+            console.error('Failed to delete student');
+            toast.error('Gagal menghapus data siswa');
+          }
+        } catch (error) {
+          console.error('Error deleting student:', error);
+          toast.error('Terjadi kesalahan saat menghapus data siswa');
+        }
       }
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      toast.error('Terjadi kesalahan saat menghapus data siswa');
-    }
+    });
   };
 
   const handleEditStudent = (student: Student) => {
@@ -1137,6 +1148,9 @@ export default function StudentsManagement() {
           onStudentUpdated={handleStudentUpdated}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog />
     </div>
   );
 }

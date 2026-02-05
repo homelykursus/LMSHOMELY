@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import AddTeacherForm from '@/components/admin/add-teacher-form';
 import EditTeacherForm from '@/components/admin/edit-teacher-form';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { toast } from 'sonner';
 
 interface Teacher {
   id: string;
@@ -69,6 +71,9 @@ export default function TeachersManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('active');
 
+  // Confirmation dialog hook
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
+
   useEffect(() => {
     fetchTeachers();
     fetchCourses();
@@ -101,21 +106,31 @@ export default function TeachersManagement() {
     const teacher = teachers.find(t => t.id === teacherId);
     const teacherName = teacher?.name || 'guru ini';
     
-    if (!confirm(`Apakah Anda yakin ingin menghapus data ${teacherName}?`)) return;
+    showConfirmation({
+      title: 'Hapus Data Guru',
+      description: `Apakah Anda yakin ingin menghapus data ${teacherName}? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait guru tersebut.`,
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/teachers?id=${teacherId}`, {
+            method: 'DELETE',
+          });
 
-    try {
-      const response = await fetch(`/api/teachers?id=${teacherId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchTeachers();
-      } else {
-        console.error('Failed to delete teacher');
+          if (response.ok) {
+            await fetchTeachers();
+            toast.success(`Data ${teacherName} berhasil dihapus`);
+          } else {
+            console.error('Failed to delete teacher');
+            toast.error('Gagal menghapus data guru');
+          }
+        } catch (error) {
+          console.error('Error deleting teacher:', error);
+          toast.error('Terjadi kesalahan saat menghapus data guru');
+        }
       }
-    } catch (error) {
-      console.error('Error deleting teacher:', error);
-    }
+    });
   };
 
   const handleEditTeacher = (teacher: Teacher) => {
@@ -595,6 +610,9 @@ export default function TeachersManagement() {
         onOpenChange={setIsEditDialogOpen}
         onTeacherUpdated={handleTeacherUpdated}
       />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog />
     </div>
   );
 }
