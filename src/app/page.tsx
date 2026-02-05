@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Loader2, 
-  GraduationCap, 
   Users, 
   Phone, 
   Mail, 
@@ -280,7 +279,11 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
           <div className="text-center">
             <div className="flex justify-center mb-6">
               <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
-                <GraduationCap className="h-12 w-12 text-white" />
+                <img 
+                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                  alt="Homely Logo" 
+                  className="h-12 w-12 rounded object-cover"
+                />
               </div>
             </div>
             <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4">
@@ -662,8 +665,12 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <div className="p-4 bg-blue-600 rounded-2xl">
-                <GraduationCap className="h-8 w-8" />
+              <div className="p-4 bg-white rounded-2xl shadow-lg">
+                <img 
+                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                  alt="Homely Logo" 
+                  className="h-8 w-8 rounded object-cover"
+                />
               </div>
             </div>
             <h3 className="text-2xl font-bold mb-4">Homely Kursus Komputer</h3>
