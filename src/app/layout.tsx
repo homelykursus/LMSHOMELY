@@ -15,24 +15,58 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistem Absensi Karyawan",
-  description: "Sistem pencatatan absensi karyawan yang modern dan mudah digunakan",
-  keywords: ["absensi", "karyawan", "check in", "check out", "kehadiran"],
-  authors: [{ name: "HR Team" }],
+  title: "Homely Kursus Komputer",
+  description: "Platform pembelajaran komputer yang modern dan mudah digunakan",
+  keywords: ["kursus", "komputer", "pembelajaran", "teknologi", "pendidikan"],
+  authors: [{ name: "Homely Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: [
+      {
+        url: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+        sizes: "32x32",
+        type: "image/jpeg",
+      },
+      {
+        url: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+        sizes: "16x16",
+        type: "image/jpeg",
+      },
+    ],
+    shortcut: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+    apple: [
+      {
+        url: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+        sizes: "180x180",
+        type: "image/jpeg",
+      },
+    ],
+    other: [
+      {
+        rel: "icon",
+        url: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+      },
+    ],
   },
   openGraph: {
-    title: "Sistem Absensi Karyawan",
-    description: "Sistem pencatatan absensi karyawan yang modern dan mudah digunakan",
-    url: "https://chat.z.ai",
-    siteName: "Sistem Absensi",
+    title: "Homely Kursus Komputer",
+    description: "Platform pembelajaran komputer yang modern dan mudah digunakan",
+    url: "https://homelykursus.com",
+    siteName: "Homely Kursus Komputer",
     type: "website",
+    images: [
+      {
+        url: "https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Homely Kursus Komputer Logo",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sistem Absensi Karyawan",
-    description: "Sistem pencatatan absensi karyawan yang modern dan mudah digunakan",
+    title: "Homely Kursus Komputer",
+    description: "Platform pembelajaran komputer yang modern dan mudah digunakan",
+    images: ["https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg"],
   },
 };
 

@@ -105,10 +105,14 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="flex justify-center">
             <div className="flex items-center space-x-2">
-              <BookOpen className="h-12 w-12 text-blue-600" />
+              <img 
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                alt="Homely Logo" 
+                className="h-12 w-12 rounded-md object-cover"
+              />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-sm text-gray-500">Kursus Komputer</p>
+                <p className="text-sm text-gray-500">Homely Kursus Komputer</p>
               </div>
             </div>
           </div>
@@ -234,7 +238,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            © 2026 Kursus Komputer. Sistem Manajemen Admin.
+            © 2026 Homely Kursus Komputer. Sistem Manajemen Admin.
           </p>
         </div>
       </div>

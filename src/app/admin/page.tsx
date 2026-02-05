@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart, PieChart, Pie, Cell, LabelList } from 'recharts';
 import { 
   BookOpen, 
   Users, 
@@ -41,6 +41,11 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  // Get current date for default filters
+  const currentDate = new Date();
+  const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  const currentYear = currentDate.getFullYear().toString();
+
   const [stats, setStats] = useState<DashboardStats>({
     totalCourses: 0,
     activeCourses: 0,
@@ -59,8 +64,8 @@ export default function AdminDashboard() {
     }
   });
   const [loading, setLoading] = useState<boolean>(true);
-  const [filterMonth, setFilterMonth] = useState<string>('');
-  const [filterYear, setFilterYear] = useState<string>('');
+  const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
+  const [filterYear, setFilterYear] = useState<string>(currentYear);
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area'>('bar');
   const [chartPeriod, setChartPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -93,7 +98,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     generateChartData();
-  }, [chartPeriod, filterYear]);
+  }, [chartPeriod, filterYear, filterMonth]);
 
   // Generate options for month and year filters
   const generateMonthOptions = () => {
@@ -129,6 +134,46 @@ export default function AdminDashboard() {
       const studentsResponse = await fetch('/api/students');
       const allStudents = await studentsResponse.json();
       
+      // Check if both month and year filters are applied - show daily view
+      if (filterMonth && filterYear) {
+        console.log(`Generating daily data for ${filterMonth}/${filterYear}`);
+        
+        // Get number of days in the selected month
+        const year = parseInt(filterYear);
+        const month = parseInt(filterMonth);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        // Generate daily data for the selected month
+        const dailyData = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayStr = day.toString().padStart(2, '0');
+          const dateStr = `${year}-${filterMonth}-${dayStr}`;
+          
+          // Filter students for this specific day
+          const dayStudents = allStudents.filter((student: any) => {
+            const registrationDate = new Date(student.createdAt);
+            const studentDateStr = registrationDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            return studentDateStr === dateStr;
+          });
+          
+          // Only count confirmed students (including alumni as confirmed registrations)
+          const confirmedStudents = dayStudents.filter((s: any) => 
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
+            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+          );
+          
+          dailyData.push({
+            name: `${dayStr}`,
+            fullDate: dateStr,
+            confirmed: confirmedStudents.length,
+          });
+        }
+        
+        setChartData(dailyData);
+        return;
+      }
+      
       if (chartPeriod === 'monthly') {
         // Generate monthly data for the selected year
         const currentYear = filterYear || new Date().getFullYear().toString();
@@ -149,12 +194,15 @@ export default function AdminDashboard() {
             return studentMonth === monthNum && studentYear === currentYear;
           });
           
+          // Only count confirmed students (including alumni as confirmed registrations)
+          const confirmedStudents = monthStudents.filter((s: any) => 
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
+            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+          );
+          
           return {
             name: month,
-            total: monthStudents.length,
-            pending: monthStudents.filter((s: any) => s.status === 'inactive').length,
-            confirmed: monthStudents.filter((s: any) => s.status === 'active').length,
-            completed: monthStudents.filter((s: any) => s.status === 'graduated').length,
+            confirmed: confirmedStudents.length,
           };
         });
         
@@ -175,12 +223,15 @@ export default function AdminDashboard() {
             return studentYear === year;
           });
           
+          // Only count confirmed students (including alumni as confirmed registrations)
+          const confirmedStudents = yearStudents.filter((s: any) => 
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
+            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+          );
+          
           return {
             name: year,
-            total: yearStudents.length,
-            pending: yearStudents.filter((s: any) => s.status === 'inactive').length,
-            confirmed: yearStudents.filter((s: any) => s.status === 'active').length,
-            completed: yearStudents.filter((s: any) => s.status === 'graduated').length,
+            confirmed: confirmedStudents.length,
           };
         });
         
@@ -277,22 +328,32 @@ export default function AdminDashboard() {
         });
       }
 
-      // Calculate filtered statistics
+      // Calculate filtered statistics with correct status mapping
       const newFilteredStats = {
         totalStudents: filteredStudents.length,
-        pendingStudents: filteredStudents.filter((s: any) => s.status === 'inactive').length,
-        confirmedStudents: filteredStudents.filter((s: any) => s.status === 'active').length,
+        pendingStudents: filteredStudents.filter((s: any) => 
+          s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
+        ).length,
+        confirmedStudents: filteredStudents.filter((s: any) => 
+          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
+        ).length,
         totalRevenue: filteredStudents.reduce((sum: number, student: any) => sum + student.finalPrice, 0)
       };
       
       setFilteredStats(newFilteredStats);
 
-      // Calculate period statistics
+      // Calculate period statistics with correct status mapping
       const periodStats = {
         totalRegistrations: filteredStudents.length,
-        pendingRegistrations: filteredStudents.filter((s: any) => s.status === 'inactive').length,
-        confirmedRegistrations: filteredStudents.filter((s: any) => s.status === 'active').length,
-        completedRegistrations: filteredStudents.filter((s: any) => s.status === 'graduated').length,
+        pendingRegistrations: filteredStudents.filter((s: any) => 
+          s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
+        ).length,
+        confirmedRegistrations: filteredStudents.filter((s: any) => 
+          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
+        ).length,
+        completedRegistrations: filteredStudents.filter((s: any) => 
+          s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+        ).length,
         totalRevenue: filteredStudents.reduce((sum: number, student: any) => sum + student.finalPrice, 0),
         monthlyGrowth: 0 // Will be calculated below
       };
@@ -331,8 +392,12 @@ export default function AdminDashboard() {
         totalCourses: courses.length,
         activeCourses: courses.filter((c: any) => c.isActive).length,
         totalStudents: students.length,
-        pendingStudents: students.filter((s: any) => s.status === 'inactive').length,
-        confirmedStudents: students.filter((s: any) => s.status === 'active').length,
+        pendingStudents: students.filter((s: any) => 
+          s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
+        ).length,
+        confirmedStudents: students.filter((s: any) => 
+          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
+        ).length,
         totalRevenue,
         recentStudents,
         periodStats
@@ -505,12 +570,18 @@ export default function AdminDashboard() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Statistik Pendaftaran {chartPeriod === 'monthly' ? 'Bulanan' : 'Tahunan'}
+                Statistik Siswa Dikonfirmasi {
+                  filterMonth && filterYear 
+                    ? 'Harian' 
+                    : chartPeriod === 'monthly' ? 'Bulanan' : 'Tahunan'
+                }
               </CardTitle>
               <CardDescription>
-                {chartPeriod === 'monthly' 
-                  ? `Data pendaftaran siswa per bulan untuk tahun ${filterYear || new Date().getFullYear()}`
-                  : 'Data pendaftaran siswa per tahun dari 2022 hingga sekarang'
+                {filterMonth && filterYear 
+                  ? `Data siswa yang dikonfirmasi per hari untuk ${generateMonthOptions().find(m => m.value === filterMonth)?.label} ${filterYear} (termasuk alumni)`
+                  : chartPeriod === 'monthly' 
+                    ? `Data siswa yang dikonfirmasi per bulan untuk tahun ${filterYear || new Date().getFullYear()} (termasuk alumni)`
+                    : 'Data siswa yang dikonfirmasi per tahun dari 2022 hingga sekarang (termasuk alumni)'
                 }
               </CardDescription>
             </div>
@@ -553,7 +624,7 @@ export default function AdminDashboard() {
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   {chartType === 'bar' ? (
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="name" 
@@ -567,12 +638,20 @@ export default function AdminDashboard() {
                         contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px' }}
                       />
                       <Legend />
-                      <Bar dataKey="pending" name="Menunggu Konfirmasi" fill="#F97316" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="confirmed" name="Dikonfirmasi" fill="#10B981" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="completed" name="Selesai" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="confirmed" name="Siswa Dikonfirmasi" fill="#10B981" radius={[4, 4, 0, 0]}>
+                        <LabelList 
+                          dataKey="confirmed" 
+                          position="top" 
+                          style={{ 
+                            fontSize: '12px', 
+                            fontWeight: 'bold', 
+                            fill: '#065F46' 
+                          }} 
+                        />
+                      </Bar>
                     </BarChart>
                   ) : chartType === 'line' ? (
-                    <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <LineChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="name" 
@@ -588,34 +667,27 @@ export default function AdminDashboard() {
                       <Legend />
                       <Line 
                         type="monotone" 
-                        dataKey="pending" 
-                        name="Menunggu Konfirmasi"
-                        stroke="#F97316" 
-                        strokeWidth={2}
-                        dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
                         dataKey="confirmed" 
-                        name="Dikonfirmasi"
+                        name="Siswa Dikonfirmasi"
                         stroke="#10B981" 
-                        strokeWidth={2}
-                        dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="completed" 
-                        name="Selesai"
-                        stroke="#8B5CF6" 
-                        strokeWidth={2}
-                        dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
+                        strokeWidth={3}
+                        dot={{ fill: '#10B981', strokeWidth: 2, r: 5 }}
+                        activeDot={{ r: 7 }}
+                      >
+                        <LabelList 
+                          dataKey="confirmed" 
+                          position="top" 
+                          offset={10}
+                          style={{ 
+                            fontSize: '12px', 
+                            fontWeight: 'bold', 
+                            fill: '#065F46' 
+                          }} 
+                        />
+                      </Line>
                     </LineChart>
                   ) : (
-                    <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <AreaChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="name" 
@@ -631,60 +703,59 @@ export default function AdminDashboard() {
                       <Legend />
                       <Area 
                         type="monotone" 
-                        dataKey="pending" 
-                        name="Menunggu Konfirmasi"
-                        stroke="#F97316" 
-                        fill="#F97316" 
-                        fillOpacity={0.3}
-                      />
-                      <Area 
-                        type="monotone" 
                         dataKey="confirmed" 
-                        name="Dikonfirmasi"
+                        name="Siswa Dikonfirmasi"
                         stroke="#10B981" 
                         fill="#10B981" 
-                        fillOpacity={0.3}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="completed" 
-                        name="Selesai"
-                        stroke="#8B5CF6" 
-                        fill="#8B5CF6" 
-                        fillOpacity={0.3}
-                      />
+                        fillOpacity={0.4}
+                      >
+                        <LabelList 
+                          dataKey="confirmed" 
+                          position="top" 
+                          offset={5}
+                          style={{ 
+                            fontSize: '12px', 
+                            fontWeight: 'bold', 
+                            fill: '#065F46' 
+                          }} 
+                        />
+                      </Area>
                     </AreaChart>
                   )}
                 </ResponsiveContainer>
               </div>
 
               {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {chartData.reduce((sum, item) => sum + (item.total || 0), 0)}
-                  </div>
-                  <div className="text-sm text-blue-800">
-                    Total Pendaftaran {chartPeriod === 'monthly' ? 'Tahun Ini' : '2022-Sekarang'}
-                  </div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {chartData.reduce((sum, item) => sum + (item.pending || 0), 0)}
-                  </div>
-                  <div className="text-sm text-orange-800">Menunggu Konfirmasi</div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-3xl font-bold text-green-600">
                     {chartData.reduce((sum, item) => sum + (item.confirmed || 0), 0)}
                   </div>
-                  <div className="text-sm text-green-800">Dikonfirmasi</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {chartData.reduce((sum, item) => sum + (item.completed || 0), 0)}
+                  <div className="text-sm text-green-800">
+                    Total Siswa Dikonfirmasi {
+                      filterMonth && filterYear 
+                        ? `${generateMonthOptions().find(m => m.value === filterMonth)?.label} ${filterYear}`
+                        : chartPeriod === 'monthly' ? 'Tahun Ini' : '2022-Sekarang'
+                    }
                   </div>
-                  <div className="text-sm text-purple-800">Selesai</div>
+                  <div className="text-xs text-green-600 mt-1">
+                    Termasuk alumni yang telah lulus
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {chartData.length > 0 ? Math.round(chartData.reduce((sum, item) => sum + (item.confirmed || 0), 0) / chartData.filter(item => item.confirmed > 0).length || 1) : 0}
+                  </div>
+                  <div className="text-sm text-blue-800">
+                    Rata-rata per {
+                      filterMonth && filterYear 
+                        ? 'Hari' 
+                        : chartPeriod === 'monthly' ? 'Bulan' : 'Tahun'
+                    }
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Pendaftaran yang dikonfirmasi
+                  </div>
                 </div>
               </div>
 

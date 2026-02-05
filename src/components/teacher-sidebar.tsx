@@ -11,8 +11,7 @@ import {
   BookOpen,
   DollarSign,
   Menu,
-  X,
-  GraduationCap
+  X
 } from 'lucide-react';
 
 const navigation = [
@@ -68,9 +67,16 @@ export function TeacherSidebar() {
       >
         <div className="flex flex-col h-full max-h-screen">
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 flex-shrink-0">
-            <div className="flex items-center">
-              <GraduationCap className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Portal Guru</span>
+            <div className="flex items-center flex-col">
+              <div className="flex items-center">
+                <img 
+                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                  alt="Homely Logo" 
+                  className="h-8 w-8 rounded object-cover"
+                />
+                <span className="ml-2 text-xl font-bold text-gray-900">Portal Guru</span>
+              </div>
+              <span className="text-xs text-gray-600 mt-1">Homely Kursus Komputer</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -116,8 +122,17 @@ export function TeacherSidebar() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex min-h-0 flex-1 flex-col bg-white shadow-lg">
           <div className="flex h-16 flex-shrink-0 items-center px-4 border-b border-gray-200">
-            <GraduationCap className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">Portal Guru</span>
+            <div className="flex items-center flex-col">
+              <div className="flex items-center">
+                <img 
+                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                  alt="Homely Logo" 
+                  className="h-8 w-8 rounded object-cover"
+                />
+                <span className="ml-2 text-xl font-bold text-gray-900">Portal Guru</span>
+              </div>
+              <span className="text-xs text-gray-600 mt-1">Homely Kursus Komputer</span>
+            </div>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto">
             <nav className="flex-1 px-2 py-4">

@@ -277,7 +277,7 @@ export default function ClassesManagement() {
       description: confirmMessage,
       confirmText: 'Ya, Selesaikan',
       cancelText: 'Batal',
-      variant: 'default',
+      variant: 'destructive',
       onConfirm: async () => {
         try {
           const response = await fetch(`/api/classes/${classData.id}/complete`, {
@@ -1264,6 +1264,7 @@ export default function ClassesManagement() {
           onClose={() => setIsAttendanceDialogOpen(false)}
           classData={attendanceClass}
           onAttendanceSubmitted={handleAttendanceSubmitted}
+          showConfirmation={showConfirmation}
         />
       )}
 
@@ -1464,7 +1465,7 @@ export default function ClassesManagement() {
       )}
 
       {/* Confirmation Dialog */}
-      <ConfirmationDialog />
+      <ConfirmationDialog key="classes-confirmation" />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
-import { Eye, EyeOff, User, Lock, GraduationCap } from 'lucide-react';
+import { Eye, EyeOff, User, Lock } from 'lucide-react';
 
 export default function TeacherLoginPage() {
   const [whatsapp, setWhatsapp] = useState('');
@@ -57,10 +57,15 @@ export default function TeacherLoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <GraduationCap className="h-8 w-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-lg">
+            <img 
+              src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+              alt="Homely Logo" 
+              className="h-12 w-12 rounded object-cover"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Portal Guru</h1>
+          <p className="text-sm text-gray-600 mb-2">Homely Kursus Komputer</p>
           <p className="text-gray-600">Masuk ke dashboard guru Anda</p>
         </div>
 
@@ -158,7 +163,7 @@ export default function TeacherLoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
-            © 2026 Sistem Kursus. All rights reserved.
+            © 2026 Homely Kursus Komputer. All rights reserved.
           </p>
         </div>
       </div>

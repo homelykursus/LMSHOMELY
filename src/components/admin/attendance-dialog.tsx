@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Users, UserCheck, Clock, CheckCircle, Flag, UserX, UserPlus, History } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface Student {
   id: string;
@@ -50,6 +51,7 @@ interface AttendanceDialogProps {
   onClose: () => void;
   classData: ClassData | null;
   onAttendanceSubmitted: () => void;
+  showConfirmation?: (options: any) => void; // Optional prop untuk menggunakan confirmation dari parent
 }
 
 interface AttendanceRecord {
@@ -68,6 +70,7 @@ export default function AttendanceDialog({
   onClose,
   classData,
   onAttendanceSubmitted,
+  showConfirmation: parentShowConfirmation,
 }: AttendanceDialogProps) {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +82,10 @@ export default function AttendanceDialog({
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [lastAttendanceData, setLastAttendanceData] = useState<{[key: string]: LastAttendance}>({});
   const [loadingLastAttendance, setLoadingLastAttendance] = useState(false);
+
+  // Confirmation dialog hook - hanya digunakan jika tidak ada dari parent
+  const { showConfirmation: localShowConfirmation, ConfirmationDialog } = useConfirmationDialog();
+  const showConfirmation = parentShowConfirmation || localShowConfirmation;
 
   // Function to calculate age from date of birth
   const calculateAge = (dateOfBirth: string | null | undefined): number | null => {
@@ -295,39 +302,39 @@ export default function AttendanceDialog({
   const handleCompleteClass = async () => {
     if (!classData) return;
 
-    // Confirmation dialog
-    const confirmed = confirm(
-      `Apakah Anda yakin ingin menyelesaikan kelas "${classData.name}"?\n\n` +
-      `Kelas yang telah selesai tidak dapat diaktifkan kembali.\n` +
-      `Status kelas akan berubah menjadi "Selesai".`
-    );
+    showConfirmation({
+      title: 'Selesaikan Kelas',
+      description: `Apakah Anda yakin ingin menyelesaikan kelas "${classData.name}"?\n\nKelas yang telah selesai tidak dapat diaktifkan kembali.\nStatus kelas akan berubah menjadi "Selesai".`,
+      confirmText: 'Ya, Selesaikan',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        setIsCompletingClass(true);
 
-    if (!confirmed) return;
+        try {
+          const response = await fetch(`/api/classes/${classData.id}/complete`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-    setIsCompletingClass(true);
-
-    try {
-      const response = await fetch(`/api/classes/${classData.id}/complete`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        toast.success(`Kelas "${classData.name}" telah diselesaikan!`);
-        onAttendanceSubmitted();
-        onClose();
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Gagal menyelesaikan kelas');
+          if (response.ok) {
+            toast.success(`Kelas "${classData.name}" telah diselesaikan!`);
+            onAttendanceSubmitted();
+            onClose();
+          } else {
+            const error = await response.json();
+            toast.error(error.error || 'Gagal menyelesaikan kelas');
+          }
+        } catch (error) {
+          console.error('Error completing class:', error);
+          toast.error('Terjadi kesalahan saat menyelesaikan kelas');
+        } finally {
+          setIsCompletingClass(false);
+        }
       }
-    } catch (error) {
-      console.error('Error completing class:', error);
-      toast.error('Terjadi kesalahan saat menyelesaikan kelas');
-    } finally {
-      setIsCompletingClass(false);
-    }
+    });
   };
 
   const getAttendanceStatusColor = (status: string) => {
@@ -619,6 +626,9 @@ export default function AttendanceDialog({
           </div>
         </div>
       </DialogContent>
+      
+      {/* Confirmation Dialog - hanya render jika tidak ada dari parent */}
+      {!parentShowConfirmation && <ConfirmationDialog key="attendance-confirmation" />}
     </Dialog>
   );
 }

@@ -240,10 +240,14 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center space-x-2">
-              <BookOpen className="h-8 w-8 text-blue-600" />
+              <img 
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                alt="Homely Logo" 
+                className="h-8 w-8 rounded-md object-cover"
+              />
               <div>
                 <h1 className="text-lg font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-xs text-gray-500">Kursus Komputer</p>
+                <p className="text-xs text-gray-500">Homely Kursus Komputer</p>
               </div>
             </div>
             <Button

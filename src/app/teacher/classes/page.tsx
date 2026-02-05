@@ -22,6 +22,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import AttendanceDialog from '@/components/admin/attendance-dialog';
 
 interface Class {
@@ -88,6 +89,9 @@ export default function TeacherClassesPage() {
   const [activePage, setActivePage] = useState<number>(1);
   const [completedPage, setCompletedPage] = useState<number>(1);
   const itemsPerPage = 10;
+
+  // Confirmation dialog hook
+  const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
 
   // Function to calculate age from date of birth
   const calculateAge = (dateOfBirth: string | null | undefined): number | null => {
@@ -189,32 +193,37 @@ export default function TeacherClassesPage() {
   const handleCompleteClass = async (classData: Class) => {
     const remaining = classData.totalMeetings - classData.completedMeetings;
     const confirmMessage = remaining > 0
-      ? `Apakah Anda yakin ingin menyelesaikan kelas "${classData.name}"? 
-    
-${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
+      ? `Apakah Anda yakin ingin menyelesaikan kelas "${classData.name}"? ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
       : `Apakah Anda yakin ingin menyelesaikan kelas "${classData.name}"?`;
 
-    if (!confirm(confirmMessage)) return;
+    showConfirmation({
+      title: 'Selesaikan Kelas',
+      description: confirmMessage,
+      confirmText: 'Ya, Selesaikan',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/classes/${classData.id}/complete`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-    try {
-      const response = await fetch(`/api/classes/${classData.id}/complete`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        await fetchClasses();
-        toast.success(`Kelas "${classData.name}" berhasil diselesaikan!`);
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || 'Gagal menyelesaikan kelas');
+          if (response.ok) {
+            await fetchClasses();
+            toast.success(`Kelas "${classData.name}" berhasil diselesaikan!`);
+          } else {
+            const errorData = await response.json();
+            toast.error(errorData.error || 'Gagal menyelesaikan kelas');
+          }
+        } catch (error) {
+          console.error('Error completing class:', error);
+          toast.error('Terjadi kesalahan saat menyelesaikan kelas');
+        }
       }
-    } catch (error) {
-      console.error('Error completing class:', error);
-      toast.error('Terjadi kesalahan saat menyelesaikan kelas');
-    }
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -1045,6 +1054,7 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
           onClose={() => setIsAttendanceDialogOpen(false)}
           classData={attendanceClass}
           onAttendanceSubmitted={handleAttendanceSubmitted}
+          showConfirmation={showConfirmation}
         />
       )}
 
@@ -1257,6 +1267,9 @@ ${remaining} pertemuan tersisa akan ditandai sebagai selesai.`
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog />
     </div>
   );
 }
