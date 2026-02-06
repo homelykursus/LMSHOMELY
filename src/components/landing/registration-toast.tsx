@@ -84,11 +84,16 @@ export default function RegistrationToast() {
 
   // Function untuk mendapatkan inisial nama
   const getInitials = (name: string) => {
-    const words = name.split(' ');
+    const words = name.trim().split(' ').filter(word => word.length > 0);
     if (words.length >= 2) {
+      // Ambil huruf pertama dari 2 kata pertama
       return (words[0][0] + words[1][0]).toUpperCase();
+    } else if (words.length === 1) {
+      // Jika hanya 1 kata, ambil 2 huruf pertama
+      return words[0].substring(0, 2).toUpperCase();
     }
-    return name.substring(0, 2).toUpperCase();
+    // Fallback jika nama kosong
+    return 'U';
   };
 
   // Show toast dengan timing berbeda untuk mobile dan desktop

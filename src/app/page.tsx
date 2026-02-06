@@ -1,707 +1,1573 @@
 'use client';
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
-  Loader2, 
-  Users, 
-  Phone, 
-  Mail, 
-  CheckCircle, 
+  ChevronLeft, 
+  ChevronRight,
   Monitor,
-  User
-} from 'lucide-react'
-import { WhatsAppIcon } from '@/components/ui/whatsapp-icon'
-import { InstagramIcon } from '@/components/ui/instagram-icon'
-import { toast } from 'sonner'
+  Wifi,
+  Users,
+  Award,
+  Clock,
+  MapPin,
+  Star,
+  ArrowRight,
+  FileText,
+  Palette,
+  Video,
+  Code,
+  TrendingUp,
+  Terminal
+} from 'lucide-react';
+import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
+import { InstagramIcon } from '@/components/ui/instagram-icon';
+import { TikTokIcon } from '@/components/ui/tiktok-icon';
+import { FacebookIcon } from '@/components/ui/facebook-icon';
+import RegistrationToast from '@/components/landing/registration-toast';
+import AlumniAvatars from '@/components/landing/alumni-avatars';
 
 interface Course {
-  id: string
-  name: string
-  description: string
-  duration: number
-  category: string
-  pricing: {
-    id: string
-    courseType: string
-    basePrice: number
-    discountRate: number
-  }[]
+  id: string;
+  name: string;
+  description: string;
+  duration: string;
+  icon: any;
+  slug: string;
 }
 
-export default function RegistrationPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [courses, setCourses] = useState<Course[]>([])
-  const [isClient, setIsClient] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    dateOfBirth: '',
-    birthDay: '',
-    birthMonth: '',
-    birthYear: '',
-    gender: '',
-    whatsapp: '',
-    courseId: '',
-    courseType: 'regular',
-    lastEducation: '',
-    referralSource: ''
-  })
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+interface Facility {
+  id: string;
+  name: string;
+  description: string;
+  icon: any;
+}
 
-  // Ensure client-side rendering
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+interface Testimonial {
+  id: string;
+  name: string;
+  course: string;
+  rating: number;
+  comment: string;
+  photo?: string;
+}
 
-  // Update dateOfBirth when individual date components change
-  useEffect(() => {
-    if (formData.birthDay && formData.birthMonth && formData.birthYear) {
-      const formattedDate = `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
-      setFormData(prev => ({ ...prev, dateOfBirth: formattedDate }))
+interface Mentor {
+  id: string;
+  name: string;
+  instagram: string;
+  photo: string;
+  specialization: string;
+}
+
+interface GalleryImage {
+  id: string;
+  image: string;
+  title: string;
+  category: string;
+}
+
+export default function LandingPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [typingText, setTypingText] = useState('');
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Gallery stacked cards state
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  
+  // Testimonial slider state
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  const words = [
+    { text: 'Mudah', gradient: 'from-green-500 to-emerald-600' },
+    { text: 'Cepat', gradient: 'from-orange-500 to-red-600' },
+    { text: 'Menyenangkan', gradient: 'from-pink-500 to-purple-600' }
+  ];
+
+  // Program Kursus
+  const courses: Course[] = [
+    {
+      id: '1',
+      name: 'Microsoft Office',
+      description: 'Kuasai Word, Excel, PowerPoint untuk kebutuhan kantor dan bisnis',
+      duration: '12 Pertemuan',
+      icon: FileText,
+      slug: 'microsoft-office'
+    },
+    {
+      id: '2',
+      name: 'Desain Grafis',
+      description: 'Belajar Adobe Photoshop, Illustrator, dan CorelDraw',
+      duration: '16 Pertemuan',
+      icon: Palette,
+      slug: 'desain-grafis'
+    },
+    {
+      id: '3',
+      name: 'Video Editing',
+      description: 'Editing video profesional dengan Adobe Premiere & After Effects',
+      duration: '14 Pertemuan',
+      icon: Video,
+      slug: 'video-editing'
+    },
+    {
+      id: '4',
+      name: 'Web Design',
+      description: 'Membuat website menarik dengan HTML, CSS, dan JavaScript',
+      duration: '20 Pertemuan',
+      icon: Code,
+      slug: 'web-design'
+    },
+    {
+      id: '5',
+      name: 'Digital Marketing',
+      description: 'Strategi pemasaran digital dan social media marketing',
+      duration: '12 Pertemuan',
+      icon: TrendingUp,
+      slug: 'digital-marketing'
+    },
+    {
+      id: '6',
+      name: 'Programming',
+      description: 'Belajar coding dari dasar hingga membuat aplikasi',
+      duration: '24 Pertemuan',
+      icon: Terminal,
+      slug: 'programming'
     }
-  }, [formData.birthDay, formData.birthMonth, formData.birthYear])
+  ];
 
-  // Generate arrays for dropdowns
-  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString())
-  const months = [
-    { value: '1', label: 'Januari' },
-    { value: '2', label: 'Februari' },
-    { value: '3', label: 'Maret' },
-    { value: '4', label: 'April' },
-    { value: '5', label: 'Mei' },
-    { value: '6', label: 'Juni' },
-    { value: '7', label: 'Juli' },
-    { value: '8', label: 'Agustus' },
-    { value: '9', label: 'September' },
-    { value: '10', label: 'Oktober' },
-    { value: '11', label: 'November' },
-    { value: '12', label: 'Desember' }
-  ]
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 80 }, (_, i) => (currentYear - i).toString())
+  // Fasilitas
+  const facilities: Facility[] = [
+    {
+      id: '1',
+      name: 'Ruang Ber-AC',
+      description: 'Ruang kelas nyaman dengan pendingin udara',
+      icon: MapPin
+    },
+    {
+      id: '2',
+      name: 'WiFi Gratis',
+      description: 'Internet cepat untuk mendukung pembelajaran',
+      icon: Wifi
+    },
+    {
+      id: '3',
+      name: 'Kelas Kecil',
+      description: 'Maksimal 5 siswa per kelas untuk pembelajaran optimal',
+      icon: Users
+    },
+    {
+      id: '4',
+      name: 'Sertifikat',
+      description: 'Sertifikat resmi setelah menyelesaikan kursus',
+      icon: Award
+    },
+    {
+      id: '5',
+      name: 'Jadwal Fleksibel',
+      description: 'Pilih jadwal sesuai kebutuhan Anda',
+      icon: Clock
+    },
+    {
+      id: '6',
+      name: 'Komputer Modern',
+      description: 'Perangkat komputer terbaru dan terawat',
+      icon: Monitor
+    }
+  ];
 
-  const fetchCourses = async () => {
-    try {
-      const response = await fetch('/api/courses')
-      if (response.ok) {
-        const data = await response.json()
-        setCourses(data || [])
+  // Testimonials
+  const testimonials: Testimonial[] = [
+    {
+      id: '1',
+      name: 'Budi Santoso',
+      course: 'Microsoft Office',
+      rating: 5,
+      comment: 'Instrukturnya sabar dan materi mudah dipahami. Sekarang saya lebih percaya diri menggunakan Excel untuk pekerjaan.',
+      photo: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=3b82f6&color=fff'
+    },
+    {
+      id: '2',
+      name: 'Siti Nurhaliza',
+      course: 'Desain Grafis',
+      rating: 5,
+      comment: 'Kursus yang sangat membantu! Saya bisa membuat desain sendiri untuk bisnis online saya. Terima kasih Homely!',
+      photo: 'https://ui-avatars.com/api/?name=Siti+Nurhaliza&background=ec4899&color=fff'
+    },
+    {
+      id: '3',
+      name: 'Ahmad Rizki',
+      course: 'Video Editing',
+      rating: 5,
+      comment: 'Fasilitas lengkap, ruangan nyaman, dan yang paling penting ilmunya sangat bermanfaat. Recommended!',
+      photo: 'https://ui-avatars.com/api/?name=Ahmad+Rizki&background=10b981&color=fff'
+    },
+    {
+      id: '4',
+      name: 'Dewi Lestari',
+      course: 'Web Design',
+      rating: 5,
+      comment: 'Materi yang diajarkan sangat praktis dan langsung bisa diterapkan. Sekarang saya bisa membuat website sendiri!',
+      photo: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=f59e0b&color=fff'
+    },
+    {
+      id: '5',
+      name: 'Rudi Hermawan',
+      course: 'Digital Marketing',
+      rating: 5,
+      comment: 'Sangat puas dengan kursusnya! Instruktur menjelaskan dengan detail dan mudah dipahami. Bisnis saya jadi lebih berkembang.',
+      photo: 'https://ui-avatars.com/api/?name=Rudi+Hermawan&background=8b5cf6&color=fff'
+    },
+    {
+      id: '6',
+      name: 'Maya Sari',
+      course: 'Programming',
+      rating: 5,
+      comment: 'Dari nol sampai bisa coding! Pengajarnya sangat sabar dan metode belajarnya menyenangkan. Highly recommended!',
+      photo: 'https://ui-avatars.com/api/?name=Maya+Sari&background=ef4444&color=fff'
+    }
+  ];
+
+  // Mentors
+  const mentors: Mentor[] = [
+    {
+      id: '1',
+      name: 'Ibu Rina Wijaya',
+      instagram: '@rinawijaya',
+      photo: 'https://ui-avatars.com/api/?name=Rina+Wijaya&background=6366f1&color=fff&size=200',
+      specialization: 'Microsoft Office & Administrasi'
+    },
+    {
+      id: '2',
+      name: 'Bapak Andi Pratama',
+      instagram: '@andipratama',
+      photo: 'https://ui-avatars.com/api/?name=Andi+Pratama&background=8b5cf6&color=fff&size=200',
+      specialization: 'Desain Grafis & Multimedia'
+    },
+    {
+      id: '3',
+      name: 'Ibu Sarah Kusuma',
+      instagram: '@sarahkusuma',
+      photo: 'https://ui-avatars.com/api/?name=Sarah+Kusuma&background=ec4899&color=fff&size=200',
+      specialization: 'Video Editing & Motion Graphics'
+    },
+    {
+      id: '4',
+      name: 'Bapak Dimas Prasetyo',
+      instagram: '@dimaspras',
+      photo: 'https://ui-avatars.com/api/?name=Dimas+Prasetyo&background=14b8a6&color=fff&size=200',
+      specialization: 'Web Design & Programming'
+    },
+    {
+      id: '5',
+      name: 'Ibu Maya Sari',
+      instagram: '@mayasari',
+      photo: 'https://ui-avatars.com/api/?name=Maya+Sari&background=f59e0b&color=fff&size=200',
+      specialization: 'Digital Marketing & SEO'
+    },
+    {
+      id: '6',
+      name: 'Bapak Rudi Hartono',
+      instagram: '@rudihartono',
+      photo: 'https://ui-avatars.com/api/?name=Rudi+Hartono&background=ef4444&color=fff&size=200',
+      specialization: 'Database & Networking'
+    }
+  ];
+
+  // Gallery Images
+  const galleryImages: GalleryImage[] = [
+    {
+      id: '1',
+      image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop',
+      title: 'Ruang Kelas Modern',
+      category: 'Fasilitas'
+    },
+    {
+      id: '2',
+      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop',
+      title: 'Suasana Belajar',
+      category: 'Aktivitas'
+    },
+    {
+      id: '3',
+      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop',
+      title: 'Lab Komputer',
+      category: 'Fasilitas'
+    },
+    {
+      id: '4',
+      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop',
+      title: 'Praktik Desain Grafis',
+      category: 'Aktivitas'
+    },
+    {
+      id: '5',
+      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
+      title: 'Kelas Video Editing',
+      category: 'Aktivitas'
+    },
+    {
+      id: '6',
+      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop',
+      title: 'Ruang Tunggu',
+      category: 'Fasilitas'
+    }
+  ];
+
+  // Typing animation effect
+  useEffect(() => {
+    const currentWord = words[wordIndex].text;
+    const typingSpeed = isDeleting ? 50 : 100;
+    const pauseTime = 2000;
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        // Typing
+        if (typingText.length < currentWord.length) {
+          setTypingText(currentWord.substring(0, typingText.length + 1));
+        } else {
+          // Pause before deleting
+          setTimeout(() => setIsDeleting(true), pauseTime);
+        }
+      } else {
+        // Deleting
+        if (typingText.length > 0) {
+          setTypingText(currentWord.substring(0, typingText.length - 1));
+        } else {
+          // Move to next word
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % words.length);
+        }
       }
-    } catch (error) {
-      console.error('Failed to fetch courses:', error)
-    }
-  }
+    }, typingSpeed);
 
+    return () => clearTimeout(timer);
+  }, [typingText, isDeleting, wordIndex, words]);
+
+  // Handle scroll
   useEffect(() => {
-    if (isClient) {
-      fetchCourses()
-    }
-  }, [isClient])
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  useEffect(() => {
-    if (formData.courseId) {
-      const course = courses.find(c => c.id === formData.courseId)
-      setSelectedCourse(course || null)
-    } else {
-      setSelectedCourse(null)
-    }
-  }, [formData.courseId, courses])
-
-  const calculatePrice = () => {
-    if (!selectedCourse) return 0
-    
-    const pricing = selectedCourse.pricing.find(p => p.courseType === formData.courseType)
-    if (!pricing) return 0
-    
-    const basePrice = pricing.basePrice
-    const discount = (basePrice * pricing.discountRate) / 100
-    return basePrice - discount
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
-  // Function to convert text to proper case (capitalize first letter of each word)
-  const toProperCase = (text: string) => {
-    return text
-      .toLowerCase()
-      .split(' ')
-      .map(word => {
-        if (word.length === 0) return word;
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      })
-      .join(' ');
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
   };
 
-  const formatWhatsAppMessage = () => {
-    const course = courses.find(c => c.id === formData.courseId)
-    const finalPrice = calculatePrice()
-    const birthDate = `${formData.birthDay}/${formData.birthMonth}/${formData.birthYear}`
-    const genderText = formData.gender === 'male' ? 'Laki-laki' : 'Perempuan'
-    const courseTypeText = formData.courseType === 'regular' ? 'Kelas Reguler' : 'Kelas Privat'
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    document.body.style.overflow = 'unset'; // Restore scrolling
+  };
+
+  const nextImage = () => {
+    setLightboxIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  const prevImage = () => {
+    setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  // Handle keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!lightboxOpen) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextImage();
+      if (e.key === 'ArrowLeft') prevImage();
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [lightboxOpen]);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Gallery swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
     
-    const message = `*PENDAFTARAN BARU - HOMELY KURSUS KOMPUTER*
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
 
-📝 *Data Pendaftar:*
-• Nama: ${formData.name}
-• Tanggal Lahir: ${birthDate}
-• Jenis Kelamin: ${genderText}
-• WhatsApp: ${formData.whatsapp}
-
-📚 *Program Kursus:*
-• Kursus: ${course?.name || '-'}
-• Jenis Kelas: ${courseTypeText}
-• Total Biaya: ${formatCurrency(finalPrice)}
-
-🎓 *Informasi Tambahan:*
-• Pendidikan Terakhir: ${formData.lastEducation || '-'}
-• Sumber Referral: ${formData.referralSource || '-'}
-
-Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
-
-    return encodeURIComponent(message)
-  }
-
-  const redirectToWhatsApp = () => {
-    const adminWhatsApp = '628216457578'
-    const message = formatWhatsAppMessage()
-    const whatsappUrl = `https://wa.me/${adminWhatsApp}?text=${message}`
-    
-    // Open WhatsApp in new tab
-    window.open(whatsappUrl, '_blank')
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.name || !formData.birthDay || !formData.birthMonth || !formData.birthYear || !formData.gender || !formData.whatsapp || !formData.courseId) {
-      toast.error('Mohon lengkapi semua field yang wajib diisi')
-      return
+    if (isLeftSwipe && activeCardIndex < galleryImages.length - 1) {
+      setActiveCardIndex(prev => prev + 1);
+    }
+    if (isRightSwipe && activeCardIndex > 0) {
+      setActiveCardIndex(prev => prev - 1);
     }
 
-    // Validasi format nama
-    if (!/^[a-zA-Z\s\.\-']+$/.test(formData.name.trim())) {
-      toast.error('Nama hanya boleh mengandung huruf, spasi, titik, strip, dan apostrof')
-      return
-    }
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
 
-    // Validasi format WhatsApp
-    if (!/^[0-9\+\-\s\(\)]+$/.test(formData.whatsapp.trim())) {
-      toast.error('Nomor WhatsApp hanya boleh mengandung angka, +, -, spasi, dan tanda kurung')
-      return
-    }
+  const goToCard = (index: number) => {
+    setActiveCardIndex(index);
+  };
 
-    setIsLoading(true)
-    
-    try {
-      const finalPrice = calculatePrice()
-      const pricing = selectedCourse?.pricing.find(p => p.courseType === formData.courseType)
-      const discount = pricing ? (pricing.basePrice * pricing.discountRate) / 100 : 0
+  // Function untuk mendapatkan gradient color berdasarkan course
+  const getCourseGradient = (courseId: string) => {
+    const gradients: { [key: string]: string } = {
+      '1': 'from-blue-500 to-blue-600',      // Microsoft Office - Blue
+      '2': 'from-purple-500 to-pink-500',    // Desain Grafis - Purple/Pink
+      '3': 'from-red-500 to-orange-500',     // Video Editing - Red/Orange
+      '4': 'from-green-500 to-teal-500',     // Web Design - Green/Teal
+      '5': 'from-yellow-500 to-orange-500',  // Digital Marketing - Yellow/Orange
+      '6': 'from-indigo-500 to-purple-600'   // Programming - Indigo/Purple
+    };
+    return gradients[courseId] || 'from-blue-500 to-blue-600';
+  };
 
-      const response = await fetch('/api/students', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          finalPrice,
-          discount
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Show success message
-        toast.success(`Pendaftaran berhasil! Terima kasih ${formData.name}, silakan hubungi admin untuk konfirmasi pembayaran.`)
-        
-        // Redirect to WhatsApp with registration data
-        setTimeout(() => {
-          redirectToWhatsApp()
-        }, 1000) // Small delay to show success message first
-        
-        // Reset form
-        setFormData({
-          name: '',
-          dateOfBirth: '',
-          birthDay: '',
-          birthMonth: '',
-          birthYear: '',
-          gender: '',
-          whatsapp: '',
-          courseId: '',
-          courseType: 'regular',
-          lastEducation: '',
-          referralSource: ''
-        })
-        setSelectedCourse(null)
-      } else {
-        toast.error(data.error || 'Terjadi kesalahan saat mendaftar')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      toast.error('Terjadi kesalahan koneksi. Silakan coba lagi.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Show loading state on server-side
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Loading...</h2>
-          <p className="text-gray-600 mt-2">Memuat halaman pendaftaran</p>
-        </div>
-      </div>
-    )
-  }
+  const whatsappNumber = '628216457578';
+  const whatsappMessage = encodeURIComponent('Halo, saya tertarik untuk mendaftar kursus di Homely Kursus Komputer. Mohon informasi lebih lanjut.');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
-          <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
-                <img 
-                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
-                  alt="Homely Logo" 
-                  className="h-12 w-12 rounded object-cover"
-                />
+    <div className="min-h-screen bg-white">
+      {/* Header / Navigation */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 md:h-20">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <img 
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                alt="Homely Logo" 
+                className="h-10 w-10 md:h-12 md:w-12 rounded object-cover"
+              />
+              <div>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900">Homely Kursus Komputer</h1>
               </div>
             </div>
-            <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4">
-              Homely Kursus
-              <span className="block text-blue-200">Komputer</span>
-            </h1>
-            <p className="text-xl lg:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              Belajar Komputer dengan Mudah dan Praktis
+
+            {/* Desktop Menu */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <button onClick={() => scrollToSection('home')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Beranda
+              </button>
+              <button onClick={() => scrollToSection('programs')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Program
+              </button>
+              <button onClick={() => scrollToSection('facilities')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Fasilitas
+              </button>
+              <button onClick={() => scrollToSection('mentors')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Mentor
+              </button>
+              <button onClick={() => scrollToSection('gallery')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Galeri
+              </button>
+              <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Lokasi
+              </button>
+              <Link
+                href="/pendaftaran"
+                className="bg-gradient-to-br from-orange-400 via-orange-500 to-pink-500 hover:from-orange-500 hover:via-orange-600 hover:to-pink-600 text-white px-6 py-2 rounded-full font-medium transition-all flex items-center space-x-2 text-sm shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
+                style={{
+                  boxShadow: '0 4px 15px rgba(251, 146, 60, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Daftar</span>
+              </Link>
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            >
+              <div className="w-6 h-5 flex flex-col justify-between">
+                <span className={`block h-0.5 w-full bg-gray-900 transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                <span className={`block h-0.5 w-full bg-gray-900 transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+                <span className={`block h-0.5 w-full bg-gray-900 transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+              </div>
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden py-4 border-t border-gray-200">
+              <nav className="flex flex-col space-y-4">
+                <button onClick={() => scrollToSection('home')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Beranda
+                </button>
+                <button onClick={() => scrollToSection('programs')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Program
+                </button>
+                <button onClick={() => scrollToSection('facilities')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Fasilitas
+                </button>
+                <button onClick={() => scrollToSection('mentors')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Mentor
+                </button>
+                <button onClick={() => scrollToSection('gallery')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Galeri
+                </button>
+                <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Lokasi
+                </button>
+                <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Testimoni
+                </button>
+                <Link
+                  href="/pendaftaran"
+                  className="bg-gradient-to-br from-orange-400 via-orange-500 to-pink-500 hover:from-orange-500 hover:via-orange-600 hover:to-pink-600 text-white px-6 py-3 rounded-full font-medium transition-all flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  style={{
+                    boxShadow: '0 4px 15px rgba(251, 146, 60, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.2)',
+                  }}
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>Daftar Sekarang</span>
+                </Link>
+              </nav>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section id="home" className="relative min-h-screen mt-16 md:mt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Mobile Layout */}
+          <div className="lg:hidden flex flex-col min-h-[calc(100vh-5rem)] py-12 space-y-8">
+            {/* 1. Text Content - TOP */}
+            <div className="text-left space-y-6 z-10">
+              <div className="inline-block">
+                <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
+                  📍 Kursus Komputer Pekanbaru
+                </span>
+              </div>
+              
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Wujudkan Impian
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                  Karir Digital Anda
+                </span>
+                <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
+                  {typingText}
+                  <span className="animate-pulse">|</span>
+                </span>
+              </h1>
+              
+              <p className="text-base md:text-lg text-gray-600 leading-relaxed">
+                Belajar komputer dengan metode praktis dan mudah dipahami. Belajar Langsung Tatap Muka dan dibimbing oleh instruktur berpengalaman dengan fasilitas terbaik.
+              </p>
+            </div>
+
+            {/* 2. Image - MIDDLE */}
+            <div className="relative flex items-center justify-center z-10">
+              <div className="relative w-full max-w-sm">
+                {/* Background Circle */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-3xl"></div>
+                
+                {/* Main Image */}
+                <div className="relative">
+                  <img
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    alt="Perempuan Indonesia menggunakan laptop"
+                    className="w-full h-auto rounded-3xl"
+                  />
+                  
+                  {/* Floating Elements */}
+                  <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-3 animate-float">
+                    <div className="flex items-center space-x-2">
+                      <div className="bg-green-100 p-2 rounded-xl">
+                        <Award className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-900">Sertifikat</div>
+                        <div className="text-xs text-gray-600">Resmi</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-3 animate-float animation-delay-2000">
+                    <div className="flex items-center space-x-2">
+                      <div className="bg-blue-100 p-2 rounded-xl">
+                        <Users className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-900">Kelas Kecil</div>
+                        <div className="text-xs text-gray-600">Max 5 Siswa</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute top-1/2 -right-6 bg-white rounded-2xl shadow-xl p-3 animate-float animation-delay-4000">
+                    <div className="flex items-center space-x-2">
+                      <div className="bg-purple-100 p-2 rounded-xl">
+                        <Clock className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-900">Jadwal</div>
+                        <div className="text-xs text-gray-600">Fleksibel</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. CTA Buttons - BELOW IMAGE */}
+            <div className="flex flex-col gap-4 z-10">
+              <a
+                href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <WhatsAppIcon className="text-white" size={24} />
+                <span>Hubungi Admin</span>
+                <ArrowRight className="w-5 h-5" />
+              </a>
+              <button
+                onClick={() => scrollToSection('programs')}
+                className="inline-flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-full font-semibold text-lg transition-all border-2 border-gray-200 hover:border-gray-300"
+              >
+                <span>Lihat Program</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 4. Statistics - BOTTOM */}
+            <div className="flex items-center justify-center gap-12 z-10">
+              {/* Alumni Avatars */}
+              <div className="flex-shrink-0">
+                <AlumniAvatars />
+              </div>
+              
+              {/* Rating Google */}
+              <div className="text-center flex-shrink-0">
+                <div className="flex items-center justify-center mb-2 space-x-0.5">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                </div>
+                <div className="text-xl font-bold text-gray-900">5.0</div>
+                <div className="text-xs text-gray-600">Rating Google</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-5rem)] py-12">
+            {/* Left Content */}
+            <div className="text-left z-10">
+              <div className="space-y-6 mb-8">
+                <div className="inline-block">
+                  <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
+                    📍 Kursus Komputer Pekanbaru
+                  </span>
+                </div>
+                
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                  Wujudkan Impian
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                    Karir Digital Anda
+                  </span>
+                  <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
+                    {typingText}
+                    <span className="animate-pulse">|</span>
+                  </span>
+                </h1>
+                
+                <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+                  Belajar komputer dengan metode praktis dan mudah dipahami. Belajar Langsung Tatap Muka dan dibimbing oleh instruktur berpengalaman dengan fasilitas terbaik.
+                </p>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                <a
+                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <WhatsAppIcon className="text-white" size={24} />
+                  <span>Hubungi Admin</span>
+                  <ArrowRight className="w-5 h-5" />
+                </a>
+                <button
+                  onClick={() => scrollToSection('programs')}
+                  className="inline-flex items-center justify-center space-x-2 bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-full font-semibold text-lg transition-all border-2 border-gray-200 hover:border-gray-300"
+                >
+                  <span>Lihat Program</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Statistics */}
+              <div className="flex items-center gap-8 pt-8">
+                {/* Alumni Avatars */}
+                <div className="flex-shrink-0">
+                  <AlumniAvatars />
+                </div>
+                
+                {/* Rating Google */}
+                <div className="text-center flex-shrink-0">
+                  <div className="flex items-center justify-center mb-2 space-x-1">
+                    <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                    <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                    <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                    <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                    <Star className="w-6 h-6 text-yellow-400 fill-current" />
+                  </div>
+                  <div className="text-2xl md:text-3xl font-bold text-gray-900">5.0</div>
+                  <div className="text-sm text-gray-600">Rating Google</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - Illustration */}
+            <div className="relative lg:h-[600px] flex items-center justify-center z-10">
+              <div className="relative w-full max-w-lg">
+                {/* Background Circle */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20 blur-3xl"></div>
+                
+                {/* Main Image */}
+                <div className="relative">
+                  <img
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    alt="Perempuan Indonesia menggunakan laptop"
+                    className="w-full h-auto rounded-3xl"
+                  />
+                  
+                  {/* Floating Elements */}
+                  <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-xl p-4 animate-float">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-green-100 p-3 rounded-xl">
+                        <Award className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">Sertifikat</div>
+                        <div className="text-xs text-gray-600">Resmi</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 animate-float animation-delay-2000">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-blue-100 p-3 rounded-xl">
+                        <Users className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">Kelas Kecil</div>
+                        <div className="text-xs text-gray-600">Max 5 Siswa</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute top-1/2 -right-8 bg-white rounded-2xl shadow-xl p-4 animate-float animation-delay-4000">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-purple-100 p-3 rounded-xl">
+                        <Clock className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900">Jadwal</div>
+                        <div className="text-xs text-gray-600">Fleksibel</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Program Kursus Section */}
+      <section id="programs" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Program Kursus Kami
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Pilih program kursus yang sesuai dengan kebutuhan dan minat Anda
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {courses.map((course) => (
+              <Link
+                key={course.id}
+                href={`/program/${course.slug}`}
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 cursor-pointer group"
+              >
+                {/* 3D Icon Container with Gradient */}
+                <div className={`bg-gradient-to-br ${getCourseGradient(course.id)} w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                  <course.icon className="w-10 h-10 text-white drop-shadow-lg" strokeWidth={2.5} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {course.name}
+                </h3>
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                  {course.description}
+                </p>
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors">
+                    <span>Lihat Detail</span>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <a
+              href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold transition-all transform hover:scale-105"
+            >
+              <span>Lihat Semua Program</span>
+              <ArrowRight className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Fasilitas Section */}
+      <section id="facilities" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Fasilitas Lengkap
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Kami menyediakan fasilitas terbaik untuk kenyamanan belajar Anda
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {facilities.map((facility) => (
+              <div
+                key={facility.id}
+                className="flex items-start space-x-4 p-6 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <facility.icon className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {facility.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {facility.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Mentors Section */}
+      <section id="mentors" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Mentor Profesional Kami
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Belajar langsung dari instruktur berpengalaman dan bersertifikat
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {mentors.map((mentor) => (
+              <div
+                key={mentor.id}
+                className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
+              >
+                <div className="text-center">
+                  <div className="relative inline-block mb-3">
+                    <img
+                      src={mentor.photo}
+                      alt={mentor.name}
+                      className="w-20 h-20 rounded-full mx-auto border-2 border-white shadow-lg"
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
+                      <Award className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
+                    {mentor.name}
+                  </h3>
+                  <p className="text-xs text-gray-600 mb-2 leading-tight">
+                    {mentor.specialization}
+                  </p>
+                  <a
+                    href={`https://instagram.com/${mentor.instagram.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-pink-600 hover:text-pink-700 font-medium transition-colors text-xs"
+                  >
+                    <InstagramIcon className="text-pink-600" size={14} />
+                    <span className="truncate">{mentor.instagram}</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-12 md:py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Apa Kata Mereka?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Testimoni dari siswa yang telah bergabung dengan Homely Kursus Komputer
+            </p>
+          </div>
+
+          {/* Horizontal Slider Container */}
+          <div className="relative max-w-7xl mx-auto">
+            {/* Overflow Container */}
+            <div className="overflow-hidden">
+              {/* Sliding Track - Mobile: 1 card, Tablet: 2 cards, Desktop: 4 cards */}
+              <div 
+                className="flex transition-transform duration-500 ease-out"
+                style={{ 
+                  transform: `translateX(-${currentTestimonial * 100}%)` 
+                }}
+              >
+                {testimonials.map((testimonial, index) => (
+                  <div
+                    key={testimonial.id}
+                    className="flex-shrink-0 w-full md:w-1/2 lg:w-1/4 px-3"
+                  >
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all h-full">
+                      <div className="flex items-center mb-4">
+                        <img
+                          src={testimonial.photo}
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full mr-3"
+                        />
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-sm">{testimonial.name}</h4>
+                          <p className="text-xs text-gray-600">{testimonial.course}</p>
+                        </div>
+                      </div>
+                      <div className="flex mb-3">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                        ))}
+                      </div>
+                      <p className="text-gray-700 italic text-sm">
+                        "{testimonial.comment}"
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation Buttons - Hidden on desktop when all 4 cards visible */}
+            <div className="flex items-center justify-center space-x-4 mt-4 md:mt-8 lg:hidden">
+              <button
+                onClick={() => setCurrentTestimonial((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
+                disabled={currentTestimonial === 0}
+                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                aria-label="Previous testimonial"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Dots Indicator */}
+              <div className="flex space-x-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTestimonial(index)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      index === currentTestimonial 
+                        ? 'bg-blue-600 w-8' 
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
+                disabled={currentTestimonial === testimonials.length - 1}
+                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                aria-label="Next testimonial"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Desktop Navigation - Show when more than 4 cards */}
+            <div className="hidden lg:flex items-center justify-center space-x-4 mt-8">
+              <button
+                onClick={() => setCurrentTestimonial((prev) => Math.max(0, prev - 1))}
+                disabled={currentTestimonial === 0}
+                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                aria-label="Previous testimonials"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Dots Indicator for Desktop - Show slides of 4 */}
+              <div className="flex space-x-2">
+                {[0, 1, 2].map((slideIndex) => (
+                  <button
+                    key={slideIndex}
+                    onClick={() => setCurrentTestimonial(slideIndex)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      currentTestimonial === slideIndex
+                        ? 'bg-blue-600 w-8' 
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Go to slide ${slideIndex + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentTestimonial((prev) => Math.min(2, prev + 1))}
+                disabled={currentTestimonial === 2}
+                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                aria-label="Next testimonials"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Gallery Section */}
+      <section id="gallery" className="py-12 md:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Galeri Foto
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Lihat suasana belajar dan fasilitas kami
+            </p>
+          </div>
+
+          {/* Desktop Grid Layout */}
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+            {galleryImages.map((item, index) => (
+              <div
+                key={item.id}
+                onClick={() => openLightbox(index)}
+                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3] cursor-pointer"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
+                      {item.category}
+                    </span>
+                    <h3 className="text-white text-xl font-bold">
+                      {item.title}
+                    </h3>
+                  </div>
+                </div>
+                {/* Click indicator */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Stacked Cards Layout */}
+          <div className="md:hidden">
+            <div 
+              className="relative h-[500px] flex items-center justify-center"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {galleryImages.map((item, index) => {
+                const position = index - activeCardIndex;
+                const isActive = index === activeCardIndex;
+                
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => isActive && openLightbox(index)}
+                    className={`gallery-card absolute w-[85%] max-w-sm transition-all duration-500 ease-out cursor-pointer ${
+                      isActive ? 'z-30' : 'z-10'
+                    }`}
+                    style={{
+                      transform: `
+                        translateX(${position * 20}px)
+                        translateY(${Math.abs(position) * 15}px)
+                        scale(${1 - Math.abs(position) * 0.1})
+                        rotateZ(${position * 2}deg)
+                      `,
+                      opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.2,
+                      pointerEvents: isActive ? 'auto' : 'none'
+                    }}
+                  >
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl aspect-[4/3]">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
+                            {item.category}
+                          </span>
+                          <h3 className="text-white text-xl font-bold">
+                            {item.title}
+                          </h3>
+                        </div>
+                      </div>
+                      {/* Click indicator for active card */}
+                      {isActive && (
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 animate-pulse">
+                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Navigation Dots */}
+            <div className="flex justify-center items-center space-x-2 mt-8">
+              {galleryImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToCard(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    index === activeCardIndex
+                      ? 'w-8 h-3 bg-blue-600'
+                      : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Swipe Instruction */}
+            <p className="text-center text-sm text-gray-500 mt-4">
+              Geser untuk melihat foto lainnya
             </p>
           </div>
         </div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full"></div>
-        </div>
-      </div>
+      </section>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10 pb-16">
-        {/* Form Pendaftaran */}
-        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl p-8">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Users className="h-8 w-8" />
-                </div>
-              </div>
-              <CardTitle className="text-3xl font-bold mb-2">
-                Daftar Sekarang
-              </CardTitle>
-              <CardDescription className="text-blue-100 text-lg">
-                Isi form di bawah untuk memulai perjalanan belajar Anda
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8 lg:p-12">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Personal Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <User className="h-5 w-5 text-blue-600" />
+      {/* Location Section */}
+      <section id="location" className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Lokasi Kami
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Kunjungi kami dan rasakan pengalaman belajar yang menyenangkan
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact Info - Left Side (2 columns) */}
+            <div className="lg:col-span-2 flex flex-col justify-center space-y-6">
+              <div className="bg-white rounded-2xl p-8 shadow-lg">
+                <div className="flex items-start space-x-4 mb-6">
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <MapPin className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Informasi Pribadi</h3>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                      Nama Lengkap <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => {
-                        const properCaseName = toProperCase(e.target.value);
-                        setFormData(prev => ({ ...prev, name: properCaseName }));
-                      }}
-                      placeholder="Masukkan nama lengkap"
-                      required
-                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="gender" className="text-sm font-medium text-gray-700">
-                      Jenis Kelamin <span className="text-red-500">*</span>
-                    </Label>
-                    <Select value={formData.gender} onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}>
-                      <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                        <SelectValue placeholder="Pilih jenis kelamin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Laki-laki</SelectItem>
-                        <SelectItem value="female">Perempuan</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Tanggal Lahir <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-3">
-                      <Select value={formData.birthDay} onValueChange={(value) => setFormData(prev => ({ ...prev, birthDay: value }))}>
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                          <SelectValue placeholder="Tanggal" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {days.map((day) => (
-                            <SelectItem key={day} value={day}>
-                              {day}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-5">
-                      <Select value={formData.birthMonth} onValueChange={(value) => setFormData(prev => ({ ...prev, birthMonth: value }))}>
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                          <SelectValue placeholder="Bulan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {months.map((month) => (
-                            <SelectItem key={month.value} value={month.value}>
-                              {month.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-4">
-                      <Select value={formData.birthYear} onValueChange={(value) => setFormData(prev => ({ ...prev, birthYear: value }))}>
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                          <SelectValue placeholder="Tahun" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {years.map((year) => (
-                            <SelectItem key={year} value={year}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Phone className="h-5 w-5 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Informasi Kontak</h3>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp" className="text-sm font-medium text-gray-700">
-                      Nomor WhatsApp <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <Input
-                        id="whatsapp"
-                        value={formData.whatsapp}
-                        onChange={(e) => {
-                          let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
-                          
-                          // If user starts typing and doesn't have 62, add it
-                          if (value.length > 0 && !value.startsWith('62')) {
-                            // If user starts with 08, replace with 628
-                            if (value.startsWith('08')) {
-                              value = '628' + value.slice(2);
-                            }
-                            // If user starts with 8 (without 0), add 628
-                            else if (value.startsWith('8')) {
-                              value = '628' + value.slice(1);
-                            }
-                            // For any other number, add 62 prefix
-                            else {
-                              value = '62' + value;
-                            }
-                          }
-                          
-                          // Limit to 15 digits maximum (62 + 13 digits)
-                          if (value.length > 15) {
-                            value = value.slice(0, 15);
-                          }
-                          
-                          setFormData(prev => ({ ...prev, whatsapp: value }));
-                        }}
-                        placeholder="62812345678"
-                        required
-                        className="h-12 pl-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3 text-green-500" />
-                      Format otomatis: 62xxxxxxxxxx
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Alamat</h3>
+                    <p className="text-gray-600">
+                      Jl. Kasah Ujung, No. 3, Pekanbaru<br />
+                      Riau, Indonesia
                     </p>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="referralSource" className="text-sm font-medium text-gray-700">
-                      Tau Homely Kursus dari mana?
-                    </Label>
-                    <Select value={formData.referralSource} onValueChange={(value) => setFormData(prev => ({ ...prev, referralSource: value }))}>
-                      <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                        <SelectValue placeholder="Pilih sumber referral" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Instagram">📸 Instagram</SelectItem>
-                        <SelectItem value="Facebook">📘 Facebook</SelectItem>
-                        <SelectItem value="Google">🔍 Google</SelectItem>
-                        <SelectItem value="Tiktok">🎵 Tiktok</SelectItem>
-                        <SelectItem value="dari Teman">👥 dari Teman</SelectItem>
-                        <SelectItem value="Lainnya">📝 Lainnya</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="lastEducation" className="text-sm font-medium text-gray-700">
-                    Pendidikan Terakhir
-                  </Label>
-                  <Select value={formData.lastEducation} onValueChange={(value) => setFormData(prev => ({ ...prev, lastEducation: value }))}>
-                    <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                      <SelectValue placeholder="Pilih pendidikan terakhir" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SD">🎒 SD</SelectItem>
-                      <SelectItem value="SMP">📚 SMP</SelectItem>
-                      <SelectItem value="SMA">🎓 SMA/SMK</SelectItem>
-                      <SelectItem value="D3">📜 Diploma (D3)</SelectItem>
-                      <SelectItem value="S1">🎓 Sarjana (S1)</SelectItem>
-                      <SelectItem value="S2">👨‍🎓 Magister (S2)</SelectItem>
-                      <SelectItem value="S3">👨‍🏫 Doktor (S3)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Course Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Monitor className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Pilihan Kursus</h3>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="courseId" className="text-sm font-medium text-gray-700">
-                      Pilih Program Kursus <span className="text-red-500">*</span>
-                    </Label>
-                    <Select value={formData.courseId} onValueChange={(value) => setFormData(prev => ({ ...prev, courseId: value }))}>
-                      <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
-                        <SelectValue placeholder="Pilih program kursus" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {courses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
-                            <div className="flex items-center gap-2">
-                              <Monitor className="h-4 w-4" />
-                              {course.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="courseType" className="text-sm font-medium text-gray-700">
-                      Jenis Kelas <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div 
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                          formData.courseType === 'regular' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={() => setFormData(prev => ({ ...prev, courseType: 'regular' }))}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            formData.courseType === 'regular' ? 'bg-blue-100' : 'bg-gray-100'
-                          }`}>
-                            <Users className={`h-5 w-5 ${
-                              formData.courseType === 'regular' ? 'text-blue-600' : 'text-gray-600'
-                            }`} />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">Kelas Reguler</div>
-                            <div className="text-sm text-gray-500">Maksimal 5 siswa</div>
-                          </div>
-                        </div>
+                {/* 2-Column Grid for Social Media */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: WhatsApp & Instagram */}
+                  <div className="space-y-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-green-100 p-3 rounded-lg">
+                        <WhatsAppIcon className="text-green-600" size={24} />
                       </div>
-                      <div 
-                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                          formData.courseType === 'private' 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={() => setFormData(prev => ({ ...prev, courseType: 'private' }))}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            formData.courseType === 'private' ? 'bg-blue-100' : 'bg-gray-100'
-                          }`}>
-                            <User className={`h-5 w-5 ${
-                              formData.courseType === 'private' ? 'text-blue-600' : 'text-gray-600'
-                            }`} />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">Kelas Privat</div>
-                            <div className="text-sm text-gray-500">1-on-1 dengan instruktur</div>
-                          </div>
-                        </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">WhatsApp</h3>
+                        <a
+                          href={`https://wa.me/${whatsappNumber}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-700 font-medium"
+                        >
+                          +62 821-6457-578
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-pink-100 p-3 rounded-lg">
+                        <InstagramIcon className="text-pink-600" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Instagram</h3>
+                        <a
+                          href="https://instagram.com/homelykursus"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-pink-600 hover:text-pink-700 font-medium"
+                        >
+                          @homelykursus
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: TikTok & Facebook */}
+                  <div className="space-y-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-gray-100 p-3 rounded-lg">
+                        <TikTokIcon className="text-gray-900" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">TikTok</h3>
+                        <a
+                          href="https://www.tiktok.com/@homelykursuskomputer"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-900 hover:text-gray-700 font-medium"
+                        >
+                          @homelykursuskomputer
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-blue-100 p-3 rounded-lg">
+                        <FacebookIcon className="text-blue-600" size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Facebook</h3>
+                        <a
+                          href="https://www.facebook.com/profile.php?id=100063558767161"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Homely Kursus Komputer Pekanbaru
+                        </a>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Price Preview */}
-              {selectedCourse && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-blue-100 rounded-xl">
-                      <CheckCircle className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-blue-900 mb-3">Ringkasan Pendaftaran</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <div className="text-gray-600">Program Kursus</div>
-                          <div className="font-medium text-gray-900">{selectedCourse.name}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-600">Durasi</div>
-                          <div className="font-medium text-gray-900">{selectedCourse.duration} pertemuan</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-600">Jenis Kelas</div>
-                          <div className="font-medium text-gray-900">
-                            {formData.courseType === 'regular' ? 'Kelas Reguler' : 'Kelas Privat'}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-gray-600">Total Biaya</div>
-                          <div className="font-bold text-xl text-blue-900">
-                            {formatCurrency(calculatePrice())}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Map - Right Side (1 column) */}
+            <div className="lg:col-span-1 flex flex-col space-y-4">
+              <div className="rounded-2xl overflow-hidden shadow-xl h-[300px]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15958.850753834!2d101.43638!3d0.50729!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31d5a8e9e4c8f8e9%3A0x1234567890abcdef!2sJl.%20Kasah%20Ujung%2C%20No.%203%2C%20Pekanbaru%20-%20Riau!5e0!3m2!1sen!2sid!4v1234567890"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Lokasi Homely Kursus Komputer"
+                ></iframe>
+              </div>
 
-              <Button 
-                type="submit" 
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200" 
-                disabled={isLoading}
+              <a
+                href="https://maps.app.goo.gl/1WPaH5dPRuhyhfVv6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    Memproses Pendaftaran...
-                  </>
-                ) : (
-                  <>
-                    <WhatsAppIcon className="mr-3 text-white" size={24} />
-                    Kirim ke WhatsApp
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center text-sm text-gray-500">
-                Dengan mendaftar, Anda menyetujui syarat dan ketentuan yang berlaku
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-16 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <div className="p-4 bg-white rounded-2xl shadow-lg">
-                <img 
-                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
-                  alt="Homely Logo" 
-                  className="h-8 w-8 rounded object-cover"
-                />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold mb-4">Homely Kursus Komputer</h3>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
-              Tempat terbaik untuk belajar komputer dengan metode praktis dan mudah dipahami. 
-              Bergabunglah dengan ribuan siswa yang telah merasakan manfaatnya.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
-              <div className="flex items-center gap-3 text-gray-300">
-                <div className="p-2 bg-green-600/20 rounded-lg">
-                  <WhatsAppIcon className="text-green-400" size={20} />
-                </div>
-                <span className="text-lg">+62 821-6457-578</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <div className="p-2 bg-pink-600/20 rounded-lg">
-                  <InstagramIcon className="text-pink-400" size={20} />
-                </div>
-                <span className="text-lg">@homelykursus</span>
-              </div>
-            </div>
-            
-            <div className="border-t border-gray-700 pt-8 text-sm text-gray-400">
-              <div className="text-center">
-                <span>© 2026 Homely Kursus Komputer. All rights reserved.</span>
-              </div>
+                <MapPin className="w-5 h-5" />
+                <span>Buka di Google Maps</span>
+                <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch">
+            {/* Left Content - Text & Button */}
+            <div className="text-left flex flex-col justify-center">
+              <p className="text-xl text-blue-100 mb-4">
+                Masih ada yang bingung ?
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+                Yuk Konsultasikan dengan Admin 👇
+              </h2>
+              <div>
+                <a
+                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-10 py-5 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl"
+                >
+                  <WhatsAppIcon size={24} />
+                  <span>Hubungi Admin</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Content - Image */}
+            <div className="hidden lg:flex lg:justify-start lg:items-stretch -ml-4 -my-20">
+              <img
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770402937/ChatGPT_Image_Feb_7_2026_01_29_59_AM_iafaf7.png"
+                alt="Konsultasi Gratis"
+                className="w-[69%] h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {/* About */}
+            <div>
+              <div className="flex items-center space-x-3 mb-4">
+                <img 
+                  src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
+                  alt="Homely Logo" 
+                  className="h-10 w-10 rounded object-cover"
+                />
+                <div>
+                  <h3 className="text-xl font-bold">Homely Kursus Komputer</h3>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Tempat terbaik untuk belajar komputer dengan metode praktis dan mudah dipahami.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="text-lg font-bold mb-4">Menu</h4>
+              <ul className="space-y-2">
+                <li>
+                  <button onClick={() => scrollToSection('home')} className="text-gray-400 hover:text-white transition-colors">
+                    Beranda
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('programs')} className="text-gray-400 hover:text-white transition-colors">
+                    Program
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('facilities')} className="text-gray-400 hover:text-white transition-colors">
+                    Fasilitas
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('mentors')} className="text-gray-400 hover:text-white transition-colors">
+                    Mentor
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('gallery')} className="text-gray-400 hover:text-white transition-colors">
+                    Galeri
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('location')} className="text-gray-400 hover:text-white transition-colors">
+                    Lokasi
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => scrollToSection('testimonials')} className="text-gray-400 hover:text-white transition-colors">
+                    Testimoni
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className="text-lg font-bold mb-4">Hubungi Kami</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left Column: WhatsApp & Instagram */}
+                <div className="space-y-3">
+                  <a
+                    href={`https://wa.me/${whatsappNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <WhatsAppIcon className="text-green-400" size={20} />
+                    <span>+62 821-6457-578</span>
+                  </a>
+                  <a
+                    href="https://instagram.com/homelykursus"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <InstagramIcon className="text-pink-400" size={20} />
+                    <span>@homelykursus</span>
+                  </a>
+                </div>
+                
+                {/* Right Column: TikTok & Facebook */}
+                <div className="space-y-3">
+                  <a
+                    href="https://www.tiktok.com/@homelykursuskomputer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <TikTokIcon className="text-white" size={20} />
+                    <span>@homelykursuskomputer</span>
+                  </a>
+                  <a
+                    href="https://www.facebook.com/profile.php?id=100063558767161"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FacebookIcon className="text-blue-400" size={20} />
+                    <span>Homely Kursus Komputer Pekanbaru</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
+            <p>© 2026 Homely Kursus Komputer. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Registration Toast Notifications */}
+      <RegistrationToast />
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center">
+          {/* Close Button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
+            aria-label="Close"
+          >
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Previous Button */}
+          <button
+            onClick={prevImage}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors bg-black/50 hover:bg-black/70 rounded-full p-3 z-10"
+            aria-label="Previous"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+
+          {/* Image Container */}
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center px-16">
+            <img
+              src={galleryImages[lightboxIndex].image}
+              alt={galleryImages[lightboxIndex].title}
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+            
+            {/* Image Info */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm px-6 py-3 rounded-full">
+              <div className="text-center">
+                <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mr-2">
+                  {galleryImages[lightboxIndex].category}
+                </span>
+                <span className="text-white font-semibold">
+                  {galleryImages[lightboxIndex].title}
+                </span>
+                <span className="text-gray-300 text-sm ml-3">
+                  {lightboxIndex + 1} / {galleryImages.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={nextImage}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors bg-black/50 hover:bg-black/70 rounded-full p-3 z-10"
+            aria-label="Next"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+
+          {/* Keyboard Hint */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-gray-400 text-sm">
+            Gunakan ← → atau klik tombol untuk navigasi • ESC untuk tutup
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Terminal } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 
 interface CourseDetail {
@@ -15,12 +15,27 @@ interface CourseDetail {
   method: string;
   practicePercentage: string;
   equipment: string;
-  icon: string;
+  iconComponent: any;
   gradient: string;
   curriculum: string[];
   benefits: string[];
   targetAudience: string[];
+  software?: { name: string; icon: string; description: string; }[];
+  pricing?: { originalPrice: number; discountedPrice: number; };
 }
+
+// Helper function to get icon component based on slug
+const getCourseIcon = (slug: string) => {
+  const iconMap: { [key: string]: any } = {
+    'microsoft-office': FileText,
+    'desain-grafis': Palette,
+    'video-editing': Video,
+    'web-design': Code,
+    'digital-marketing': TrendingUp,
+    'programming': Terminal
+  };
+  return iconMap[slug] || FileText;
+};
 
 const courseDetails: CourseDetail[] = [
   {
@@ -34,7 +49,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '📊',
+    iconComponent: FileText,
     gradient: 'from-blue-500 to-cyan-500',
     curriculum: [
       'Microsoft Word: Pembuatan dokumen, formatting, mail merge',
@@ -55,7 +70,43 @@ const courseDetails: CourseDetail[] = [
       'Mahasiswa',
       'Pengusaha',
       'Siapa saja yang ingin meningkatkan skill perkantoran'
-    ]
+    ],
+    software: [
+      {
+        name: 'Microsoft Word',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png',
+        description: 'Document processing'
+      },
+      {
+        name: 'PowerPoint',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg.png',
+        description: 'Presentation design'
+      },
+      {
+        name: 'Microsoft Excel',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png',
+        description: 'Data management'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant'
+      },
+      {
+        name: 'Canva',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
+        description: 'Design tool'
+      },
+      {
+        name: 'Google Workspace',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Google_Workspace_Logo.svg/200px-Google_Workspace_Logo.svg.png',
+        description: 'Cloud productivity'
+      }
+    ],
+    pricing: {
+      originalPrice: 950000,
+      discountedPrice: 700000
+    }
   },
   {
     id: '2',
@@ -68,7 +119,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '🎨',
+    iconComponent: Palette,
     gradient: 'from-purple-500 to-pink-500',
     curriculum: [
       'Adobe Photoshop: Photo editing, manipulation, retouching',
@@ -89,7 +140,33 @@ const courseDetails: CourseDetail[] = [
       'Content creator',
       'Marketing & social media specialist',
       'Pengusaha yang ingin desain sendiri'
-    ]
+    ],
+    software: [
+      {
+        name: 'CorelDraw',
+        icon: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/CorelDRAW_logo.svg/200px-CorelDRAW_logo.svg.png',
+        description: 'Vector design & layout'
+      },
+      {
+        name: 'Canva',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
+        description: 'Online design tool'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant for ideas'
+      },
+      {
+        name: 'Freepik',
+        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
+        description: 'Design resources'
+      }
+    ],
+    pricing: {
+      originalPrice: 1200000,
+      discountedPrice: 950000
+    }
   },
   {
     id: '3',
@@ -102,7 +179,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '🎬',
+    iconComponent: Video,
     gradient: 'from-red-500 to-orange-500',
     curriculum: [
       'Adobe Premiere Pro: Basic editing, cutting, transitions',
@@ -123,7 +200,38 @@ const courseDetails: CourseDetail[] = [
       'Social media specialist',
       'Videographer',
       'Siapa saja yang ingin membuat video'
-    ]
+    ],
+    software: [
+      {
+        name: 'CapCut',
+        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968534.png',
+        description: 'Video editing app'
+      },
+      {
+        name: 'Canva',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
+        description: 'Design & video tool'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant'
+      },
+      {
+        name: 'Grok AI',
+        icon: 'https://cdn-icons-png.flaticon.com/512/8943/8943377.png',
+        description: 'AI tool'
+      },
+      {
+        name: 'Gemini',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/200px-Google_Gemini_logo.svg.png',
+        description: 'Google AI'
+      }
+    ],
+    pricing: {
+      originalPrice: 1200000,
+      discountedPrice: 950000
+    }
   },
   {
     id: '4',
@@ -136,7 +244,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '💻',
+    iconComponent: Code,
     gradient: 'from-green-500 to-teal-500',
     curriculum: [
       'HTML: Structure dan semantic markup',
@@ -157,7 +265,33 @@ const courseDetails: CourseDetail[] = [
       'Pengusaha yang ingin website sendiri',
       'Mahasiswa IT',
       'Siapa saja yang tertarik web development'
-    ]
+    ],
+    software: [
+      {
+        name: 'WordPress',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/200px-WordPress_blue_logo.svg.png',
+        description: 'CMS platform'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant'
+      },
+      {
+        name: 'Elementor',
+        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
+        description: 'Page builder'
+      },
+      {
+        name: 'Canva',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
+        description: 'Design tool'
+      }
+    ],
+    pricing: {
+      originalPrice: 2000000,
+      discountedPrice: 1600000
+    }
   },
   {
     id: '5',
@@ -170,7 +304,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '📱',
+    iconComponent: TrendingUp,
     gradient: 'from-yellow-500 to-orange-500',
     curriculum: [
       'Fundamental digital marketing',
@@ -191,7 +325,53 @@ const courseDetails: CourseDetail[] = [
       'Marketing specialist',
       'Content creator',
       'Siapa saja yang ingin jualan online'
-    ]
+    ],
+    software: [
+      {
+        name: 'Google Ads',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Google_Ads_logo.svg/200px-Google_Ads_logo.svg.png',
+        description: 'Advertising platform'
+      },
+      {
+        name: 'Facebook',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/2023_Facebook_icon.svg/200px-2023_Facebook_icon.svg.png',
+        description: 'Social media'
+      },
+      {
+        name: 'Instagram',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/200px-Instagram_logo_2016.svg.png',
+        description: 'Social media'
+      },
+      {
+        name: 'TikTok',
+        icon: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png',
+        description: 'Video platform'
+      },
+      {
+        name: 'Shopee',
+        icon: 'https://cdn-icons-png.flaticon.com/512/5977/5977575.png',
+        description: 'E-commerce'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant'
+      },
+      {
+        name: 'CapCut',
+        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968534.png',
+        description: 'Video editing'
+      },
+      {
+        name: 'Canva',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
+        description: 'Design tool'
+      }
+    ],
+    pricing: {
+      originalPrice: 2000000,
+      discountedPrice: 1600000
+    }
   },
   {
     id: '6',
@@ -204,7 +384,7 @@ const courseDetails: CourseDetail[] = [
     method: 'Tatap Muka',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    icon: '⚡',
+    iconComponent: Terminal,
     gradient: 'from-indigo-500 to-purple-500',
     curriculum: [
       'Fundamental programming dan algoritma',
@@ -276,8 +456,7 @@ export default function ProgramDetailPage() {
                 className="h-10 w-10 md:h-12 md:w-12 rounded object-cover"
               />
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-gray-900">Homely</h1>
-                <p className="text-xs text-gray-600 hidden sm:block">Kursus Komputer</p>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900">Homely Kursus Komputer</h1>
               </div>
             </div>
           </div>
@@ -288,8 +467,8 @@ export default function ProgramDetailPage() {
       <section className="pt-24 md:pt-32 pb-12 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${course.gradient} text-white text-4xl mb-6 shadow-lg`}>
-              {course.icon}
+            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${course.gradient} text-white mb-6 shadow-lg`}>
+              <course.iconComponent className="w-10 h-10" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               {course.name}
@@ -339,6 +518,28 @@ export default function ProgramDetailPage() {
                 </p>
               </div>
 
+              {/* Software Section - Only for courses with software */}
+              {course.software && course.software.length > 0 && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 shadow-lg">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Software yang Digunakan</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {course.software.map((software, index) => (
+                      <div key={index} className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow text-center">
+                        <div className="flex justify-center mb-4">
+                          <img 
+                            src={software.icon} 
+                            alt={software.name}
+                            className="w-16 h-16 object-contain"
+                          />
+                        </div>
+                        <h3 className="font-bold text-gray-900 mb-1">{software.name}</h3>
+                        <p className="text-sm text-gray-600">{software.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Curriculum */}
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Materi Pembelajaran</h2>
@@ -382,12 +583,42 @@ export default function ProgramDetailPage() {
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                {/* CTA Card */}
-                <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl p-8 shadow-xl text-white`}>
-                  <h3 className="text-2xl font-bold mb-4">Siap Memulai?</h3>
-                  <p className="mb-6 text-white/90">
-                    Daftar sekarang dan mulai perjalanan belajar Anda bersama kami!
-                  </p>
+                {/* CTA Card with Pricing */}
+                <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl p-6 shadow-xl text-white`}>
+                  {/* Pricing Info - Only for courses with pricing */}
+                  {course.pricing && (
+                    <div className="mb-6">
+                      <div className="space-y-3">
+                        {/* Original Price */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-white/70 text-sm">Harga Normal</span>
+                          <span className="text-white/60 line-through text-lg">
+                            Rp {course.pricing.originalPrice.toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                        
+                        {/* Divider */}
+                        <div className="border-t border-white/20"></div>
+                        
+                        {/* Discounted Price */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-white font-semibold">Harga Promo</span>
+                          <span className="text-white font-bold text-2xl">
+                            Rp {course.pricing.discountedPrice.toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                        
+                        {/* Savings Badge */}
+                        <div className="text-center pt-2">
+                          <span className="inline-block bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-xs font-semibold">
+                            💰 Hemat Rp {(course.pricing.originalPrice - course.pricing.discountedPrice).toLocaleString('id-ID')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* WhatsApp Button */}
                   <a
                     href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
                     target="_blank"
