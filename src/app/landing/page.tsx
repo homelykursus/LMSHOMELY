@@ -12,7 +12,13 @@ import {
   Clock,
   MapPin,
   Star,
-  ArrowRight
+  ArrowRight,
+  FileText,
+  Palette,
+  Video,
+  Code,
+  TrendingUp,
+  Terminal
 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 import { InstagramIcon } from '@/components/ui/instagram-icon';
@@ -85,7 +91,7 @@ export default function LandingPage() {
       name: 'Microsoft Office',
       description: 'Kuasai Word, Excel, PowerPoint untuk kebutuhan kantor dan bisnis',
       duration: '12 Pertemuan',
-      icon: Monitor,
+      icon: FileText,
       slug: 'microsoft-office'
     },
     {
@@ -93,7 +99,7 @@ export default function LandingPage() {
       name: 'Desain Grafis',
       description: 'Belajar Adobe Photoshop, Illustrator, dan CorelDraw',
       duration: '16 Pertemuan',
-      icon: Monitor,
+      icon: Palette,
       slug: 'desain-grafis'
     },
     {
@@ -101,7 +107,7 @@ export default function LandingPage() {
       name: 'Video Editing',
       description: 'Editing video profesional dengan Adobe Premiere & After Effects',
       duration: '14 Pertemuan',
-      icon: Monitor,
+      icon: Video,
       slug: 'video-editing'
     },
     {
@@ -109,7 +115,7 @@ export default function LandingPage() {
       name: 'Web Design',
       description: 'Membuat website menarik dengan HTML, CSS, dan JavaScript',
       duration: '20 Pertemuan',
-      icon: Monitor,
+      icon: Code,
       slug: 'web-design'
     },
     {
@@ -117,7 +123,7 @@ export default function LandingPage() {
       name: 'Digital Marketing',
       description: 'Strategi pemasaran digital dan social media marketing',
       duration: '12 Pertemuan',
-      icon: Monitor,
+      icon: TrendingUp,
       slug: 'digital-marketing'
     },
     {
@@ -125,7 +131,7 @@ export default function LandingPage() {
       name: 'Programming',
       description: 'Belajar coding dari dasar hingga membuat aplikasi',
       duration: '24 Pertemuan',
-      icon: Monitor,
+      icon: Terminal,
       slug: 'programming'
     }
   ];
@@ -391,6 +397,19 @@ export default function LandingPage() {
 
   const goToCard = (index: number) => {
     setActiveCardIndex(index);
+  };
+
+  // Function untuk mendapatkan gradient color berdasarkan course
+  const getCourseGradient = (courseId: string) => {
+    const gradients: { [key: string]: string } = {
+      '1': 'from-blue-500 to-blue-600',      // Microsoft Office - Blue
+      '2': 'from-purple-500 to-pink-500',    // Desain Grafis - Purple/Pink
+      '3': 'from-red-500 to-orange-500',     // Video Editing - Red/Orange
+      '4': 'from-green-500 to-teal-500',     // Web Design - Green/Teal
+      '5': 'from-yellow-500 to-orange-500',  // Digital Marketing - Yellow/Orange
+      '6': 'from-indigo-500 to-purple-600'   // Programming - Indigo/Purple
+    };
+    return gradients[courseId] || 'from-blue-500 to-blue-600';
   };
 
   const whatsappNumber = '628216457578';
@@ -792,23 +811,24 @@ export default function LandingPage() {
               <Link
                 key={course.id}
                 href={`/landing/program/${course.slug}`}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2 duration-300 cursor-pointer"
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 cursor-pointer group"
               >
-                <div className="bg-blue-100 w-16 h-16 rounded-xl flex items-center justify-center mb-4">
-                  <course.icon className="w-8 h-8 text-blue-600" />
+                {/* 3D Icon Container with Gradient */}
+                <div className={`bg-gradient-to-br ${getCourseGradient(course.id)} w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                  <course.icon className="w-10 h-10 text-white drop-shadow-lg" strokeWidth={2.5} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                   {course.name}
                 </h3>
-                <p className="text-gray-600 mb-4 text-sm">
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
                   {course.description}
                 </p>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="flex items-center text-sm text-blue-600 font-medium">
                     <Clock className="w-4 h-4 mr-2" />
                     {course.duration}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-blue-600" />
+                  <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
             ))}
