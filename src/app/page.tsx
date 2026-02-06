@@ -1273,43 +1273,6 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Right Column: TikTok & Facebook */}
-                  <div className="space-y-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-gray-100 p-3 rounded-lg">
-                        <TikTokIcon className="text-gray-900" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">TikTok</h3>
-                        <a
-                          href="https://www.tiktok.com/@homelykursuskomputer"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-900 hover:text-gray-700 font-medium"
-                        >
-                          @homelykursuskomputer
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-blue-100 p-3 rounded-lg">
-                        <FacebookIcon className="text-blue-600" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Facebook</h3>
-                        <a
-                          href="https://www.facebook.com/profile.php?id=100063558767161"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Homely Kursus Komputer Pekanbaru
-                        </a>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
