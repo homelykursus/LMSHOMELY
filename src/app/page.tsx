@@ -22,8 +22,6 @@ import {
 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 import { InstagramIcon } from '@/components/ui/instagram-icon';
-import { TikTokIcon } from '@/components/ui/tiktok-icon';
-import { FacebookIcon } from '@/components/ui/facebook-icon';
 import RegistrationToast from '@/components/landing/registration-toast';
 import AlumniAvatars from '@/components/landing/alumni-avatars';
 
@@ -1449,50 +1447,25 @@ export default function LandingPage() {
             {/* Contact */}
             <div>
               <h4 className="text-lg font-bold mb-4">Hubungi Kami</h4>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Left Column: WhatsApp & Instagram */}
-                <div className="space-y-3">
-                  <a
-                    href={`https://wa.me/${whatsappNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <WhatsAppIcon className="text-green-400" size={20} />
-                    <span>+62 821-6457-578</span>
-                  </a>
-                  <a
-                    href="https://instagram.com/homelykursus"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <InstagramIcon className="text-pink-400" size={20} />
-                    <span>@homelykursus</span>
-                  </a>
-                </div>
-                
-                {/* Right Column: TikTok & Facebook */}
-                <div className="space-y-3">
-                  <a
-                    href="https://www.tiktok.com/@homelykursuskomputer"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <TikTokIcon className="text-white" size={20} />
-                    <span>@homelykursuskomputer</span>
-                  </a>
-                  <a
-                    href="https://www.facebook.com/profile.php?id=100063558767161"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <FacebookIcon className="text-blue-400" size={20} />
-                    <span>Homely Kursus Komputer Pekanbaru</span>
-                  </a>
-                </div>
+              <div className="space-y-3">
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <WhatsAppIcon className="text-green-400" size={20} />
+                  <span>+62 821-6457-578</span>
+                </a>
+                <a
+                  href="https://instagram.com/homelykursus"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <InstagramIcon className="text-pink-400" size={20} />
+                  <span>@homelykursus</span>
+                </a>
               </div>
             </div>
           </div>
