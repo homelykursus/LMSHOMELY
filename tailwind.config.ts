@@ -56,6 +56,30 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		keyframes: {
+  			'slide-in-left': {
+  				'0%': { opacity: '0', transform: 'translateX(-100%)' },
+  				'100%': { opacity: '1', transform: 'translateX(0)' }
+  			},
+  			'slide-out-left': {
+  				'0%': { opacity: '1', transform: 'translateX(0)' },
+  				'100%': { opacity: '0', transform: 'translateX(-100%)' }
+  			},
+  			'slide-in-right': {
+  				'0%': { opacity: '0', transform: 'translateX(100%)' },
+  				'100%': { opacity: '1', transform: 'translateX(0)' }
+  			},
+  			'slide-out-right': {
+  				'0%': { opacity: '1', transform: 'translateX(0)' },
+  				'100%': { opacity: '0', transform: 'translateX(100%)' }
+  			}
+  		},
+  		animation: {
+  			'slide-in-left': 'slide-in-left 0.5s ease-out forwards',
+  			'slide-out-left': 'slide-out-left 0.3s ease-in forwards',
+  			'slide-in-right': 'slide-in-right 0.5s ease-out forwards',
+  			'slide-out-right': 'slide-out-right 0.3s ease-in forwards'
   		}
   	}
   },
