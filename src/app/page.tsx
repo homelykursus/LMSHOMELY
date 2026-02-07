@@ -483,6 +483,9 @@ export default function LandingPage() {
               <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
                 Lokasi
               </button>
+              <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+                Blog
+              </Link>
               <Link
                 href="/pendaftaran"
                 className="bg-gradient-to-br from-orange-400 via-orange-500 to-pink-500 hover:from-orange-500 hover:via-orange-600 hover:to-pink-600 text-white px-6 py-2 rounded-full font-medium transition-all flex items-center space-x-2 text-sm shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
@@ -533,6 +536,9 @@ export default function LandingPage() {
                 <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
                   Testimoni
                 </button>
+                <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                  Blog
+                </Link>
                 <Link
                   href="/pendaftaran"
                   className="bg-gradient-to-br from-orange-400 via-orange-500 to-pink-500 hover:from-orange-500 hover:via-orange-600 hover:to-pink-600 text-white px-6 py-3 rounded-full font-medium transition-all flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
@@ -592,7 +598,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457339/laptop_wcnfbh.webp"
                     alt="Perempuan Indonesia menggunakan laptop"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -759,7 +765,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457339/laptop_wcnfbh.webp"
                     alt="Perempuan Indonesia menggunakan laptop"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -1386,7 +1392,7 @@ export default function LandingPage() {
             {/* Right Content - Image */}
             <div className="hidden lg:flex lg:justify-start lg:items-stretch -ml-4 -my-20">
               <img
-                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770402937/ChatGPT_Image_Feb_7_2026_01_29_59_AM_iafaf7.png"
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457338/hp_piy5pr.webp"
                 alt="Konsultasi Gratis"
                 className="w-[69%] h-full object-contain"
               />

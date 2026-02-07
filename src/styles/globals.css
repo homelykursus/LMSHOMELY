@@ -179,6 +179,26 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* Continuous floating animation for icons with subtle rotation */
+@keyframes floatContinuous {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-25px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(-2deg);
+  }
+}
+
+.animate-float-continuous {
+  animation: floatContinuous 4s ease-in-out infinite;
+}
+
 .animation-delay-2000 {
   animation-delay: 2s;
 }
@@ -291,4 +311,36 @@
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Blob animation for modern gradient backgrounds */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-6000 {
+  animation-delay: 6s;
 }
