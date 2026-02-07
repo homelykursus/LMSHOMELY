@@ -422,7 +422,7 @@ export default function ProgramDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Program tidak ditemukan</h1>
           <button
-            onClick={() => router.push('/landing')}
+            onClick={() => router.push('/')}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
             Kembali ke Beranda
@@ -442,7 +442,7 @@ export default function ProgramDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             <button
-              onClick={() => router.push('/landing')}
+              onClick={() => router.push('/')}
               className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />

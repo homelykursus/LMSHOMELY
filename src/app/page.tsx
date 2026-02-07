@@ -896,7 +896,7 @@ export default function LandingPage() {
       </section>
 
       {/* Mentors Section */}
-      <section id="mentors" className="py-20 bg-white">
+      <section id="mentors" className="py-20 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -907,7 +907,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {/* Mobile Layout - Grid Only (No Image) */}
+          <div className="grid grid-cols-2 md:hidden gap-4">
             {mentors.map((mentor) => (
               <div
                 key={mentor.id}
@@ -942,6 +943,56 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Desktop Layout - Image Left, Cards Right */}
+          <div className="hidden md:flex md:gap-8 items-end -mb-20">
+            {/* Left Side - Mentor Image (40% width, scaled up 4%, moved up 3%, extends beyond section bottom) */}
+            <div className="w-[40%] flex items-end">
+              <img
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770443618/ChatGPT_Image_7_Feb_2026_12.38.25_h1dnn2.webp"
+                alt="Mentor Profesional"
+                className="w-full h-auto object-contain scale-[1.04] -translate-y-[3%]"
+              />
+            </div>
+
+            {/* Right Side - Mentor Cards Grid (60% width, 3 columns x 2 rows) */}
+            <div className="w-[60%] grid grid-cols-3 gap-4 mb-20">
+              {mentors.map((mentor) => (
+                <div
+                  key={mentor.id}
+                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
+                >
+                  <div className="text-center">
+                    <div className="relative inline-block mb-3">
+                      <img
+                        src={mentor.photo}
+                        alt={mentor.name}
+                        className="w-16 h-16 rounded-full mx-auto border-2 border-white shadow-lg"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
+                        <Award className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-900 mb-1 leading-tight">
+                      {mentor.name}
+                    </h3>
+                    <p className="text-[10px] text-gray-600 mb-2 leading-tight">
+                      {mentor.specialization}
+                    </p>
+                    <a
+                      href={`https://instagram.com/${mentor.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1 text-pink-600 hover:text-pink-700 font-medium transition-colors text-[10px]"
+                    >
+                      <InstagramIcon className="text-pink-600" size={12} />
+                      <span className="truncate">{mentor.instagram}</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
