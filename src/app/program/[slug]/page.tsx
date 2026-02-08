@@ -1,8 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Sheet } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Sheet, ChevronDown } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
+
+interface CurriculumTopic {
+  title: string;
+  subtopics: string[];
+}
 
 interface CourseDetail {
   id: string;
@@ -17,7 +23,7 @@ interface CourseDetail {
   equipment: string;
   iconComponent: any;
   gradient: string;
-  curriculum: string[];
+  curriculum: CurriculumTopic[];
   benefits: string[];
   targetAudience: string[];
   software?: { name: string; icon: string; description: string; }[];
@@ -52,12 +58,41 @@ const courseDetails: CourseDetail[] = [
     iconComponent: FileText,
     gradient: 'from-blue-500 to-cyan-500',
     curriculum: [
-      'Microsoft Word: Pembuatan dokumen, formatting, mail merge',
-      'Microsoft Excel: Formula, fungsi, pivot table, grafik',
-      'Microsoft PowerPoint: Desain presentasi, animasi, transisi',
-      'Tips & Trik produktivitas Microsoft Office',
-      'Integrasi antar aplikasi Office',
-      'Studi kasus: Laporan, proposal, dan presentasi bisnis'
+      {
+        title: 'Microsoft Word',
+        subtopics: [
+          'Pembuatan dokumen profesional',
+          'Formatting dan styling teks',
+          'Mail merge untuk surat massal',
+          'Table of contents dan referensi'
+        ]
+      },
+      {
+        title: 'Microsoft Excel',
+        subtopics: [
+          'Formula dan fungsi dasar',
+          'Pivot table untuk analisis data',
+          'Grafik dan visualisasi data',
+          'Data validation dan conditional formatting'
+        ]
+      },
+      {
+        title: 'Microsoft PowerPoint',
+        subtopics: [
+          'Desain presentasi yang menarik',
+          'Animasi dan transisi',
+          'Master slide dan template',
+          'Tips presentasi efektif'
+        ]
+      },
+      {
+        title: 'Produktivitas & Integrasi',
+        subtopics: [
+          'Tips & trik produktivitas Office',
+          'Integrasi antar aplikasi Office',
+          'Studi kasus: Laporan dan proposal bisnis'
+        ]
+      }
     ],
     benefits: [
       'Meningkatkan produktivitas kerja',
@@ -122,12 +157,41 @@ const courseDetails: CourseDetail[] = [
     iconComponent: Palette,
     gradient: 'from-purple-500 to-pink-500',
     curriculum: [
-      'Adobe Photoshop: Photo editing, manipulation, retouching',
-      'Adobe Illustrator: Vector design, logo, icon',
-      'CorelDraw: Layout design, brochure, banner',
-      'Teori warna dan komposisi desain',
-      'Typography dan pemilihan font',
-      'Project: Desain logo, poster, social media content'
+      {
+        title: 'Adobe Photoshop',
+        subtopics: [
+          'Photo editing dan retouching',
+          'Image manipulation',
+          'Layer dan masking',
+          'Color correction'
+        ]
+      },
+      {
+        title: 'Adobe Illustrator',
+        subtopics: [
+          'Vector design basics',
+          'Logo dan icon design',
+          'Typography dan text effects',
+          'Pen tool mastery'
+        ]
+      },
+      {
+        title: 'CorelDraw',
+        subtopics: [
+          'Layout design',
+          'Brochure dan banner',
+          'Business card design',
+          'Print preparation'
+        ]
+      },
+      {
+        title: 'Teori Desain',
+        subtopics: [
+          'Teori warna dan komposisi',
+          'Typography dan pemilihan font',
+          'Project: Logo, poster, social media content'
+        ]
+      }
     ],
     benefits: [
       'Membuat desain profesional',
@@ -182,12 +246,50 @@ const courseDetails: CourseDetail[] = [
     iconComponent: Video,
     gradient: 'from-red-500 to-orange-500',
     curriculum: [
-      'Adobe Premiere Pro: Basic editing, cutting, transitions',
-      'Color grading dan color correction',
-      'Audio editing dan mixing',
-      'Adobe After Effects: Motion graphics, visual effects',
-      'Text animation dan lower thirds',
-      'Project: YouTube video, commercial, short film'
+      {
+        title: 'Adobe Premiere Pro',
+        subtopics: [
+          'Basic editing dan cutting',
+          'Transitions dan effects',
+          'Multi-camera editing',
+          'Export settings'
+        ]
+      },
+      {
+        title: 'Color Grading',
+        subtopics: [
+          'Color correction basics',
+          'Color grading techniques',
+          'LUTs dan presets',
+          'Matching colors'
+        ]
+      },
+      {
+        title: 'Audio Editing',
+        subtopics: [
+          'Audio mixing dan balancing',
+          'Sound effects',
+          'Music synchronization',
+          'Noise reduction'
+        ]
+      },
+      {
+        title: 'Adobe After Effects',
+        subtopics: [
+          'Motion graphics',
+          'Visual effects',
+          'Text animation',
+          'Lower thirds dan titles'
+        ]
+      },
+      {
+        title: 'Final Project',
+        subtopics: [
+          'YouTube video production',
+          'Commercial video',
+          'Short film editing'
+        ]
+      }
     ],
     benefits: [
       'Membuat video berkualitas profesional',
@@ -247,12 +349,50 @@ const courseDetails: CourseDetail[] = [
     iconComponent: Code,
     gradient: 'from-green-500 to-teal-500',
     curriculum: [
-      'HTML: Structure dan semantic markup',
-      'CSS: Styling, layout, flexbox, grid',
-      'Responsive design untuk mobile',
-      'JavaScript: Interactivity dan DOM manipulation',
-      'Bootstrap framework',
-      'Project: Portfolio website, landing page, company profile'
+      {
+        title: 'HTML Fundamentals',
+        subtopics: [
+          'HTML structure dan semantic markup',
+          'Forms dan input elements',
+          'HTML5 features',
+          'Best practices'
+        ]
+      },
+      {
+        title: 'CSS Styling',
+        subtopics: [
+          'CSS selectors dan properties',
+          'Flexbox dan Grid layout',
+          'Responsive design',
+          'CSS animations'
+        ]
+      },
+      {
+        title: 'JavaScript Basics',
+        subtopics: [
+          'JavaScript fundamentals',
+          'DOM manipulation',
+          'Event handling',
+          'Interactive features'
+        ]
+      },
+      {
+        title: 'Bootstrap Framework',
+        subtopics: [
+          'Bootstrap components',
+          'Grid system',
+          'Responsive utilities',
+          'Customization'
+        ]
+      },
+      {
+        title: 'Final Project',
+        subtopics: [
+          'Portfolio website',
+          'Landing page',
+          'Company profile website'
+        ]
+      }
     ],
     benefits: [
       'Membuat website sendiri',
@@ -307,12 +447,51 @@ const courseDetails: CourseDetail[] = [
     iconComponent: TrendingUp,
     gradient: 'from-yellow-500 to-orange-500',
     curriculum: [
-      'Fundamental digital marketing',
-      'Social media marketing: Instagram, Facebook, TikTok',
-      'Content marketing dan copywriting',
-      'SEO (Search Engine Optimization)',
-      'Google Ads dan Facebook Ads',
-      'Analytics dan measuring ROI'
+      {
+        title: 'Digital Marketing Fundamentals',
+        subtopics: [
+          'Konsep dasar digital marketing',
+          'Marketing funnel',
+          'Target audience analysis',
+          'Marketing strategy'
+        ]
+      },
+      {
+        title: 'Social Media Marketing',
+        subtopics: [
+          'Instagram marketing',
+          'Facebook marketing',
+          'TikTok marketing',
+          'Content planning'
+        ]
+      },
+      {
+        title: 'Content Marketing',
+        subtopics: [
+          'Content creation',
+          'Copywriting techniques',
+          'Visual content design',
+          'Content calendar'
+        ]
+      },
+      {
+        title: 'SEO & Paid Advertising',
+        subtopics: [
+          'Search Engine Optimization',
+          'Google Ads',
+          'Facebook Ads',
+          'Campaign optimization'
+        ]
+      },
+      {
+        title: 'Analytics & ROI',
+        subtopics: [
+          'Google Analytics',
+          'Measuring performance',
+          'ROI calculation',
+          'Reporting'
+        ]
+      }
     ],
     benefits: [
       'Meningkatkan penjualan online',
@@ -387,12 +566,51 @@ const courseDetails: CourseDetail[] = [
     iconComponent: Sheet,
     gradient: 'from-green-600 to-emerald-600',
     curriculum: [
-      'Formula dan Fungsi Lanjutan (VLOOKUP, HLOOKUP, INDEX-MATCH)',
-      'Pivot Table dan Pivot Chart untuk analisis data',
-      'Conditional Formatting dan Data Validation',
-      'Macro dan VBA untuk otomasi',
-      'Dashboard dan Reporting profesional',
-      'Tips & Trik produktivitas Excel tingkat lanjut'
+      {
+        title: 'Formula & Fungsi Lanjutan',
+        subtopics: [
+          'VLOOKUP dan HLOOKUP',
+          'INDEX-MATCH combination',
+          'Array formulas',
+          'Nested functions'
+        ]
+      },
+      {
+        title: 'Pivot Table & Analysis',
+        subtopics: [
+          'Pivot table creation',
+          'Pivot chart visualization',
+          'Slicers dan filters',
+          'Data analysis techniques'
+        ]
+      },
+      {
+        title: 'Data Management',
+        subtopics: [
+          'Conditional formatting',
+          'Data validation',
+          'Data cleaning',
+          'Import/export data'
+        ]
+      },
+      {
+        title: 'Automation dengan Macro',
+        subtopics: [
+          'Recording macros',
+          'VBA basics',
+          'Automating repetitive tasks',
+          'Custom functions'
+        ]
+      },
+      {
+        title: 'Dashboard & Reporting',
+        subtopics: [
+          'Professional dashboard design',
+          'Interactive reports',
+          'Charts dan visualizations',
+          'Tips produktivitas Excel'
+        ]
+      }
     ],
     benefits: [
       'Menguasai Excel tingkat lanjut',
@@ -424,6 +642,43 @@ const courseDetails: CourseDetail[] = [
     }
   }
 ];
+
+// Accordion Item Component
+function AccordionItem({ topic, index, gradient }: { topic: CurriculumTopic; index: number; gradient: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden transition-all hover:shadow-md">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center space-x-3">
+          <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r ${gradient} text-white font-bold text-sm`}>
+            {index + 1}
+          </div>
+          <h3 className="text-left font-semibold text-gray-900">{topic.title}</h3>
+        </div>
+        <ChevronDown 
+          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      
+      {isOpen && (
+        <div className="px-4 pb-4 pt-2 bg-gray-50">
+          <ul className="space-y-2">
+            {topic.subtopics.map((subtopic, subIndex) => (
+              <li key={subIndex} className="flex items-start space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-700">{subtopic}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ProgramDetailPage() {
   const params = useParams();
@@ -559,12 +814,14 @@ export default function ProgramDetailPage() {
               {/* Curriculum */}
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Materi Pembelajaran</h2>
-                <div className="space-y-4">
-                  {course.curriculum.map((item, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-gray-700">{item}</p>
-                    </div>
+                <div className="space-y-3">
+                  {course.curriculum.map((topic, index) => (
+                    <AccordionItem
+                      key={index}
+                      topic={topic}
+                      index={index}
+                      gradient={course.gradient}
+                    />
                   ))}
                 </div>
               </div>
@@ -599,8 +856,17 @@ export default function ProgramDetailPage() {
             {/* Right Column - Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
+                {/* Image pointing down - positioned above CTA Card */}
+                <div className="relative flex justify-center -mb-2.5 z-0">
+                  <img 
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770570143/tunjuk_bawah_dlp3pf.webp"
+                    alt="Daftar Sekarang"
+                    className="w-72 h-auto object-contain drop-shadow-lg"
+                  />
+                </div>
+
                 {/* CTA Card with Pricing */}
-                <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl p-6 shadow-xl text-white`}>
+                <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl p-6 shadow-xl text-white relative z-10`}>
                   {/* Pricing Info - Only for courses with pricing */}
                   {course.pricing && (
                     <div className="mb-6">
@@ -648,40 +914,7 @@ export default function ProgramDetailPage() {
                   </a>
                 </div>
 
-                {/* Features Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Fasilitas</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Ruang Ber-AC</p>
-                        <p className="text-sm text-gray-600">Nyaman untuk belajar</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Kelas Kecil</p>
-                        <p className="text-sm text-gray-600">Maksimal 5 siswa</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Sertifikat</p>
-                        <p className="text-sm text-gray-600">Setelah lulus</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">{course.equipment}</p>
-                        <p className="text-sm text-gray-600">Tinggal datang & belajar</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>

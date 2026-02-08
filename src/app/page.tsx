@@ -972,7 +972,7 @@ export default function LandingPage() {
       </section>
 
       {/* Fasilitas Section */}
-      <section id="facilities" className="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+      <section id="facilities" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -1007,7 +1007,7 @@ export default function LandingPage() {
       </section>
 
       {/* Mentors Section */}
-      <section id="mentors" className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+      <section id="mentors" className="py-20 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -1488,15 +1488,20 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+        {/* Blur Effects */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch">
             {/* Left Content - Text & Button */}
             <div className="text-center lg:text-left flex flex-col justify-center items-center lg:items-start">
-              <p className="text-xl text-blue-100 mb-4">
-                Masih ada yang bingung ?
+              <p className="text-xl text-gray-600 mb-4">
+                Masih ada yang ingin di tanyakan ?
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
                 Yuk Konsultasikan dengan Admin
               </h2>
               <div>
@@ -1507,7 +1512,7 @@ export default function LandingPage() {
                   className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-10 py-5 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl"
                 >
                   <WhatsAppIcon size={24} />
-                  <span>Hubungi Admin</span>
+                  <span>Chat admin sekarang</span>
                 </a>
               </div>
             </div>

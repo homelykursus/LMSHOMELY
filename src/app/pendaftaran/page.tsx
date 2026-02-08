@@ -260,7 +260,7 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
   // Show loading state on server-side
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">Loading...</h2>
@@ -271,14 +271,23 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Decorative blur effects - sama seperti landing page */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+      <div className="absolute top-40 right-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+      
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        {/* Blur Effects */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 z-10">
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
+              <div className="p-4 bg-white backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100">
                 <img 
                   src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770305224/logo_innhbv.jpg" 
                   alt="Homely Logo" 
@@ -286,37 +295,33 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
                 />
               </div>
             </div>
-            <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-4">
               Homely Kursus
-              <span className="block text-blue-200">Komputer</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">Komputer</span>
             </h1>
-            <p className="text-xl lg:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl lg:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
               Belajar Komputer dengan Mudah dan Praktis
             </p>
           </div>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/5 rounded-full"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full"></div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10 pb-16">
         {/* Form Pendaftaran */}
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl p-8">
+          <CardHeader className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-t-xl p-8">
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Users className="h-8 w-8" />
+                <div className="text-6xl">
+                  👋
                 </div>
               </div>
               <CardTitle className="text-3xl font-bold mb-2">
-                Daftar Sekarang
+                Hai! Udah ready buat upgrade skill
+                <span className="block">bareng Homely Kursus?</span>
               </CardTitle>
-              <CardDescription className="text-blue-100 text-lg">
-                Isi form di bawah untuk memulai perjalanan belajar Anda
+              <CardDescription className="text-white/90 text-lg">
+                Yuk isi form pendaftaran dulu
               </CardDescription>
             </div>
           </CardHeader>
@@ -600,13 +605,13 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
 
               {/* Price Preview */}
               {selectedCourse && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-blue-100 rounded-xl">
-                      <CheckCircle className="h-6 w-6 text-blue-600" />
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl shadow-lg">
+                      <CheckCircle className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-blue-900 mb-3">Ringkasan Pendaftaran</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3">Ringkasan Pendaftaran</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="text-gray-600">Program Kursus</div>
@@ -624,7 +629,7 @@ Mohon konfirmasi pendaftaran dan informasi pembayaran. Terima kasih! 🙏`
                         </div>
                         <div>
                           <div className="text-gray-600">Total Biaya</div>
-                          <div className="font-bold text-xl text-blue-900">
+                          <div className="font-bold text-xl text-purple-900">
                             {formatCurrency(calculatePrice())}
                           </div>
                         </div>
