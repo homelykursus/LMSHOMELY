@@ -73,8 +73,6 @@ export default function LandingPage() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [typingText, setTypingText] = useState('');
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -410,37 +408,6 @@ export default function LandingPage() {
       });
     };
   }, []);
-
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-    document.body.style.overflow = 'unset'; // Restore scrolling
-  };
-
-  const nextImage = () => {
-    setLightboxIndex((prev) => (prev + 1) % galleryImages.length);
-  };
-
-  const prevImage = () => {
-    setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-  };
-
-  // Handle keyboard navigation for lightbox
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (!lightboxOpen) return;
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowRight') nextImage();
-      if (e.key === 'ArrowLeft') prevImage();
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [lightboxOpen]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -1311,8 +1278,7 @@ export default function LandingPage() {
             {galleryImages.map((item, index) => (
               <div
                 key={item.id}
-                onClick={() => openLightbox(index)}
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3] cursor-pointer"
+                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]"
               >
                 <img
                   src={item.image}
@@ -1328,12 +1294,6 @@ export default function LandingPage() {
                       {item.title}
                     </h3>
                   </div>
-                </div>
-                {/* Click indicator */}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                  </svg>
                 </div>
               </div>
             ))}
@@ -1357,8 +1317,7 @@ export default function LandingPage() {
                       className="flex-shrink-0 w-full px-3"
                     >
                       <div
-                        onClick={() => openLightbox(index)}
-                        className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3] cursor-pointer"
+                        className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3]"
                       >
                         <img
                           src={item.image}
@@ -1374,12 +1333,6 @@ export default function LandingPage() {
                               {item.title}
                             </h3>
                           </div>
-                        </div>
-                        {/* Click indicator */}
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2">
-                          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                          </svg>
                         </div>
                       </div>
                     </div>
@@ -1668,69 +1621,6 @@ export default function LandingPage() {
 
       {/* Registration Toast Notifications */}
       <RegistrationToast />
-
-      {/* Lightbox Modal */}
-      {lightboxOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center">
-          {/* Close Button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
-            aria-label="Close"
-          >
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          {/* Previous Button */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors bg-black/50 hover:bg-black/70 rounded-full p-3 z-10"
-            aria-label="Previous"
-          >
-            <ChevronLeft className="w-8 h-8" />
-          </button>
-
-          {/* Image Container */}
-          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center px-16">
-            <img
-              src={galleryImages[lightboxIndex].image}
-              alt={galleryImages[lightboxIndex].title}
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
-            
-            {/* Image Info */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm px-6 py-3 rounded-full">
-              <div className="text-center">
-                <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mr-2">
-                  {galleryImages[lightboxIndex].category}
-                </span>
-                <span className="text-white font-semibold">
-                  {galleryImages[lightboxIndex].title}
-                </span>
-                <span className="text-gray-300 text-sm ml-3">
-                  {lightboxIndex + 1} / {galleryImages.length}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Next Button */}
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors bg-black/50 hover:bg-black/70 rounded-full p-3 z-10"
-            aria-label="Next"
-          >
-            <ChevronRight className="w-8 h-8" />
-          </button>
-
-          {/* Keyboard Hint */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-gray-400 text-sm">
-            Gunakan ← → atau klik tombol untuk navigasi • ESC untuk tutup
-          </div>
-        </div>
-      )}
     </div>
   );
 }
