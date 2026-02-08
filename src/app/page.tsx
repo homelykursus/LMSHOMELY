@@ -74,13 +74,11 @@ export default function LandingPage() {
   const [wordIndex, setWordIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Gallery stacked cards state
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  
   // Testimonial slider state
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  
+  // Gallery slider state
+  const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
 
   const words = [
     { text: 'Mudah', gradient: 'from-green-500 to-emerald-600' },
@@ -397,36 +395,6 @@ export default function LandingPage() {
   };
 
   // Gallery swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && activeCardIndex < galleryImages.length - 1) {
-      setActiveCardIndex(prev => prev + 1);
-    }
-    if (isRightSwipe && activeCardIndex > 0) {
-      setActiveCardIndex(prev => prev - 1);
-    }
-
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
-
-  const goToCard = (index: number) => {
-    setActiveCardIndex(index);
-  };
-
   // Function untuk mendapatkan gradient color berdasarkan course
   const getCourseGradient = (courseId: string) => {
     const gradients: { [key: string]: string } = {
@@ -598,7 +566,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457339/laptop_wcnfbh.webp"
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
                     alt="Perempuan Indonesia menggunakan laptop"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -765,7 +733,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457339/laptop_wcnfbh.webp"
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
                     alt="Perempuan Indonesia menggunakan laptop"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -1179,86 +1147,96 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Mobile Stacked Cards Layout */}
+          {/* Mobile Slider Layout - Same style as Testimonials */}
           <div className="md:hidden">
-            <div 
-              className="relative h-[500px] flex items-center justify-center"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              {galleryImages.map((item, index) => {
-                const position = index - activeCardIndex;
-                const isActive = index === activeCardIndex;
-                
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => isActive && openLightbox(index)}
-                    className={`gallery-card absolute w-[85%] max-w-sm transition-all duration-500 ease-out cursor-pointer ${
-                      isActive ? 'z-30' : 'z-10'
-                    }`}
-                    style={{
-                      transform: `
-                        translateX(${position * 20}px)
-                        translateY(${Math.abs(position) * 15}px)
-                        scale(${1 - Math.abs(position) * 0.1})
-                        rotateZ(${position * 2}deg)
-                      `,
-                      opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.2,
-                      pointerEvents: isActive ? 'auto' : 'none'
-                    }}
-                  >
-                    <div className="relative overflow-hidden rounded-2xl shadow-2xl aspect-[4/3]">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                        <div className="absolute bottom-0 left-0 right-0 p-6">
-                          <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
-                            {item.category}
-                          </span>
-                          <h3 className="text-white text-xl font-bold">
-                            {item.title}
-                          </h3>
+            <div className="relative max-w-7xl mx-auto">
+              {/* Overflow Container */}
+              <div className="overflow-hidden">
+                {/* Sliding Track */}
+                <div 
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{ 
+                    transform: `translateX(-${currentGallerySlide * 100}%)` 
+                  }}
+                >
+                  {galleryImages.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="flex-shrink-0 w-full px-3"
+                    >
+                      <div
+                        onClick={() => openLightbox(index)}
+                        className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3] cursor-pointer"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                          <div className="absolute bottom-0 left-0 right-0 p-6">
+                            <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
+                              {item.category}
+                            </span>
+                            <h3 className="text-white text-xl font-bold">
+                              {item.title}
+                            </h3>
+                          </div>
                         </div>
-                      </div>
-                      {/* Click indicator for active card */}
-                      {isActive && (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 animate-pulse">
+                        {/* Click indicator */}
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2">
                           <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                           </svg>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* Navigation Dots */}
-            <div className="flex justify-center items-center space-x-2 mt-8">
-              {galleryImages.map((_, index) => (
+              {/* Navigation Buttons */}
+              <div className="flex items-center justify-center space-x-4 mt-4">
                 <button
-                  key={index}
-                  onClick={() => goToCard(index)}
-                  className={`transition-all duration-300 rounded-full ${
-                    index === activeCardIndex
-                      ? 'w-8 h-3 bg-blue-600'
-                      : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  aria-label={`Go to image ${index + 1}`}
-                />
-              ))}
-            </div>
+                  onClick={() => setCurrentGallerySlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                  disabled={currentGallerySlide === 0}
+                  className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
 
-            {/* Swipe Instruction */}
-            <p className="text-center text-sm text-gray-500 mt-4">
-              Geser untuk melihat foto lainnya
-            </p>
+                {/* Dots Indicator */}
+                <div className="flex space-x-2">
+                  {galleryImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentGallerySlide(index)}
+                      className={`transition-all duration-300 rounded-full ${
+                        index === currentGallerySlide
+                          ? 'w-8 h-3 bg-blue-600'
+                          : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentGallerySlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                  disabled={currentGallerySlide === galleryImages.length - 1}
+                  className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Swipe Instruction */}
+              <p className="text-center text-sm text-gray-500 mt-4">
+                Geser untuk melihat foto lainnya
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -1369,12 +1347,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch">
             {/* Left Content - Text & Button */}
-            <div className="text-left flex flex-col justify-center">
+            <div className="text-center lg:text-left flex flex-col justify-center items-center lg:items-start">
               <p className="text-xl text-blue-100 mb-4">
                 Masih ada yang bingung ?
               </p>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
-                Yuk Konsultasikan dengan Admin 👇
+                Yuk Konsultasikan dengan Admin
               </h2>
               <div>
                 <a
@@ -1390,7 +1368,7 @@ export default function LandingPage() {
             </div>
 
             {/* Right Content - Image */}
-            <div className="hidden lg:flex lg:justify-start lg:items-stretch -ml-4 -my-20">
+            <div className="hidden lg:flex lg:justify-end lg:items-stretch -mr-4 -my-20">
               <img
                 src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457338/hp_piy5pr.webp"
                 alt="Konsultasi Gratis"
