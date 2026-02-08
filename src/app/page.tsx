@@ -972,7 +972,7 @@ export default function LandingPage() {
       </section>
 
       {/* Fasilitas Section */}
-      <section id="facilities" className="py-20 bg-white">
+      <section id="facilities" className="py-20 bg-gradient-to-br from-green-50 to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -1007,7 +1007,7 @@ export default function LandingPage() {
       </section>
 
       {/* Mentors Section */}
-      <section id="mentors" className="py-20 bg-white overflow-hidden">
+      <section id="mentors" className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
