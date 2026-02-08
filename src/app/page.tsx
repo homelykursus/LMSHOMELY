@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ChevronLeft, 
@@ -18,7 +19,10 @@ import {
   Video,
   Code,
   TrendingUp,
-  Terminal
+  Sheet,
+  BookOpen,
+  CreditCard,
+  UserCheck
 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 import { InstagramIcon } from '@/components/ui/instagram-icon';
@@ -53,9 +57,9 @@ interface Testimonial {
 interface Mentor {
   id: string;
   name: string;
-  instagram: string;
-  photo: string;
-  specialization: string;
+  photo: string | null;
+  education: string;
+  specialization: string | null;
 }
 
 interface GalleryImage {
@@ -66,6 +70,7 @@ interface GalleryImage {
 }
 
 export default function LandingPage() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -79,6 +84,13 @@ export default function LandingPage() {
   
   // Gallery slider state
   const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
+  
+  // Active section state for navigation
+  const [activeSection, setActiveSection] = useState('home');
+
+  // Mentors state - fetch from database
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [mentorsLoading, setMentorsLoading] = useState(true);
 
   const words = [
     { text: 'Mudah', gradient: 'from-green-500 to-emerald-600' },
@@ -91,7 +103,7 @@ export default function LandingPage() {
     {
       id: '1',
       name: 'Microsoft Office',
-      description: 'Kuasai Word, Excel, PowerPoint untuk kebutuhan kantor dan bisnis',
+      description: 'Cocok untuk Sekolah atau Perkantoran',
       duration: '12 Pertemuan',
       icon: FileText,
       slug: 'microsoft-office'
@@ -99,7 +111,7 @@ export default function LandingPage() {
     {
       id: '2',
       name: 'Desain Grafis',
-      description: 'Belajar Adobe Photoshop, Illustrator, dan CorelDraw',
+      description: 'Cocok untuk peningkatan Skill Desain Grafis',
       duration: '16 Pertemuan',
       icon: Palette,
       slug: 'desain-grafis'
@@ -107,15 +119,15 @@ export default function LandingPage() {
     {
       id: '3',
       name: 'Video Editing',
-      description: 'Editing video profesional dengan Adobe Premiere & After Effects',
+      description: 'Cocok untuk Peningkatan Skill dan Content Creator',
       duration: '14 Pertemuan',
       icon: Video,
       slug: 'video-editing'
     },
     {
       id: '4',
-      name: 'Web Design',
-      description: 'Membuat website menarik dengan HTML, CSS, dan JavaScript',
+      name: 'Pembuatan Website',
+      description: 'Pengembangan web tanpa Coding dengan Wordpress dan AI',
       duration: '20 Pertemuan',
       icon: Code,
       slug: 'web-design'
@@ -123,18 +135,18 @@ export default function LandingPage() {
     {
       id: '5',
       name: 'Digital Marketing',
-      description: 'Strategi pemasaran digital dan social media marketing',
+      description: 'Teknik Pemasaran produk secara digital dan Beriklan di Sosial Media',
       duration: '12 Pertemuan',
       icon: TrendingUp,
       slug: 'digital-marketing'
     },
     {
       id: '6',
-      name: 'Programming',
-      description: 'Belajar coding dari dasar hingga membuat aplikasi',
-      duration: '24 Pertemuan',
-      icon: Terminal,
-      slug: 'programming'
+      name: 'Microsoft Excel Lanjutan',
+      description: 'Tingkatkan kemampuan Microsoft Excel untuk tujuan yang lebih spesifik',
+      duration: '6x Pertemuan',
+      icon: Sheet,
+      slug: 'microsoft-excel-lanjutan'
     }
   ];
 
@@ -175,6 +187,24 @@ export default function LandingPage() {
       name: 'Komputer Modern',
       description: 'Perangkat komputer terbaru dan terawat',
       icon: Monitor
+    },
+    {
+      id: '7',
+      name: 'Modul Materi',
+      description: 'Modul pembelajaran lengkap dan terstruktur',
+      icon: BookOpen
+    },
+    {
+      id: '8',
+      name: 'Pembayaran Bisa Cicil',
+      description: 'Sistem pembayaran fleksibel dengan cicilan',
+      icon: CreditCard
+    },
+    {
+      id: '9',
+      name: 'Komunitas Alumni',
+      description: 'Bergabung dengan komunitas alumni yang aktif',
+      icon: UserCheck
     }
   ];
 
@@ -227,54 +257,43 @@ export default function LandingPage() {
       rating: 5,
       comment: 'Dari nol sampai bisa coding! Pengajarnya sangat sabar dan metode belajarnya menyenangkan. Highly recommended!',
       photo: 'https://ui-avatars.com/api/?name=Maya+Sari&background=ef4444&color=fff'
+    },
+    {
+      id: '7',
+      name: 'Andi Wijaya',
+      course: 'Microsoft Excel Lanjutan',
+      rating: 5,
+      comment: 'Pembelajaran private sangat efektif! Saya bisa fokus belajar fitur Excel yang saya butuhkan untuk pekerjaan. Sangat worth it!',
+      photo: 'https://ui-avatars.com/api/?name=Andi+Wijaya&background=059669&color=fff'
+    },
+    {
+      id: '8',
+      name: 'Rina Kusuma',
+      course: 'Desain Grafis',
+      rating: 5,
+      comment: 'Tempat kursusnya nyaman dan instrukturnya profesional. Setelah kursus di sini, saya bisa freelance desain dan dapat penghasilan tambahan!',
+      photo: 'https://ui-avatars.com/api/?name=Rina+Kusuma&background=db2777&color=fff'
     }
   ];
 
-  // Mentors
-  const mentors: Mentor[] = [
-    {
-      id: '1',
-      name: 'Ibu Rina Wijaya',
-      instagram: '@rinawijaya',
-      photo: 'https://ui-avatars.com/api/?name=Rina+Wijaya&background=6366f1&color=fff&size=200',
-      specialization: 'Microsoft Office & Administrasi'
-    },
-    {
-      id: '2',
-      name: 'Bapak Andi Pratama',
-      instagram: '@andipratama',
-      photo: 'https://ui-avatars.com/api/?name=Andi+Pratama&background=8b5cf6&color=fff&size=200',
-      specialization: 'Desain Grafis & Multimedia'
-    },
-    {
-      id: '3',
-      name: 'Ibu Sarah Kusuma',
-      instagram: '@sarahkusuma',
-      photo: 'https://ui-avatars.com/api/?name=Sarah+Kusuma&background=ec4899&color=fff&size=200',
-      specialization: 'Video Editing & Motion Graphics'
-    },
-    {
-      id: '4',
-      name: 'Bapak Dimas Prasetyo',
-      instagram: '@dimaspras',
-      photo: 'https://ui-avatars.com/api/?name=Dimas+Prasetyo&background=14b8a6&color=fff&size=200',
-      specialization: 'Web Design & Programming'
-    },
-    {
-      id: '5',
-      name: 'Ibu Maya Sari',
-      instagram: '@mayasari',
-      photo: 'https://ui-avatars.com/api/?name=Maya+Sari&background=f59e0b&color=fff&size=200',
-      specialization: 'Digital Marketing & SEO'
-    },
-    {
-      id: '6',
-      name: 'Bapak Rudi Hartono',
-      instagram: '@rudihartono',
-      photo: 'https://ui-avatars.com/api/?name=Rudi+Hartono&background=ef4444&color=fff&size=200',
-      specialization: 'Database & Networking'
-    }
-  ];
+  // Fetch mentors from database
+  useEffect(() => {
+    const fetchMentors = async () => {
+      try {
+        const response = await fetch('/api/landing/teachers');
+        if (response.ok) {
+          const data = await response.json();
+          setMentors(data);
+        }
+      } catch (error) {
+        console.error('Error fetching mentors:', error);
+      } finally {
+        setMentorsLoading(false);
+      }
+    };
+
+    fetchMentors();
+  }, []);
 
   // Gallery Images
   const galleryImages: GalleryImage[] = [
@@ -355,6 +374,43 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Intersection Observer for active section detection
+  useEffect(() => {
+    const sections = ['home', 'programs', 'facilities', 'mentors', 'gallery', 'location', 'testimonials'];
+    
+    const observerOptions = {
+      root: null,
+      rootMargin: '-50% 0px -50% 0px',
+      threshold: 0
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    sections.forEach((sectionId) => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => {
+      sections.forEach((sectionId) => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          observer.unobserve(element);
+        }
+      });
+    };
+  }, []);
+
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
@@ -403,7 +459,7 @@ export default function LandingPage() {
       '3': 'from-red-500 to-orange-500',     // Video Editing - Red/Orange
       '4': 'from-green-500 to-teal-500',     // Web Design - Green/Teal
       '5': 'from-yellow-500 to-orange-500',  // Digital Marketing - Yellow/Orange
-      '6': 'from-indigo-500 to-purple-600'   // Programming - Indigo/Purple
+      '6': 'from-green-600 to-emerald-600'   // Microsoft Excel Lanjutan - Green
     };
     return gradients[courseId] || 'from-blue-500 to-blue-600';
   };
@@ -433,26 +489,96 @@ export default function LandingPage() {
 
             {/* Desktop Menu */}
             <nav className="hidden md:flex items-center space-x-6">
-              <button onClick={() => scrollToSection('home')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('home')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'home' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Beranda
+                {activeSection === 'home' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <button onClick={() => scrollToSection('programs')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('programs')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'programs' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Program
+                {activeSection === 'programs' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <button onClick={() => scrollToSection('facilities')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('facilities')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'facilities' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Fasilitas
+                {activeSection === 'facilities' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <button onClick={() => scrollToSection('mentors')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('mentors')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'mentors' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Mentor
+                {activeSection === 'mentors' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <button onClick={() => scrollToSection('gallery')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('gallery')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'gallery' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Galeri
+                {activeSection === 'gallery' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <button 
+                onClick={() => scrollToSection('location')} 
+                className={`transition-colors font-medium text-sm relative ${
+                  activeSection === 'location' 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Lokasi
+                {activeSection === 'location' && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </button>
-              <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+              <Link 
+                href="/blog" 
+                className={`transition-colors font-medium text-sm relative ${
+                  pathname?.startsWith('/blog') 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Blog
+                {pathname?.startsWith('/blog') && (
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+                )}
               </Link>
               <Link
                 href="/pendaftaran"
@@ -483,28 +609,84 @@ export default function LandingPage() {
           {isMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200">
               <nav className="flex flex-col space-y-4">
-                <button onClick={() => scrollToSection('home')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('home')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'home' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Beranda
                 </button>
-                <button onClick={() => scrollToSection('programs')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('programs')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'programs' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Program
                 </button>
-                <button onClick={() => scrollToSection('facilities')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('facilities')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'facilities' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Fasilitas
                 </button>
-                <button onClick={() => scrollToSection('mentors')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('mentors')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'mentors' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Mentor
                 </button>
-                <button onClick={() => scrollToSection('gallery')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('gallery')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'gallery' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Galeri
                 </button>
-                <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('location')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'location' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Lokasi
                 </button>
-                <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <button 
+                  onClick={() => scrollToSection('testimonials')} 
+                  className={`transition-colors font-medium text-left ${
+                    activeSection === 'testimonials' 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Testimoni
                 </button>
-                <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+                <Link 
+                  href="/blog" 
+                  className={`transition-colors font-medium text-left ${
+                    pathname?.startsWith('/blog') 
+                      ? 'text-blue-600 font-bold' 
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
                   Blog
                 </Link>
                 <Link
@@ -786,7 +968,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Program Kursus Kami
+              Program Kursus
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Pilih program kursus yang sesuai dengan kebutuhan dan minat Anda
@@ -819,18 +1001,6 @@ export default function LandingPage() {
               </Link>
             ))}
           </div>
-
-          <div className="text-center mt-12">
-            <a
-              href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold transition-all transform hover:scale-105"
-            >
-              <span>Lihat Semua Program</span>
-              <ArrowRight className="w-5 h-5" />
-            </a>
-          </div>
         </div>
       </section>
 
@@ -839,7 +1009,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Fasilitas Lengkap
+              Fasilitas Kursus
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Kami menyediakan fasilitas terbaik untuk kenyamanan belajar Anda
@@ -883,40 +1053,51 @@ export default function LandingPage() {
 
           {/* Mobile Layout - Grid Only (No Image) */}
           <div className="grid grid-cols-2 md:hidden gap-4">
-            {mentors.map((mentor) => (
-              <div
-                key={mentor.id}
-                className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
-              >
-                <div className="text-center">
-                  <div className="relative inline-block mb-3">
-                    <img
-                      src={mentor.photo}
-                      alt={mentor.name}
-                      className="w-20 h-20 rounded-full mx-auto border-2 border-white shadow-lg"
-                    />
-                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
-                      <Award className="w-3 h-3 text-white" />
-                    </div>
+            {mentorsLoading ? (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg border border-gray-100 animate-pulse">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-3"></div>
+                    <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-300 rounded"></div>
                   </div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
-                    {mentor.name}
-                  </h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-tight">
-                    {mentor.specialization}
-                  </p>
-                  <a
-                    href={`https://instagram.com/${mentor.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1 text-pink-600 hover:text-pink-700 font-medium transition-colors text-xs"
-                  >
-                    <InstagramIcon className="text-pink-600" size={14} />
-                    <span className="truncate">{mentor.instagram}</span>
-                  </a>
                 </div>
+              ))
+            ) : mentors.length > 0 ? (
+              mentors.map((mentor) => (
+                <div
+                  key={mentor.id}
+                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
+                >
+                  <div className="text-center">
+                    <div className="relative inline-block mb-3">
+                      <img
+                        src={mentor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name)}&background=6366f1&color=fff&size=200`}
+                        alt={mentor.name}
+                        className="w-20 h-20 rounded-full mx-auto border-2 border-white shadow-lg object-cover"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
+                        <Award className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-sm font-bold text-gray-900 mb-1 leading-tight">
+                      {mentor.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 mb-1 leading-tight">
+                      {mentor.specialization || 'Instruktur'}
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium">
+                      {mentor.education}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-8 text-gray-500">
+                Belum ada data mentor
               </div>
-            ))}
+            )}
           </div>
 
           {/* Desktop Layout - Image Left, Cards Right */}
@@ -932,40 +1113,51 @@ export default function LandingPage() {
 
             {/* Right Side - Mentor Cards Grid (60% width, 3 columns x 2 rows) */}
             <div className="w-[60%] grid grid-cols-3 gap-4 mb-20">
-              {mentors.map((mentor) => (
-                <div
-                  key={mentor.id}
-                  className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
-                >
-                  <div className="text-center">
-                    <div className="relative inline-block mb-3">
-                      <img
-                        src={mentor.photo}
-                        alt={mentor.name}
-                        className="w-16 h-16 rounded-full mx-auto border-2 border-white shadow-lg"
-                      />
-                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
-                        <Award className="w-3 h-3 text-white" />
-                      </div>
+              {mentorsLoading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg border border-gray-100 animate-pulse">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3"></div>
+                      <div className="h-3 bg-gray-300 rounded mb-2"></div>
+                      <div className="h-2 bg-gray-300 rounded"></div>
                     </div>
-                    <h3 className="text-xs font-bold text-gray-900 mb-1 leading-tight">
-                      {mentor.name}
-                    </h3>
-                    <p className="text-[10px] text-gray-600 mb-2 leading-tight">
-                      {mentor.specialization}
-                    </p>
-                    <a
-                      href={`https://instagram.com/${mentor.instagram.replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1 text-pink-600 hover:text-pink-700 font-medium transition-colors text-[10px]"
-                    >
-                      <InstagramIcon className="text-pink-600" size={12} />
-                      <span className="truncate">{mentor.instagram}</span>
-                    </a>
                   </div>
+                ))
+              ) : mentors.length > 0 ? (
+                mentors.map((mentor) => (
+                  <div
+                    key={mentor.id}
+                    className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 border border-gray-100"
+                  >
+                    <div className="text-center">
+                      <div className="relative inline-block mb-3">
+                        <img
+                          src={mentor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.name)}&background=6366f1&color=fff&size=200`}
+                          alt={mentor.name}
+                          className="w-16 h-16 rounded-full mx-auto border-2 border-white shadow-lg object-cover"
+                        />
+                        <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-1">
+                          <Award className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="text-xs font-bold text-gray-900 mb-1 leading-tight">
+                        {mentor.name}
+                      </h3>
+                      <p className="text-[10px] text-gray-600 mb-1 leading-tight">
+                        {mentor.specialization || 'Instruktur'}
+                      </p>
+                      <p className="text-[10px] text-blue-600 font-medium">
+                        {mentor.education}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-8 text-gray-500">
+                  Belum ada data mentor
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -1075,7 +1267,7 @@ export default function LandingPage() {
 
               {/* Dots Indicator for Desktop - Show slides of 4 */}
               <div className="flex space-x-2">
-                {[0, 1, 2].map((slideIndex) => (
+                {[0, 1].map((slideIndex) => (
                   <button
                     key={slideIndex}
                     onClick={() => setCurrentTestimonial(slideIndex)}
@@ -1090,8 +1282,8 @@ export default function LandingPage() {
               </div>
 
               <button
-                onClick={() => setCurrentTestimonial((prev) => Math.min(2, prev + 1))}
-                disabled={currentTestimonial === 2}
+                onClick={() => setCurrentTestimonial((prev) => Math.min(1, prev + 1))}
+                disabled={currentTestimonial === 1}
                 className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
                 aria-label="Next testimonials"
               >

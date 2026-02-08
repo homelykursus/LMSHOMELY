@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
 
 export default function Header() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -68,8 +70,18 @@ export default function Header() {
             <button onClick={() => scrollToSection('location')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
               Lokasi
             </button>
-            <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
+            <Link 
+              href="/blog" 
+              className={`transition-colors font-medium text-sm relative ${
+                pathname?.startsWith('/blog') 
+                  ? 'text-blue-600 font-bold' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
               Blog
+              {pathname?.startsWith('/blog') && (
+                <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></span>
+              )}
             </Link>
             <Link
               href="/pendaftaran"
@@ -121,7 +133,14 @@ export default function Header() {
               <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
                 Testimoni
               </button>
-              <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-left">
+              <Link 
+                href="/blog" 
+                className={`transition-colors font-medium text-left ${
+                  pathname?.startsWith('/blog') 
+                    ? 'text-blue-600 font-bold' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
                 Blog
               </Link>
               <Link

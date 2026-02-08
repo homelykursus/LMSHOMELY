@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Terminal } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Sheet } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 
 interface CourseDetail {
@@ -32,7 +32,7 @@ const getCourseIcon = (slug: string) => {
     'video-editing': Video,
     'web-design': Code,
     'digital-marketing': TrendingUp,
-    'programming': Terminal
+    'microsoft-excel-lanjutan': Sheet
   };
   return iconMap[slug] || FileText;
 };
@@ -375,37 +375,53 @@ const courseDetails: CourseDetail[] = [
   },
   {
     id: '6',
-    name: 'Programming',
-    slug: 'programming',
-    description: 'Belajar coding dari dasar hingga membuat aplikasi',
-    fullDescription: 'Program kursus Programming mengajarkan fundamental programming dan membuat aplikasi dari nol. Mulai dari logika pemrograman hingga membuat aplikasi web dan mobile.',
-    duration: '24x Pertemuan',
+    name: 'Microsoft Excel Lanjutan',
+    slug: 'microsoft-excel-lanjutan',
+    description: 'Tingkatkan kemampuan Microsoft Excel untuk tujuan yang lebih spesifik',
+    fullDescription: 'Program kursus Microsoft Excel Lanjutan dirancang khusus untuk pembelajaran private dengan metode 1 guru 1 siswa. Fokus pada penguasaan fitur-fitur advanced Excel yang sangat berguna untuk analisis data, pelaporan, dan otomasi pekerjaan.',
+    duration: '6x Pertemuan',
     sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
+    method: 'Private 1 Guru 1 Siswa',
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: Terminal,
-    gradient: 'from-indigo-500 to-purple-500',
+    iconComponent: Sheet,
+    gradient: 'from-green-600 to-emerald-600',
     curriculum: [
-      'Fundamental programming dan algoritma',
-      'Python: Syntax, data structures, OOP',
-      'Database: SQL dan database design',
-      'Web development dengan framework modern',
-      'API development dan integration',
-      'Project: Web application, automation script'
+      'Formula dan Fungsi Lanjutan (VLOOKUP, HLOOKUP, INDEX-MATCH)',
+      'Pivot Table dan Pivot Chart untuk analisis data',
+      'Conditional Formatting dan Data Validation',
+      'Macro dan VBA untuk otomasi',
+      'Dashboard dan Reporting profesional',
+      'Tips & Trik produktivitas Excel tingkat lanjut'
     ],
     benefits: [
-      'Membuat aplikasi sendiri',
-      'Karir sebagai programmer dengan gaji tinggi',
-      'Freelance dan remote work',
-      'Skill masa depan yang sangat dibutuhkan'
+      'Menguasai Excel tingkat lanjut',
+      'Meningkatkan efisiensi kerja secara signifikan',
+      'Pembelajaran fokus dengan metode private',
+      'Skill yang sangat dibutuhkan di dunia kerja'
     ],
     targetAudience: [
-      'Pemula yang ingin belajar coding',
-      'Mahasiswa IT',
-      'Career switcher',
-      'Siapa saja yang ingin jadi programmer'
-    ]
+      'Karyawan yang ingin upgrade skill Excel',
+      'Profesional yang bekerja dengan data',
+      'Mahasiswa yang perlu Excel untuk tugas/skripsi',
+      'Siapa saja yang ingin menguasai Excel lanjutan'
+    ],
+    software: [
+      {
+        name: 'Microsoft Excel',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png',
+        description: 'Advanced data analysis'
+      },
+      {
+        name: 'ChatGPT',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
+        description: 'AI assistant for formulas'
+      }
+    ],
+    pricing: {
+      originalPrice: 950000,
+      discountedPrice: 700000
+    }
   }
 ];
 
