@@ -1496,6 +1496,15 @@ export default function LandingPage() {
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch">
+            {/* Mobile Image - Shows on mobile only, positioned ABOVE text */}
+            <div className="lg:hidden flex justify-center items-center mb-8">
+              <img
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457338/hp_piy5pr.webp"
+                alt="Konsultasi Gratis"
+                className="w-[95%] sm:w-[85%] max-w-lg object-contain"
+              />
+            </div>
+
             {/* Left Content - Text & Button */}
             <div className="text-center lg:text-left flex flex-col justify-center items-center lg:items-start">
               <p className="text-xl text-gray-600 mb-4">
@@ -1517,7 +1526,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right Content - Image */}
+            {/* Desktop Image - Shows on desktop only */}
             <div className="hidden lg:flex lg:justify-end lg:items-stretch -mr-4 -my-20">
               <img
                 src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770457338/hp_piy5pr.webp"
