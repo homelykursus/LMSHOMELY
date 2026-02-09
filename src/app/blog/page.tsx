@@ -10,6 +10,18 @@ import Footer from '@/components/landing/footer';
 const blogPosts = [
   {
     id: 1,
+    title: 'Cara Belajar Microsoft Excel untuk Pemula di Pekanbaru',
+    slug: 'cara-belajar-microsoft-excel-untuk-pemula-pekanbaru',
+    excerpt: 'Panduan lengkap belajar Microsoft Excel untuk pemula di Pekanbaru. Tips, trik, dan rekomendasi kursus Excel terbaik. Mulai dari nol hingga mahir!',
+    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-excel_zxcvbn.png',
+    author: 'Admin Homely',
+    date: '2025-02-09',
+    readTime: '8 menit',
+    category: 'Tutorial',
+    categoryColor: 'bg-blue-500'
+  },
+  {
+    id: 2,
     title: 'Tips Belajar Microsoft Office untuk Pemula',
     slug: 'tips-belajar-microsoft-office-pemula',
     excerpt: 'Panduan lengkap untuk memulai belajar Microsoft Office dari nol hingga mahir. Pelajari Word, Excel, dan PowerPoint dengan mudah.',
@@ -21,7 +33,7 @@ const blogPosts = [
     categoryColor: 'bg-blue-500'
   },
   {
-    id: 2,
+    id: 3,
     title: 'Cara Membuat Desain Grafis Profesional dengan CorelDRAW',
     slug: 'cara-membuat-desain-grafis-coreldraw',
     excerpt: 'Pelajari teknik-teknik dasar dan advanced dalam CorelDRAW untuk membuat desain grafis yang menarik dan profesional.',
@@ -33,7 +45,7 @@ const blogPosts = [
     categoryColor: 'bg-purple-500'
   },
   {
-    id: 3,
+    id: 4,
     title: 'Mengenal Dasar-Dasar Editing Video dengan Adobe Premiere',
     slug: 'dasar-editing-video-adobe-premiere',
     excerpt: 'Tutorial lengkap untuk memulai editing video menggunakan Adobe Premiere Pro. Cocok untuk content creator pemula.',
@@ -45,7 +57,7 @@ const blogPosts = [
     categoryColor: 'bg-pink-500'
   },
   {
-    id: 4,
+    id: 5,
     title: 'Strategi Digital Marketing untuk UMKM',
     slug: 'strategi-digital-marketing-umkm',
     excerpt: 'Panduan praktis menggunakan digital marketing untuk meningkatkan penjualan bisnis UMKM Anda di era digital.',
@@ -57,7 +69,7 @@ const blogPosts = [
     categoryColor: 'bg-green-500'
   },
   {
-    id: 5,
+    id: 6,
     title: 'Photoshop untuk Pemula: Teknik Dasar yang Wajib Dikuasai',
     slug: 'photoshop-pemula-teknik-dasar',
     excerpt: 'Kuasai teknik-teknik dasar Adobe Photoshop yang paling sering digunakan dalam dunia desain grafis dan fotografi.',
@@ -69,7 +81,7 @@ const blogPosts = [
     categoryColor: 'bg-purple-500'
   },
   {
-    id: 6,
+    id: 7,
     title: 'Meningkatkan Produktivitas dengan Microsoft Excel',
     slug: 'meningkatkan-produktivitas-excel',
     excerpt: 'Tips dan trik menggunakan formula dan fitur Excel untuk meningkatkan produktivitas kerja Anda sehari-hari.',

@@ -691,9 +691,9 @@ export default function LandingPage() {
               </div>
               
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                Wujudkan Impian
+                Kursus Komputer Pekanbaru
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                  Karir Digital Anda
+                  Bersertifikat & Terpercaya
                 </span>
                 <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
                   {typingText}
@@ -702,7 +702,7 @@ export default function LandingPage() {
               </h1>
               
               <p className="text-base md:text-lg text-gray-600 leading-relaxed">
-                Belajar komputer dengan metode praktis dan mudah dipahami. Belajar Langsung Tatap Muka dan dibimbing oleh instruktur berpengalaman dengan fasilitas terbaik.
+                Tempat kursus komputer terbaik di Pekanbaru dengan metode praktis dan mudah dipahami. Belajar langsung tatap muka dengan instruktur berpengalaman, fasilitas lengkap, dan sertifikat resmi.
               </p>
             </div>
 
@@ -716,7 +716,7 @@ export default function LandingPage() {
                 <div className="relative">
                   <img
                     src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
-                    alt="Perempuan Indonesia menggunakan laptop"
+                    alt="Kursus Komputer Pekanbaru - Siswa Belajar Komputer dengan Instruktur Profesional"
                     className="w-full h-auto rounded-3xl"
                   />
                   
@@ -815,9 +815,9 @@ export default function LandingPage() {
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  Wujudkan Impian
+                  Kursus Komputer Pekanbaru
                   <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                    Karir Digital Anda
+                    Bersertifikat & Terpercaya
                   </span>
                   <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
                     {typingText}
@@ -826,7 +826,7 @@ export default function LandingPage() {
                 </h1>
                 
                 <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                  Belajar komputer dengan metode praktis dan mudah dipahami. Belajar Langsung Tatap Muka dan dibimbing oleh instruktur berpengalaman dengan fasilitas terbaik.
+                  Tempat kursus komputer terbaik di Pekanbaru dengan metode praktis dan mudah dipahami. Belajar langsung tatap muka dengan instruktur berpengalaman, fasilitas lengkap, dan sertifikat resmi.
                 </p>
               </div>
 
@@ -883,7 +883,7 @@ export default function LandingPage() {
                 <div className="relative">
                   <img
                     src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
-                    alt="Perempuan Indonesia menggunakan laptop"
+                    alt="Tempat Kursus Komputer Terbaik di Pekanbaru - Homely Kursus Komputer"
                     className="w-full h-auto rounded-3xl"
                   />
                   

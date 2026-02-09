@@ -1,14 +1,27 @@
-User-agent: Googlebot
-Allow: /
+# Robots.txt for Homely Kursus Komputer
+# https://homelykursus.com
 
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Allow all search engines to crawl the site
 User-agent: *
 Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /teacher/
+
+# Disallow private files
+Disallow: /*.json$
+Disallow: /*.env$
+
+# Allow specific important pages
+Allow: /
+Allow: /program/
+Allow: /pendaftaran
+Allow: /blog/
+
+# Sitemap location
+Sitemap: https://homelykursus.com/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1
