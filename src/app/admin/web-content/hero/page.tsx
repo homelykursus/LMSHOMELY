@@ -5,6 +5,7 @@ import { Home, Plus, Edit, Trash2, Check, X, Image as ImageIcon } from 'lucide-r
 
 interface HeroSection {
   id: string;
+  badgeText: string | null;
   title: string;
   description: string;
   imageUrl: string | null;
@@ -20,6 +21,7 @@ export default function HeroWebPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingHero, setEditingHero] = useState<HeroSection | null>(null);
   const [formData, setFormData] = useState({
+    badgeText: '',
     title: '',
     description: '',
     imageUrl: '',
@@ -80,6 +82,7 @@ export default function HeroWebPage() {
   const handleEdit = (hero: HeroSection) => {
     setEditingHero(hero);
     setFormData({
+      badgeText: hero.badgeText || '',
       title: hero.title,
       description: hero.description,
       imageUrl: hero.imageUrl || '',
@@ -110,6 +113,7 @@ export default function HeroWebPage() {
 
   const resetForm = () => {
     setFormData({
+      badgeText: '',
       title: '',
       description: '',
       imageUrl: '',
@@ -160,6 +164,22 @@ export default function HeroWebPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Teks Badge
+              </label>
+              <input
+                type="text"
+                value={formData.badgeText}
+                onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="📍 Kursus Komputer Pekanbaru"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Teks badge yang muncul di atas judul hero (opsional)
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Judul <span className="text-red-500">*</span>

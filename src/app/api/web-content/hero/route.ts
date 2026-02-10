@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, imageUrl, animatedWords, isActive } = body;
+    const { badgeText, title, description, imageUrl, animatedWords, isActive } = body;
 
     // Validate required fields
     if (!title || !description) {
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
 
     const hero = await db.heroSection.create({
       data: {
+        badgeText: badgeText || null,
         title,
         description,
         imageUrl: imageUrl || null,

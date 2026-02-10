@@ -28,7 +28,9 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
-  Megaphone
+  Megaphone,
+  Image as ImageIcon,
+  MapPin
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -127,6 +129,16 @@ const sidebarItems: SidebarItem[] = [
         title: 'Testimonial',
         href: '/admin/web-content/testimonials',
         icon: Users,
+      },
+      {
+        title: 'Galeri Foto',
+        href: '/admin/web-content/gallery',
+        icon: ImageIcon,
+      },
+      {
+        title: 'Lokasi Kami',
+        href: '/admin/web-content/location',
+        icon: MapPin,
       },
     ],
   },

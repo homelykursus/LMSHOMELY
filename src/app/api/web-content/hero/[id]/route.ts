@@ -37,7 +37,9 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, description, imageUrl, animatedWords, isActive } = body;
+    const { badgeText, title, description, imageUrl, animatedWords, isActive } = body;
+
+    console.log('[Hero Update] Request received:', { id, badgeText, title, isActive });
 
     // Check if hero exists
     const existingHero = await db.heroSection.findUnique({
@@ -45,14 +47,18 @@ export async function PUT(
     });
 
     if (!existingHero) {
+      console.log('[Hero Update] Hero not found:', id);
       return NextResponse.json(
         { error: 'Hero not found' },
         { status: 404 }
       );
     }
 
+    console.log('[Hero Update] Existing hero found:', existingHero.id);
+
     // If setting as active, deactivate all others first
     if (isActive && !existingHero.isActive) {
+      console.log('[Hero Update] Deactivating other heroes');
       await db.heroSection.updateMany({
         where: { 
           isActive: true,
@@ -62,22 +68,35 @@ export async function PUT(
       });
     }
 
+    console.log('[Hero Update] Updating hero with data:', {
+      badgeText: badgeText || null,
+      title,
+      description: description?.substring(0, 50),
+      imageUrl: imageUrl || null,
+      animatedWords: animatedWords || null,
+      isActive: isActive || false
+    });
+
     const hero = await db.heroSection.update({
       where: { id },
       data: {
-        title,
-        description,
-        imageUrl: imageUrl || null,
-        animatedWords: animatedWords || null,
-        isActive: isActive || false
+        badgeText: badgeText !== undefined && badgeText !== '' ? badgeText : null,
+        title: title || existingHero.title,
+        description: description || existingHero.description,
+        imageUrl: imageUrl !== undefined && imageUrl !== '' ? imageUrl : null,
+        animatedWords: animatedWords !== undefined && animatedWords !== '' ? animatedWords : null,
+        isActive: isActive !== undefined ? Boolean(isActive) : existingHero.isActive
       }
     });
 
+    console.log('[Hero Update] Update successful:', hero.id);
     return NextResponse.json(hero);
-  } catch (error) {
-    console.error('Error updating hero:', error);
+  } catch (error: any) {
+    console.error('[Hero Update] Error updating hero:', error);
+    console.error('[Hero Update] Error stack:', error.stack);
+    console.error('[Hero Update] Error message:', error.message);
     return NextResponse.json(
-      { error: 'Failed to update hero' },
+      { error: 'Failed to update hero', details: error.message },
       { status: 500 }
     );
   }

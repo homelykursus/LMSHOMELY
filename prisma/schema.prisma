@@ -403,6 +403,7 @@ model Announcement {
 
 model HeroSection {
   id            String   @id @default(cuid())
+  badgeText     String?  @default("📍 Kursus Komputer Pekanbaru") // Teks badge di atas judul
   title         String   // Judul utama hero section
   description   String   @db.Text // Deskripsi hero section
   imageUrl      String?  // URL gambar hero
@@ -447,4 +448,39 @@ model Testimonial {
   @@index([isActive])
   @@index([order])
   @@index([rating])
+}
+
+model GalleryImage {
+  id          String   @id @default(cuid())
+  title       String   // Judul foto
+  imageUrl    String   // URL gambar
+  category    String   // Kategori: Fasilitas, Aktivitas, dll
+  order       Int      @default(0) // Urutan tampil
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String   // user ID yang membuat
+  
+  @@index([isActive])
+  @@index([order])
+  @@index([category])
+}
+
+model LocationInfo {
+  id                String   @id @default(cuid())
+  title             String   // Judul section (contoh: "Lokasi Kami")
+  subtitle          String   @db.Text // Subtitle section
+  address           String   @db.Text // Alamat lengkap
+  whatsappNumber    String   // Nomor WhatsApp (format: 6282164575780)
+  whatsappDisplay   String   // Nomor WhatsApp untuk ditampilkan (contoh: "+62 821-6457-578")
+  instagramUsername String   // Username Instagram (tanpa @)
+  instagramUrl      String   // URL Instagram lengkap
+  googleMapsEmbed   String   @db.Text // URL embed Google Maps
+  googleMapsLink    String   // Link Google Maps untuk tombol
+  isActive          Boolean  @default(true) // hanya 1 yang aktif
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdBy         String   // user ID yang membuat
+  
+  @@index([isActive])
 }

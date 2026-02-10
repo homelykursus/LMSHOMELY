@@ -67,9 +67,10 @@ interface Mentor {
 
 interface GalleryImage {
   id: string;
-  image: string;
   title: string;
+  imageUrl: string;
   category: string;
+  order: number;
 }
 
 export default function LandingPage() {
@@ -95,6 +96,7 @@ export default function LandingPage() {
 
   // Hero state - fetch from database (no fallback)
   const [heroData, setHeroData] = useState<{
+    badgeText: string;
     title: string;
     description: string;
     imageUrl: string;
@@ -112,6 +114,26 @@ export default function LandingPage() {
   const [testimonialsData, setTestimonialsData] = useState<Testimonial[]>([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const [testimonialsError, setTestimonialsError] = useState(false);
+
+  // Gallery state - fetch from database (no fallback)
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+  const [galleryError, setGalleryError] = useState(false);
+
+  // Location state - fetch from database (no fallback)
+  const [locationData, setLocationData] = useState<{
+    title: string;
+    subtitle: string;
+    address: string;
+    whatsappNumber: string;
+    whatsappDisplay: string;
+    instagramUsername: string;
+    instagramUrl: string;
+    googleMapsEmbed: string;
+    googleMapsLink: string;
+  } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState(false);
 
   // Generate words array with gradients based on heroData.animatedWords
   const gradients = [
@@ -205,6 +227,7 @@ export default function LandingPage() {
           }
           
           setHeroData({
+            badgeText: data.badgeText || '📍 Kursus Komputer Pekanbaru',
             title: data.title,
             description: data.description,
             imageUrl: data.imageUrl,
@@ -290,45 +313,55 @@ export default function LandingPage() {
     fetchTestimonials();
   }, []);
 
-  // Gallery Images
-  const galleryImages: GalleryImage[] = [
-    {
-      id: '1',
-      image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop',
-      title: 'Ruang Kelas Modern',
-      category: 'Fasilitas'
-    },
-    {
-      id: '2',
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop',
-      title: 'Suasana Belajar',
-      category: 'Aktivitas'
-    },
-    {
-      id: '3',
-      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop',
-      title: 'Lab Komputer',
-      category: 'Fasilitas'
-    },
-    {
-      id: '4',
-      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop',
-      title: 'Praktik Desain Grafis',
-      category: 'Aktivitas'
-    },
-    {
-      id: '5',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
-      title: 'Kelas Video Editing',
-      category: 'Aktivitas'
-    },
-    {
-      id: '6',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop',
-      title: 'Ruang Tunggu',
-      category: 'Fasilitas'
-    }
-  ];
+  // Fetch gallery images from database (no fallback)
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const response = await fetch('/api/web-content/gallery/active');
+        if (response.ok) {
+          const data = await response.json();
+          setGalleryImages(data);
+          setGalleryError(false);
+        } else {
+          setGalleryError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching gallery images:', error);
+        setGalleryError(true);
+      } finally {
+        setGalleryLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
+  // Fetch location info from database (no fallback)
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const response = await fetch('/api/web-content/location/active');
+        if (response.ok) {
+          const data = await response.json();
+          if (data) {
+            setLocationData(data);
+            setLocationError(false);
+          } else {
+            setLocationError(true);
+          }
+        } else {
+          setLocationError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching location info:', error);
+        setLocationError(true);
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    fetchLocation();
+  }, []);
 
   // Typing animation effect
   useEffect(() => {
@@ -437,7 +470,6 @@ export default function LandingPage() {
     return gradients[courseId] || 'from-blue-500 to-blue-600';
   };
 
-  const whatsappNumber = '628216457578';
   const whatsappMessage = encodeURIComponent('Halo, saya tertarik untuk mendaftar kursus di Homely Kursus Komputer. Mohon informasi lebih lanjut.');
 
   // Helper function to map icon names to icon components
@@ -733,7 +765,7 @@ export default function LandingPage() {
             <div className="text-left space-y-6 z-10">
               <div className="inline-block">
                 <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
-                  📍 Kursus Komputer Pekanbaru
+                  {heroData.badgeText}
                 </span>
               </div>
               
@@ -809,7 +841,7 @@ export default function LandingPage() {
             {/* 3. CTA Buttons - BELOW IMAGE */}
             <div className="flex flex-col gap-4 z-10">
               <a
-                href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                href={`https://wa.me/${locationData?.whatsappNumber || '628216457578'}?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
@@ -856,7 +888,7 @@ export default function LandingPage() {
               <div className="space-y-6 mb-8">
                 <div className="inline-block">
                   <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
-                    📍 Kursus Komputer Pekanbaru
+                    {heroData.badgeText}
                   </span>
                 </div>
                 
@@ -878,7 +910,7 @@ export default function LandingPage() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <a
-                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  href={`https://wa.me/${locationData?.whatsappNumber || '628216457578'}?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
@@ -1413,113 +1445,143 @@ export default function LandingPage() {
 
           {/* Desktop Grid Layout */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleryImages.map((item, index) => (
-              <div
-                key={item.id}
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]"
-              >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
-                      {item.category}
-                    </span>
-                    <h3 className="text-white text-xl font-bold">
-                      {item.title}
-                    </h3>
+            {galleryLoading ? (
+              <div className="col-span-full text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Memuat galeri...</p>
+              </div>
+            ) : galleryError ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-red-600">Gagal memuat galeri foto</p>
+              </div>
+            ) : galleryImages.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-600">Belum ada foto galeri</p>
+              </div>
+            ) : (
+              galleryImages.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
+                        {item.category}
+                      </span>
+                      <h3 className="text-white text-xl font-bold">
+                        {item.title}
+                      </h3>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Mobile Slider Layout - Same style as Testimonials */}
           <div className="md:hidden">
-            <div className="relative max-w-7xl mx-auto">
-              {/* Overflow Container */}
-              <div className="overflow-hidden">
-                {/* Sliding Track */}
-                <div 
-                  className="flex transition-transform duration-500 ease-out"
-                  style={{ 
-                    transform: `translateX(-${currentGallerySlide * 100}%)` 
-                  }}
-                >
-                  {galleryImages.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="flex-shrink-0 w-full px-3"
-                    >
+            {galleryLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Memuat galeri...</p>
+              </div>
+            ) : galleryError ? (
+              <div className="text-center py-12">
+                <p className="text-red-600">Gagal memuat galeri foto</p>
+              </div>
+            ) : galleryImages.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Belum ada foto galeri</p>
+              </div>
+            ) : (
+              <div className="relative max-w-7xl mx-auto">
+                {/* Overflow Container */}
+                <div className="overflow-hidden">
+                  {/* Sliding Track */}
+                  <div 
+                    className="flex transition-transform duration-500 ease-out"
+                    style={{ 
+                      transform: `translateX(-${currentGallerySlide * 100}%)` 
+                    }}
+                  >
+                    {galleryImages.map((item, index) => (
                       <div
-                        className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3]"
+                        key={item.id}
+                        className="flex-shrink-0 w-full px-3"
                       >
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-                          <div className="absolute bottom-0 left-0 right-0 p-6">
-                            <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
-                              {item.category}
-                            </span>
-                            <h3 className="text-white text-xl font-bold">
-                              {item.title}
-                            </h3>
+                        <div
+                          className="relative overflow-hidden rounded-2xl shadow-lg aspect-[4/3]"
+                        >
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+                            <div className="absolute bottom-0 left-0 right-0 p-6">
+                              <span className="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full mb-2">
+                                {item.category}
+                              </span>
+                              <h3 className="text-white text-xl font-bold">
+                                {item.title}
+                              </h3>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex items-center justify-center space-x-4 mt-4">
-                <button
-                  onClick={() => setCurrentGallerySlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1))}
-                  disabled={currentGallerySlide === 0}
-                  className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-
-                {/* Dots Indicator */}
-                <div className="flex space-x-2">
-                  {galleryImages.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentGallerySlide(index)}
-                      className={`transition-all duration-300 rounded-full ${
-                        index === currentGallerySlide
-                          ? 'w-8 h-3 bg-blue-600'
-                          : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
-                      }`}
-                      aria-label={`Go to image ${index + 1}`}
-                    />
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => setCurrentGallerySlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1))}
-                  disabled={currentGallerySlide === galleryImages.length - 1}
-                  className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-center space-x-4 mt-4">
+                  <button
+                    onClick={() => setCurrentGallerySlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1))}
+                    disabled={currentGallerySlide === 0}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
 
-              {/* Swipe Instruction */}
-              <p className="text-center text-sm text-gray-500 mt-4">
-                Geser untuk melihat foto lainnya
-              </p>
-            </div>
+                  {/* Dots Indicator */}
+                  <div className="flex space-x-2">
+                    {galleryImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentGallerySlide(index)}
+                        className={`transition-all duration-300 rounded-full ${
+                          index === currentGallerySlide
+                            ? 'w-8 h-3 bg-blue-600'
+                            : 'w-3 h-3 bg-gray-300 hover:bg-gray-400'
+                        }`}
+                        aria-label={`Go to image ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentGallerySlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1))}
+                    disabled={currentGallerySlide === galleryImages.length - 1}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Swipe Instruction */}
+                <p className="text-center text-sm text-gray-500 mt-4">
+                  Geser untuk melihat foto lainnya
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -1527,101 +1589,113 @@ export default function LandingPage() {
       {/* Location Section */}
       <section id="location" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Lokasi Kami
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Kunjungi kami dan rasakan pengalaman belajar yang menyenangkan
-            </p>
-          </div>
+          {locationLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Memuat informasi lokasi...</p>
+            </div>
+          ) : locationError || !locationData ? (
+            <div className="text-center py-12">
+              <p className="text-red-600">Gagal memuat informasi lokasi</p>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                  {locationData.title}
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  {locationData.subtitle}
+                </p>
+              </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Contact Info - Left Side (2 columns) */}
-            <div className="lg:col-span-2 flex flex-col justify-center space-y-6">
-              <div className="bg-white rounded-2xl p-8 shadow-lg">
-                <div className="flex items-start space-x-4 mb-6">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <MapPin className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Alamat</h3>
-                    <p className="text-gray-600">
-                      Jl. Kasah Ujung, No. 3, Pekanbaru<br />
-                      Riau, Indonesia
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2-Column Grid for Social Media */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Left Column: WhatsApp & Instagram */}
-                  <div className="space-y-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-green-100 p-3 rounded-lg">
-                        <WhatsAppIcon className="text-green-600" size={24} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Contact Info - Left Side (2 columns) */}
+                <div className="lg:col-span-2 flex flex-col justify-center space-y-6">
+                  <div className="bg-white rounded-2xl p-8 shadow-lg">
+                    <div className="flex items-start space-x-4 mb-6">
+                      <div className="bg-blue-100 p-3 rounded-lg">
+                        <MapPin className="w-6 h-6 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">WhatsApp</h3>
-                        <a
-                          href={`https://wa.me/${whatsappNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-700 font-medium"
-                        >
-                          +62 821-6457-578
-                        </a>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Alamat</h3>
+                        <p className="text-gray-600 whitespace-pre-line">
+                          {locationData.address}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-pink-100 p-3 rounded-lg">
-                        <InstagramIcon className="text-pink-600" size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Instagram</h3>
-                        <a
-                          href="https://instagram.com/homelykursus"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-pink-600 hover:text-pink-700 font-medium"
-                        >
-                          @homelykursus
-                        </a>
+                    {/* 2-Column Grid for Social Media */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Left Column: WhatsApp & Instagram */}
+                      <div className="space-y-6">
+                        <div className="flex items-start space-x-4">
+                          <div className="bg-green-100 p-3 rounded-lg">
+                            <WhatsAppIcon className="text-green-600" size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">WhatsApp</h3>
+                            <a
+                              href={`https://wa.me/${locationData.whatsappNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-700 font-medium"
+                            >
+                              {locationData.whatsappDisplay}
+                            </a>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-4">
+                          <div className="bg-pink-100 p-3 rounded-lg">
+                            <InstagramIcon className="text-pink-600" size={24} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Instagram</h3>
+                            <a
+                              href={locationData.instagramUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-pink-600 hover:text-pink-700 font-medium"
+                            >
+                              @{locationData.instagramUsername}
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Map - Right Side (1 column) */}
-            <div className="lg:col-span-1 flex flex-col space-y-4">
-              <div className="rounded-2xl overflow-hidden shadow-xl h-[300px]">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15958.850753834!2d101.43638!3d0.50729!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31d5a8e9e4c8f8e9%3A0x1234567890abcdef!2sJl.%20Kasah%20Ujung%2C%20No.%203%2C%20Pekanbaru%20-%20Riau!5e0!3m2!1sen!2sid!4v1234567890"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Lokasi Homely Kursus Komputer"
-                ></iframe>
-              </div>
+                {/* Map - Right Side (1 column) */}
+                <div className="lg:col-span-1 flex flex-col space-y-4">
+                  <div className="rounded-2xl overflow-hidden shadow-xl h-[300px]">
+                    <iframe
+                      src={locationData.googleMapsEmbed}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Lokasi Homely Kursus Komputer"
+                    ></iframe>
+                  </div>
 
-              <a
-                href="https://maps.app.goo.gl/1WPaH5dPRuhyhfVv6"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg"
-              >
-                <MapPin className="w-5 h-5" />
-                <span>Buka di Google Maps</span>
-                <ArrowRight className="w-5 h-5" />
-              </a>
-            </div>
-          </div>
+                  <a
+                    href={locationData.googleMapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg"
+                  >
+                    <MapPin className="w-5 h-5" />
+                    <span>Buka di Google Maps</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -1653,7 +1727,7 @@ export default function LandingPage() {
               </h2>
               <div>
                 <a
-                  href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                  href={`https://wa.me/${locationData?.whatsappNumber || '628216457578'}?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-10 py-5 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl"
@@ -1744,22 +1818,22 @@ export default function LandingPage() {
               <h4 className="text-lg font-bold mb-4">Hubungi Kami</h4>
               <div className="space-y-3">
                 <a
-                  href={`https://wa.me/${whatsappNumber}`}
+                  href={`https://wa.me/${locationData?.whatsappNumber || '628216457578'}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
                 >
                   <WhatsAppIcon className="text-green-400" size={20} />
-                  <span>+62 821-6457-578</span>
+                  <span>{locationData?.whatsappDisplay || '+62 821-6457-578'}</span>
                 </a>
                 <a
-                  href="https://instagram.com/homelykursus"
+                  href={locationData?.instagramUrl || 'https://instagram.com/homelykursus'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
                 >
                   <InstagramIcon className="text-pink-400" size={20} />
-                  <span>@homelykursus</span>
+                  <span>@{locationData?.instagramUsername || 'homelykursus'}</span>
                 </a>
               </div>
             </div>
