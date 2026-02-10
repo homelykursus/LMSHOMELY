@@ -21,6 +21,7 @@ interface Teacher {
   specialization?: string | null;
   experience?: number | null;
   address?: string | null;
+  instagramUsername?: string | null;
   joinDate: string;
   status: 'active' | 'inactive' | 'leave';
   salary?: number | null;
@@ -67,6 +68,7 @@ export default function EditTeacherForm({ teacher, open, onOpenChange, onTeacher
     specialization: '',
     experience: '',
     address: '',
+    instagramUsername: '',
     joinDate: '',
     status: 'active',
     salary: '',
@@ -88,6 +90,7 @@ export default function EditTeacherForm({ teacher, open, onOpenChange, onTeacher
           specialization: teacher.specialization || '',
           experience: teacher.experience?.toString() || '',
           address: teacher.address || '',
+          instagramUsername: teacher.instagramUsername || '',
           joinDate: teacher.joinDate,
           status: teacher.status,
           salary: teacher.salary?.toString() || '',
@@ -472,6 +475,19 @@ export default function EditTeacherForm({ teacher, open, onOpenChange, onTeacher
                       placeholder="Masukkan alamat lengkap"
                       rows={3}
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="instagramUsername" className="text-sm font-medium">Username Instagram</Label>
+                    <Input
+                      id="instagramUsername"
+                      value={formData.instagramUsername}
+                      onChange={(e) => handleInputChange('instagramUsername', e.target.value)}
+                      placeholder="Contoh: homelykursus (tanpa @)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Masukkan username Instagram tanpa simbol @ (akan ditampilkan di landing page)
+                    </p>
                   </div>
                 </CardContent>
               </Card>

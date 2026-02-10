@@ -61,6 +61,7 @@ export async function PUT(
     const specialization = formData.get('specialization') as string | null;
     const experience = formData.get('experience') as string | null;
     const address = formData.get('address') as string | null;
+    const instagramUsername = formData.get('instagramUsername') as string | null;
     const joinDate = formData.get('joinDate') as string;
     const status = formData.get('status') as string || 'active';
     const salary = formData.get('salary') as string | null;
@@ -161,6 +162,7 @@ export async function PUT(
         specialization,
         experience: experience ? parseInt(experience) : null,
         address,
+        instagramUsername,
         joinDate,
         status,
         salary: salary ? parseInt(salary) : null,

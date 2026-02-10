@@ -22,7 +22,9 @@ import {
   Sheet,
   BookOpen,
   CreditCard,
-  UserCheck
+  UserCheck,
+  Package,
+  MessageSquare
 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 import { InstagramIcon } from '@/components/ui/instagram-icon';
@@ -60,6 +62,7 @@ interface Mentor {
   photo: string | null;
   education: string;
   specialization: string | null;
+  instagramUsername: string | null;
 }
 
 interface GalleryImage {
@@ -90,11 +93,40 @@ export default function LandingPage() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [mentorsLoading, setMentorsLoading] = useState(true);
 
-  const words = [
-    { text: 'Mudah', gradient: 'from-green-500 to-emerald-600' },
-    { text: 'Cepat', gradient: 'from-orange-500 to-red-600' },
-    { text: 'Menyenangkan', gradient: 'from-pink-500 to-purple-600' }
+  // Hero state - fetch from database (no fallback)
+  const [heroData, setHeroData] = useState<{
+    title: string;
+    description: string;
+    imageUrl: string;
+    animatedWords: string[];
+  } | null>(null);
+  const [heroLoading, setHeroLoading] = useState(true);
+  const [heroError, setHeroError] = useState(false);
+
+  // Facilities state - fetch from database (no fallback)
+  const [facilitiesData, setFacilitiesData] = useState<Facility[]>([]);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(true);
+  const [facilitiesError, setFacilitiesError] = useState(false);
+
+  // Testimonials state - fetch from database (no fallback)
+  const [testimonialsData, setTestimonialsData] = useState<Testimonial[]>([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
+  const [testimonialsError, setTestimonialsError] = useState(false);
+
+  // Generate words array with gradients based on heroData.animatedWords
+  const gradients = [
+    'from-green-500 to-emerald-600',
+    'from-orange-500 to-red-600',
+    'from-pink-500 to-purple-600',
+    'from-blue-500 to-cyan-600',
+    'from-purple-500 to-pink-600',
+    'from-yellow-500 to-orange-600'
   ];
+
+  const words = heroData?.animatedWords.map((text, index) => ({
+    text,
+    gradient: gradients[index % gradients.length]
+  })) || [];
 
   // Program Kursus
   const courses: Course[] = [
@@ -148,131 +180,50 @@ export default function LandingPage() {
     }
   ];
 
-  // Fasilitas
-  const facilities: Facility[] = [
-    {
-      id: '1',
-      name: 'Ruang Ber-AC',
-      description: 'Ruang kelas nyaman dengan pendingin udara',
-      icon: MapPin
-    },
-    {
-      id: '2',
-      name: 'WiFi Gratis',
-      description: 'Internet cepat untuk mendukung pembelajaran',
-      icon: Wifi
-    },
-    {
-      id: '3',
-      name: 'Kelas Kecil',
-      description: 'Maksimal 5 siswa per kelas untuk pembelajaran optimal',
-      icon: Users
-    },
-    {
-      id: '4',
-      name: 'Sertifikat',
-      description: 'Sertifikat resmi setelah menyelesaikan kursus',
-      icon: Award
-    },
-    {
-      id: '5',
-      name: 'Jadwal Fleksibel',
-      description: 'Pilih jadwal sesuai kebutuhan Anda',
-      icon: Clock
-    },
-    {
-      id: '6',
-      name: 'Komputer Modern',
-      description: 'Perangkat komputer terbaru dan terawat',
-      icon: Monitor
-    },
-    {
-      id: '7',
-      name: 'Modul Materi',
-      description: 'Modul pembelajaran lengkap dan terstruktur',
-      icon: BookOpen
-    },
-    {
-      id: '8',
-      name: 'Pembayaran Bisa Cicil',
-      description: 'Sistem pembayaran fleksibel dengan cicilan',
-      icon: CreditCard
-    },
-    {
-      id: '9',
-      name: 'Komunitas Alumni',
-      description: 'Bergabung dengan komunitas alumni yang aktif',
-      icon: UserCheck
-    }
-  ];
+  // Fasilitas - removed hardcoded data, now fetched from database
 
-  // Testimonials
-  const testimonials: Testimonial[] = [
-    {
-      id: '1',
-      name: 'Budi Santoso',
-      course: 'Microsoft Office',
-      rating: 5,
-      comment: 'Instrukturnya sabar dan materi mudah dipahami. Sekarang saya lebih percaya diri menggunakan Excel untuk pekerjaan.',
-      photo: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=3b82f6&color=fff'
-    },
-    {
-      id: '2',
-      name: 'Siti Nurhaliza',
-      course: 'Desain Grafis',
-      rating: 5,
-      comment: 'Kursus yang sangat membantu! Saya bisa membuat desain sendiri untuk bisnis online saya. Terima kasih Homely!',
-      photo: 'https://ui-avatars.com/api/?name=Siti+Nurhaliza&background=ec4899&color=fff'
-    },
-    {
-      id: '3',
-      name: 'Ahmad Rizki',
-      course: 'Video Editing',
-      rating: 5,
-      comment: 'Fasilitas lengkap, ruangan nyaman, dan yang paling penting ilmunya sangat bermanfaat. Recommended!',
-      photo: 'https://ui-avatars.com/api/?name=Ahmad+Rizki&background=10b981&color=fff'
-    },
-    {
-      id: '4',
-      name: 'Dewi Lestari',
-      course: 'Web Design',
-      rating: 5,
-      comment: 'Materi yang diajarkan sangat praktis dan langsung bisa diterapkan. Sekarang saya bisa membuat website sendiri!',
-      photo: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=f59e0b&color=fff'
-    },
-    {
-      id: '5',
-      name: 'Rudi Hermawan',
-      course: 'Digital Marketing',
-      rating: 5,
-      comment: 'Sangat puas dengan kursusnya! Instruktur menjelaskan dengan detail dan mudah dipahami. Bisnis saya jadi lebih berkembang.',
-      photo: 'https://ui-avatars.com/api/?name=Rudi+Hermawan&background=8b5cf6&color=fff'
-    },
-    {
-      id: '6',
-      name: 'Maya Sari',
-      course: 'Programming',
-      rating: 5,
-      comment: 'Dari nol sampai bisa coding! Pengajarnya sangat sabar dan metode belajarnya menyenangkan. Highly recommended!',
-      photo: 'https://ui-avatars.com/api/?name=Maya+Sari&background=ef4444&color=fff'
-    },
-    {
-      id: '7',
-      name: 'Andi Wijaya',
-      course: 'Microsoft Excel Lanjutan',
-      rating: 5,
-      comment: 'Pembelajaran private sangat efektif! Saya bisa fokus belajar fitur Excel yang saya butuhkan untuk pekerjaan. Sangat worth it!',
-      photo: 'https://ui-avatars.com/api/?name=Andi+Wijaya&background=059669&color=fff'
-    },
-    {
-      id: '8',
-      name: 'Rina Kusuma',
-      course: 'Desain Grafis',
-      rating: 5,
-      comment: 'Tempat kursusnya nyaman dan instrukturnya profesional. Setelah kursus di sini, saya bisa freelance desain dan dapat penghasilan tambahan!',
-      photo: 'https://ui-avatars.com/api/?name=Rina+Kusuma&background=db2777&color=fff'
-    }
-  ];
+  // Testimonials - removed hardcoded data, now fetched from database
+
+  // Fetch hero data from database (no fallback)
+  useEffect(() => {
+    const fetchHeroData = async () => {
+      try {
+        const response = await fetch('/api/web-content/hero/active');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Parse animated words from database
+          let parsedWords: string[] = [];
+          if (data.animatedWords) {
+            try {
+              // Try parsing as JSON array first
+              parsedWords = JSON.parse(data.animatedWords);
+            } catch {
+              // If not JSON, split by comma
+              parsedWords = data.animatedWords.split(',').map((w: string) => w.trim()).filter((w: string) => w);
+            }
+          }
+          
+          setHeroData({
+            title: data.title,
+            description: data.description,
+            imageUrl: data.imageUrl,
+            animatedWords: parsedWords
+          });
+          setHeroError(false);
+        } else {
+          setHeroError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching hero data:', error);
+        setHeroError(true);
+      } finally {
+        setHeroLoading(false);
+      }
+    };
+
+    fetchHeroData();
+  }, []);
 
   // Fetch mentors from database
   useEffect(() => {
@@ -291,6 +242,52 @@ export default function LandingPage() {
     };
 
     fetchMentors();
+  }, []);
+
+  // Fetch facilities from database (no fallback)
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const response = await fetch('/api/web-content/facilities/active');
+        if (response.ok) {
+          const data = await response.json();
+          setFacilitiesData(data);
+          setFacilitiesError(false);
+        } else {
+          setFacilitiesError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        setFacilitiesError(true);
+      } finally {
+        setFacilitiesLoading(false);
+      }
+    };
+
+    fetchFacilities();
+  }, []);
+
+  // Fetch testimonials from database (no fallback)
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await fetch('/api/web-content/testimonials/active');
+        if (response.ok) {
+          const data = await response.json();
+          setTestimonialsData(data);
+          setTestimonialsError(false);
+        } else {
+          setTestimonialsError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+        setTestimonialsError(true);
+      } finally {
+        setTestimonialsLoading(false);
+      }
+    };
+
+    fetchTestimonials();
   }, []);
 
   // Gallery Images
@@ -335,7 +332,16 @@ export default function LandingPage() {
 
   // Typing animation effect
   useEffect(() => {
-    const currentWord = words[wordIndex].text;
+    // Guard: Don't run if words array is empty or heroData is not loaded
+    if (!words || words.length === 0 || !heroData) {
+      return;
+    }
+
+    const currentWord = words[wordIndex]?.text;
+    if (!currentWord) {
+      return;
+    }
+
     const typingSpeed = isDeleting ? 50 : 100;
     const pauseTime = 2000;
 
@@ -361,7 +367,7 @@ export default function LandingPage() {
     }, typingSpeed);
 
     return () => clearTimeout(timer);
-  }, [typingText, isDeleting, wordIndex, words]);
+  }, [typingText, isDeleting, wordIndex, words, heroData]);
 
   // Handle scroll
   useEffect(() => {
@@ -433,6 +439,22 @@ export default function LandingPage() {
 
   const whatsappNumber = '628216457578';
   const whatsappMessage = encodeURIComponent('Halo, saya tertarik untuk mendaftar kursus di Homely Kursus Komputer. Mohon informasi lebih lanjut.');
+
+  // Helper function to map icon names to icon components
+  const getIconComponent = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      MapPin,
+      Wifi,
+      Users,
+      Award,
+      Clock,
+      Monitor,
+      BookOpen,
+      CreditCard,
+      UserCheck
+    };
+    return iconMap[iconName] || MapPin; // Default to MapPin if icon not found
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -680,6 +702,31 @@ export default function LandingPage() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Loading State */}
+          {heroLoading && (
+            <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Memuat data...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!heroLoading && heroError && (
+            <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] py-12">
+              <div className="text-center">
+                <div className="bg-red-100 text-red-600 p-4 rounded-lg mb-4 inline-block">
+                  <p className="font-semibold">Gagal memuat data hero</p>
+                  <p className="text-sm mt-2">Silakan refresh halaman atau hubungi admin</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Hero Content - Only show when data is loaded */}
+          {!heroLoading && !heroError && heroData && (
+            <>
           {/* Mobile Layout */}
           <div className="lg:hidden flex flex-col min-h-[calc(100vh-5rem)] py-12 space-y-8">
             {/* 1. Text Content - TOP */}
@@ -691,18 +738,17 @@ export default function LandingPage() {
               </div>
               
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-                Kursus Komputer Pekanbaru
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                  Bersertifikat & Terpercaya
-                </span>
-                <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
-                  {typingText}
-                  <span className="animate-pulse">|</span>
-                </span>
+                {heroData.title}
+                {words.length > 0 && (
+                  <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex]?.gradient || 'from-blue-500 to-purple-600'}`}>
+                    {typingText}
+                    <span className="animate-pulse">|</span>
+                  </span>
+                )}
               </h1>
               
               <p className="text-base md:text-lg text-gray-600 leading-relaxed">
-                Tempat kursus komputer terbaik di Pekanbaru dengan metode praktis dan mudah dipahami. Belajar langsung tatap muka dengan instruktur berpengalaman, fasilitas lengkap, dan sertifikat resmi.
+                {heroData.description}
               </p>
             </div>
 
@@ -715,7 +761,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    src={heroData.imageUrl}
                     alt="Kursus Komputer Pekanbaru - Siswa Belajar Komputer dengan Instruktur Profesional"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -815,18 +861,17 @@ export default function LandingPage() {
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  Kursus Komputer Pekanbaru
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                    Bersertifikat & Terpercaya
-                  </span>
-                  <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex].gradient}`}>
-                    {typingText}
-                    <span className="animate-pulse">|</span>
-                  </span>
+                  {heroData.title}
+                  {words.length > 0 && (
+                    <span className={`block text-transparent bg-clip-text bg-gradient-to-r ${words[wordIndex]?.gradient || 'from-blue-500 to-purple-600'}`}>
+                      {typingText}
+                      <span className="animate-pulse">|</span>
+                    </span>
+                  )}
                 </h1>
                 
                 <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                  Tempat kursus komputer terbaik di Pekanbaru dengan metode praktis dan mudah dipahami. Belajar langsung tatap muka dengan instruktur berpengalaman, fasilitas lengkap, dan sertifikat resmi.
+                  {heroData.description}
                 </p>
               </div>
 
@@ -882,7 +927,7 @@ export default function LandingPage() {
                 {/* Main Image */}
                 <div className="relative">
                   <img
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770397147/hero_indah_2_zdz7mr.webp"
+                    src={heroData.imageUrl}
                     alt="Tempat Kursus Komputer Terbaik di Pekanbaru - Homely Kursus Komputer"
                     className="w-full h-auto rounded-3xl"
                   />
@@ -927,6 +972,8 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -983,26 +1030,64 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {facilities.map((facility) => (
-              <div
-                key={facility.id}
-                className="flex items-start space-x-4 p-6 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <facility.icon className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {facility.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {facility.description}
-                  </p>
+          {/* Loading State */}
+          {facilitiesLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Memuat fasilitas...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!facilitiesLoading && facilitiesError && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="bg-red-100 text-red-600 p-4 rounded-lg inline-block">
+                  <p className="font-semibold">Gagal memuat data fasilitas</p>
+                  <p className="text-sm mt-2">Silakan refresh halaman atau hubungi admin</p>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Facilities Grid - Only show when data is loaded */}
+          {!facilitiesLoading && !facilitiesError && facilitiesData.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {facilitiesData.map((facility) => {
+                const IconComponent = getIconComponent(facility.icon);
+                return (
+                  <div
+                    key={facility.id}
+                    className="flex items-start space-x-4 p-6 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <IconComponent className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        {facility.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {facility.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!facilitiesLoading && !facilitiesError && facilitiesData.length === 0 && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Belum ada fasilitas yang ditampilkan</p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1054,9 +1139,17 @@ export default function LandingPage() {
                     <p className="text-xs text-gray-600 mb-1 leading-tight">
                       {mentor.specialization || 'Instruktur'}
                     </p>
-                    <p className="text-xs text-blue-600 font-medium">
-                      {mentor.education}
-                    </p>
+                    {mentor.instagramUsername && (
+                      <a
+                        href={`https://instagram.com/${mentor.instagramUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-pink-600 hover:text-pink-700 font-medium transition-colors"
+                      >
+                        <InstagramIcon size={12} />
+                        <span>@{mentor.instagramUsername}</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               ))
@@ -1114,9 +1207,17 @@ export default function LandingPage() {
                       <p className="text-[10px] text-gray-600 mb-1 leading-tight">
                         {mentor.specialization || 'Instruktur'}
                       </p>
-                      <p className="text-[10px] text-blue-600 font-medium">
-                        {mentor.education}
-                      </p>
+                      {mentor.instagramUsername && (
+                        <a
+                          href={`https://instagram.com/${mentor.instagramUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] text-pink-600 hover:text-pink-700 font-medium transition-colors"
+                        >
+                          <InstagramIcon size={10} />
+                          <span>@{mentor.instagramUsername}</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))
@@ -1142,122 +1243,159 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Horizontal Slider Container */}
-          <div className="relative max-w-7xl mx-auto">
-            {/* Overflow Container */}
-            <div className="overflow-hidden">
-              {/* Sliding Track - Mobile: 1 card, Tablet: 2 cards, Desktop: 4 cards */}
-              <div 
-                className="flex transition-transform duration-500 ease-out"
-                style={{ 
-                  transform: `translateX(-${currentTestimonial * 100}%)` 
-                }}
-              >
-                {testimonials.map((testimonial, index) => (
-                  <div
-                    key={testimonial.id}
-                    className="flex-shrink-0 w-full md:w-1/2 lg:w-1/4 px-3"
+          {/* Loading State */}
+          {testimonialsLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Memuat testimonial...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!testimonialsLoading && testimonialsError && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="bg-red-100 text-red-600 p-4 rounded-lg inline-block">
+                  <p className="font-semibold">Gagal memuat testimonial</p>
+                  <p className="text-sm mt-2">Silakan refresh halaman atau hubungi admin</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!testimonialsLoading && !testimonialsError && testimonialsData.length === 0 && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Belum ada testimonial yang ditampilkan</p>
+              </div>
+            </div>
+          )}
+
+          {/* Testimonials Slider - Only show when data is loaded */}
+          {!testimonialsLoading && !testimonialsError && testimonialsData.length > 0 && (
+            <>
+              {/* Horizontal Slider Container */}
+              <div className="relative max-w-7xl mx-auto">
+                {/* Overflow Container */}
+                <div className="overflow-hidden">
+                  {/* Sliding Track - Mobile: 1 card, Tablet: 2 cards, Desktop: 4 cards */}
+                  <div 
+                    className="flex transition-transform duration-500 ease-out"
+                    style={{ 
+                      transform: `translateX(-${currentTestimonial * 100}%)` 
+                    }}
                   >
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all h-full">
-                      <div className="flex items-center mb-4">
-                        <img
-                          src={testimonial.photo}
-                          alt={testimonial.name}
-                          className="w-12 h-12 rounded-full mr-3"
-                        />
-                        <div>
-                          <h4 className="font-bold text-gray-900 text-sm">{testimonial.name}</h4>
-                          <p className="text-xs text-gray-600">{testimonial.course}</p>
+                    {testimonialsData.map((testimonial, index) => (
+                      <div
+                        key={testimonial.id}
+                        className="flex-shrink-0 w-full md:w-1/2 lg:w-1/4 px-3"
+                      >
+                        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all h-full">
+                          <div className="flex items-center mb-4">
+                            <img
+                              src={testimonial.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=3b82f6&color=fff`}
+                              alt={testimonial.name}
+                              className="w-12 h-12 rounded-full mr-3"
+                            />
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-sm">{testimonial.name}</h4>
+                              <p className="text-xs text-gray-600">{testimonial.course}</p>
+                            </div>
+                          </div>
+                          <div className="flex mb-3">
+                            {[...Array(testimonial.rating)].map((_, i) => (
+                              <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                            ))}
+                          </div>
+                          <p className="text-gray-700 italic text-sm">
+                            "{testimonial.comment}"
+                          </p>
                         </div>
                       </div>
-                      <div className="flex mb-3">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                        ))}
-                      </div>
-                      <p className="text-gray-700 italic text-sm">
-                        "{testimonial.comment}"
-                      </p>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Navigation Buttons - Hidden on desktop when all 4 cards visible */}
-            <div className="flex items-center justify-center space-x-4 mt-4 md:mt-8 lg:hidden">
-              <button
-                onClick={() => setCurrentTestimonial((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
-                disabled={currentTestimonial === 0}
-                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                aria-label="Previous testimonial"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              {/* Dots Indicator */}
-              <div className="flex space-x-2">
-                {testimonials.map((_, index) => (
+                {/* Navigation Buttons - Hidden on desktop when all 4 cards visible */}
+                <div className="flex items-center justify-center space-x-4 mt-4 md:mt-8 lg:hidden">
                   <button
-                    key={index}
-                    onClick={() => setCurrentTestimonial(index)}
-                    className={`w-3 h-3 rounded-full transition-all ${
-                      index === currentTestimonial 
-                        ? 'bg-blue-600 w-8' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    aria-label={`Go to testimonial ${index + 1}`}
-                  />
-                ))}
-              </div>
+                    onClick={() => setCurrentTestimonial((prev) => (prev === 0 ? testimonialsData.length - 1 : prev - 1))}
+                    disabled={currentTestimonial === 0}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Previous testimonial"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
 
-              <button
-                onClick={() => setCurrentTestimonial((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
-                disabled={currentTestimonial === testimonials.length - 1}
-                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                aria-label="Next testimonial"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
+                  {/* Dots Indicator */}
+                  <div className="flex space-x-2">
+                    {testimonialsData.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentTestimonial(index)}
+                        className={`w-3 h-3 rounded-full transition-all ${
+                          index === currentTestimonial 
+                            ? 'bg-blue-600 w-8' 
+                            : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                        aria-label={`Go to testimonial ${index + 1}`}
+                      />
+                    ))}
+                  </div>
 
-            {/* Desktop Navigation - Show when more than 4 cards */}
-            <div className="hidden lg:flex items-center justify-center space-x-4 mt-8">
-              <button
-                onClick={() => setCurrentTestimonial((prev) => Math.max(0, prev - 1))}
-                disabled={currentTestimonial === 0}
-                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                aria-label="Previous testimonials"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              {/* Dots Indicator for Desktop - Show slides of 4 */}
-              <div className="flex space-x-2">
-                {[0, 1].map((slideIndex) => (
                   <button
-                    key={slideIndex}
-                    onClick={() => setCurrentTestimonial(slideIndex)}
-                    className={`w-3 h-3 rounded-full transition-all ${
-                      currentTestimonial === slideIndex
-                        ? 'bg-blue-600 w-8' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    aria-label={`Go to slide ${slideIndex + 1}`}
-                  />
-                ))}
-              </div>
+                    onClick={() => setCurrentTestimonial((prev) => (prev === testimonialsData.length - 1 ? 0 : prev + 1))}
+                    disabled={currentTestimonial === testimonialsData.length - 1}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Next testimonial"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
 
-              <button
-                onClick={() => setCurrentTestimonial((prev) => Math.min(1, prev + 1))}
-                disabled={currentTestimonial === 1}
-                className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
-                aria-label="Next testimonials"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
+                {/* Desktop Navigation - Show when more than 4 cards */}
+                <div className="hidden lg:flex items-center justify-center space-x-4 mt-8">
+                  <button
+                    onClick={() => setCurrentTestimonial((prev) => Math.max(0, prev - 1))}
+                    disabled={currentTestimonial === 0}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Previous testimonials"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+
+                  {/* Dots Indicator for Desktop - Show slides of 4 */}
+                  <div className="flex space-x-2">
+                    {[0, 1].map((slideIndex) => (
+                      <button
+                        key={slideIndex}
+                        onClick={() => setCurrentTestimonial(slideIndex)}
+                        className={`w-3 h-3 rounded-full transition-all ${
+                          currentTestimonial === slideIndex
+                            ? 'bg-blue-600 w-8' 
+                            : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                        aria-label={`Go to slide ${slideIndex + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentTestimonial((prev) => Math.min(1, prev + 1))}
+                    disabled={currentTestimonial === 1}
+                    className="bg-white hover:bg-blue-600 hover:text-white text-blue-600 p-3 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-blue-600"
+                    aria-label="Next testimonials"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

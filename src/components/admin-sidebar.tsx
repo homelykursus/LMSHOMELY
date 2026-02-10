@@ -110,6 +110,27 @@ const sidebarItems: SidebarItem[] = [
     icon: Megaphone,
   },
   {
+    title: 'Konten Web',
+    icon: Home,
+    children: [
+      {
+        title: 'Hero Web',
+        href: '/admin/web-content/hero',
+        icon: Home,
+      },
+      {
+        title: 'Fasilitas Kursus',
+        href: '/admin/web-content/facilities',
+        icon: Award,
+      },
+      {
+        title: 'Testimonial',
+        href: '/admin/web-content/testimonials',
+        icon: Users,
+      },
+    ],
+  },
+  {
     title: 'Pengaturan',
     icon: Settings,
     children: [

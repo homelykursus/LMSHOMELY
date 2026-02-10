@@ -38,6 +38,7 @@ export default function AddTeacherForm({ onTeacherAdded }: AddTeacherFormProps) 
     specialization: '',
     experience: '',
     address: '',
+    instagramUsername: '',
     joinDate: '',
     status: 'active',
     salary: '',
@@ -197,6 +198,7 @@ export default function AddTeacherForm({ onTeacherAdded }: AddTeacherFormProps) 
       specialization: '',
       experience: '',
       address: '',
+      instagramUsername: '',
       joinDate: '',
       status: 'active',
       salary: '',
@@ -372,6 +374,19 @@ export default function AddTeacherForm({ onTeacherAdded }: AddTeacherFormProps) 
                       placeholder="Masukkan alamat lengkap"
                       rows={3}
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="instagramUsername" className="text-sm font-medium">Username Instagram</Label>
+                    <Input
+                      id="instagramUsername"
+                      value={formData.instagramUsername}
+                      onChange={(e) => handleInputChange('instagramUsername', e.target.value)}
+                      placeholder="Contoh: homelykursus (tanpa @)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Masukkan username Instagram tanpa simbol @ (akan ditampilkan di landing page)
+                    </p>
                   </div>
                 </CardContent>
               </Card>

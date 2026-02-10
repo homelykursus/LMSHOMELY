@@ -73,22 +73,23 @@ model Student {
 }
 
 model Teacher {
-  id            String   @id @default(cuid())
-  name          String
-  dateOfBirth   String   // format YYYY-MM-DD
-  whatsapp      String   @unique // unique untuk login
-  password      String?  // password untuk login guru
-  photo         String?  // URL foto guru
-  education     String   // pendidikan terakhir: SMA, S1, S2, S3, dll
-  specialization String? // spesialisasi keahlian
-  experience    Int?     // pengalaman mengajar dalam tahun
-  address       String?  // alamat lengkap
-  joinDate      String   // tanggal bergabung format YYYY-MM-DD
-  status        String   @default("active") // active, inactive, leave
-  salary        Int?     // gaji per bulan
-  notes         String?  // catatan tambahan
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  dateOfBirth       String   // format YYYY-MM-DD
+  whatsapp          String   @unique // unique untuk login
+  password          String?  // password untuk login guru
+  photo             String?  // URL foto guru
+  education         String   // pendidikan terakhir: SMA, S1, S2, S3, dll
+  specialization    String?  // spesialisasi keahlian
+  experience        Int?     // pengalaman mengajar dalam tahun
+  address           String?  // alamat lengkap
+  joinDate          String   // tanggal bergabung format YYYY-MM-DD
+  status            String   @default("active") // active, inactive, leave
+  salary            Int?     // gaji per bulan
+  notes             String?  // catatan tambahan
+  instagramUsername String?  // username Instagram (tanpa @)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   
   courses              TeacherCourse[]
   classes              Class[]
@@ -398,4 +399,52 @@ model Announcement {
   @@index([priority])
   @@index([targetRole])
   @@index([createdAt])
+}
+
+model HeroSection {
+  id            String   @id @default(cuid())
+  title         String   // Judul utama hero section
+  description   String   @db.Text // Deskripsi hero section
+  imageUrl      String?  // URL gambar hero
+  animatedWords String?  @db.Text // JSON array kata-kata animasi typing (contoh: ["Mudah","Cepat","Menyenangkan"])
+  isActive      Boolean  @default(true) // hanya 1 yang aktif
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String   // user ID yang membuat
+  
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model Facility {
+  id          String   @id @default(cuid())
+  name        String   // Nama fasilitas
+  description String   // Deskripsi fasilitas
+  icon        String   // Nama icon (dari lucide-react)
+  order       Int      @default(0) // Urutan tampil
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String   // user ID yang membuat
+  
+  @@index([isActive])
+  @@index([order])
+}
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  name        String   // Nama pemberi testimoni
+  course      String   // Program kursus yang diikuti
+  rating      Int      @default(5) // Rating 1-5
+  comment     String   @db.Text // Isi testimoni
+  photo       String?  // URL foto (optional, bisa pakai avatar)
+  order       Int      @default(0) // Urutan tampil
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String   // user ID yang membuat
+  
+  @@index([isActive])
+  @@index([order])
+  @@index([rating])
 }

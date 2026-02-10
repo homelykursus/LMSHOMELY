@@ -14,7 +14,8 @@ export async function GET() {
         name: true,
         photo: true,
         education: true,
-        specialization: true
+        specialization: true,
+        instagramUsername: true
       },
       orderBy: {
         createdAt: 'asc'
