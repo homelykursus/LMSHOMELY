@@ -859,7 +859,7 @@ export default function ProgramDetailPage() {
                 {/* Image pointing down - positioned above CTA Card */}
                 <div className="relative flex justify-center -mb-2.5 z-0">
                   <img 
-                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770711401/tunjuk_bawahpng_ndgtcx.webp"
+                    src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770717919/TUNJUK_BAWAH_ASLI_rjahgd.webp"
                     alt="Daftar Sekarang"
                     className="w-72 h-auto object-contain drop-shadow-lg"
                   />
