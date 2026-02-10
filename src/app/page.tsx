@@ -1197,7 +1197,7 @@ export default function LandingPage() {
             {/* Left Side - Mentor Image (40% width, scaled up 4%, moved up 3%, extends beyond section bottom) */}
             <div className="w-[40%] flex items-end">
               <img
-                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770443618/ChatGPT_Image_7_Feb_2026_12.38.25_h1dnn2.webp"
+                src="https://res.cloudinary.com/dzksnkl72/image/upload/v1770717919/TUNJUK_SAMPING_ATAS_ASLI_ytxmgo.webp"
                 alt="Mentor Profesional"
                 className="w-full h-auto object-contain scale-[1.04] -translate-y-[3%]"
               />
