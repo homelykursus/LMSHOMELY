@@ -1,62 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Homepage -->
+  
+  <!-- Homepage - Priority Tertinggi -->
   <url>
-    <loc>https://homelykursus.com/</loc>
-    <lastmod>2025-02-09</lastmod>
+    <loc>https://lmshomely.vercel.app/</loc>
+    <lastmod>2026-02-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   
-  <!-- Program Pages -->
+  <!-- Halaman Pendaftaran - Priority Tinggi -->
   <url>
-    <loc>https://homelykursus.com/program/microsoft-office</loc>
-    <lastmod>2025-02-09</lastmod>
+    <loc>https://lmshomely.vercel.app/pendaftaran</loc>
+    <lastmod>2026-02-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   
+  <!-- Program Detail Pages - Priority Tinggi -->
   <url>
-    <loc>https://homelykursus.com/program/desain-grafis</loc>
-    <lastmod>2025-02-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://homelykursus.com/program/video-editing</loc>
-    <lastmod>2025-02-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://homelykursus.com/program/web-design</loc>
-    <lastmod>2025-02-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://homelykursus.com/program/digital-marketing</loc>
-    <lastmod>2025-02-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <!-- Registration Page -->
-  <url>
-    <loc>https://homelykursus.com/pendaftaran</loc>
-    <lastmod>2025-02-09</lastmod>
+    <loc>https://lmshomely.vercel.app/program/microsoft-office</loc>
+    <lastmod>2026-02-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- Blog Page -->
   <url>
-    <loc>https://homelykursus.com/blog</loc>
-    <lastmod>2025-02-09</lastmod>
+    <loc>https://lmshomely.vercel.app/program/desain-grafis</loc>
+    <lastmod>2026-02-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://lmshomely.vercel.app/program/video-editing</loc>
+    <lastmod>2026-02-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://lmshomely.vercel.app/program/web-design</loc>
+    <lastmod>2026-02-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://lmshomely.vercel.app/program/digital-marketing</loc>
+    <lastmod>2026-02-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://lmshomely.vercel.app/program/microsoft-excel-lanjutan</loc>
+    <lastmod>2026-02-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Blog Pages (jika ada) - Priority Sedang -->
+  <url>
+    <loc>https://lmshomely.vercel.app/blog</loc>
+    <lastmod>2026-02-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  
 </urlset>

@@ -1,27 +1,33 @@
-# Robots.txt for Homely Kursus Komputer
-# https://homelykursus.com
+# Robots.txt untuk Homely Kursus Komputer
+# Website: https://lmshomely.vercel.app
 
-# Allow all search engines to crawl the site
+# Allow all search engines to crawl public pages
 User-agent: *
-Allow: /
-
-# Disallow admin and API routes
-Disallow: /admin/
-Disallow: /api/
-Disallow: /teacher/
-
-# Disallow private files
-Disallow: /*.json$
-Disallow: /*.env$
-
-# Allow specific important pages
 Allow: /
 Allow: /program/
 Allow: /pendaftaran
 Allow: /blog/
 
-# Sitemap location
-Sitemap: https://homelykursus.com/sitemap.xml
+# Disallow admin pages - PENTING untuk keamanan
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /login
+Disallow: /teacher/
+Disallow: /teacher/*
 
-# Crawl-delay (optional, helps prevent server overload)
-Crawl-delay: 1
+# Disallow API routes - tidak perlu di-index
+Disallow: /api/
+
+# Disallow private files
+Disallow: /*.json$
+Disallow: /*.env$
+
+# Allow CSS and JS files for better rendering
+Allow: /*.css$
+Allow: /*.js$
+
+# Sitemap location - PENTING untuk SEO
+Sitemap: https://lmshomely.vercel.app/sitemap.xml
+
+# Crawl-delay (optional, untuk menghindari overload server)
+# Crawl-delay: 1
