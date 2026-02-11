@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Sheet, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Award, CheckCircle, BookOpen, Target, FileText, Palette, Video, Code, TrendingUp, Sheet, ChevronDown, Loader2 } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/ui/whatsapp-icon';
 
 interface CurriculumTopic {
   title: string;
   subtopics: string[];
+}
+
+interface Software {
+  name: string;
+  icon: string;
+  description: string;
 }
 
 interface CourseDetail {
@@ -21,627 +27,30 @@ interface CourseDetail {
   method: string;
   practicePercentage: string;
   equipment: string;
-  iconComponent: any;
   gradient: string;
   curriculum: CurriculumTopic[];
   benefits: string[];
   targetAudience: string[];
-  software?: { name: string; icon: string; description: string; }[];
-  pricing?: { originalPrice: number; discountedPrice: number; };
+  software?: Software[];
+  originalPrice?: number;
+  discountedPrice?: number;
+  icon: string;
 }
 
-// Helper function to get icon component based on slug
-const getCourseIcon = (slug: string) => {
+// Helper function to get icon component based on icon name
+const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: any } = {
-    'microsoft-office': FileText,
-    'desain-grafis': Palette,
-    'video-editing': Video,
-    'web-design': Code,
-    'digital-marketing': TrendingUp,
-    'microsoft-excel-lanjutan': Sheet
+    'FileText': FileText,
+    'Palette': Palette,
+    'Video': Video,
+    'Code': Code,
+    'TrendingUp': TrendingUp,
+    'Sheet': Sheet
   };
-  return iconMap[slug] || FileText;
+  return iconMap[iconName] || FileText;
 };
 
-const courseDetails: CourseDetail[] = [
-  {
-    id: '1',
-    name: 'Microsoft Office',
-    slug: 'microsoft-office',
-    description: 'Kuasai Word, Excel, PowerPoint untuk kebutuhan kantor dan bisnis',
-    fullDescription: 'Program kursus Microsoft Office dirancang untuk membantu Anda menguasai aplikasi perkantoran yang paling banyak digunakan di dunia. Dari pembuatan dokumen profesional, pengolahan data, hingga presentasi yang menarik.',
-    duration: '12x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: FileText,
-    gradient: 'from-blue-500 to-cyan-500',
-    curriculum: [
-      {
-        title: 'Microsoft Word',
-        subtopics: [
-          'Pembuatan dokumen profesional',
-          'Formatting dan styling teks',
-          'Mail merge untuk surat massal',
-          'Table of contents dan referensi'
-        ]
-      },
-      {
-        title: 'Microsoft Excel',
-        subtopics: [
-          'Formula dan fungsi dasar',
-          'Pivot table untuk analisis data',
-          'Grafik dan visualisasi data',
-          'Data validation dan conditional formatting'
-        ]
-      },
-      {
-        title: 'Microsoft PowerPoint',
-        subtopics: [
-          'Desain presentasi yang menarik',
-          'Animasi dan transisi',
-          'Master slide dan template',
-          'Tips presentasi efektif'
-        ]
-      },
-      {
-        title: 'Produktivitas & Integrasi',
-        subtopics: [
-          'Tips & trik produktivitas Office',
-          'Integrasi antar aplikasi Office',
-          'Studi kasus: Laporan dan proposal bisnis'
-        ]
-      }
-    ],
-    benefits: [
-      'Meningkatkan produktivitas kerja',
-      'Membuat dokumen profesional',
-      'Mengelola data dengan efisien',
-      'Presentasi yang menarik dan efektif'
-    ],
-    targetAudience: [
-      'Karyawan kantoran',
-      'Mahasiswa',
-      'Pengusaha',
-      'Siapa saja yang ingin meningkatkan skill perkantoran'
-    ],
-    software: [
-      {
-        name: 'Microsoft Word',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Microsoft_Office_Word_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Word_%282019%E2%80%93present%29.svg.png',
-        description: 'Document processing'
-      },
-      {
-        name: 'PowerPoint',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_PowerPoint_%282019%E2%80%93present%29.svg.png',
-        description: 'Presentation design'
-      },
-      {
-        name: 'Microsoft Excel',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png',
-        description: 'Data management'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant'
-      },
-      {
-        name: 'Canva',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
-        description: 'Design tool'
-      },
-      {
-        name: 'Google Workspace',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Google_Workspace_Logo.svg/200px-Google_Workspace_Logo.svg.png',
-        description: 'Cloud productivity'
-      }
-    ],
-    pricing: {
-      originalPrice: 950000,
-      discountedPrice: 700000
-    }
-  },
-  {
-    id: '2',
-    name: 'Desain Grafis',
-    slug: 'desain-grafis',
-    description: 'Belajar Adobe Photoshop, Illustrator, dan CorelDraw',
-    fullDescription: 'Program kursus Desain Grafis mengajarkan Anda cara membuat desain visual yang menarik dan profesional menggunakan software industry standard seperti Adobe Photoshop, Illustrator, dan CorelDraw.',
-    duration: '16x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: Palette,
-    gradient: 'from-purple-500 to-pink-500',
-    curriculum: [
-      {
-        title: 'Adobe Photoshop',
-        subtopics: [
-          'Photo editing dan retouching',
-          'Image manipulation',
-          'Layer dan masking',
-          'Color correction'
-        ]
-      },
-      {
-        title: 'Adobe Illustrator',
-        subtopics: [
-          'Vector design basics',
-          'Logo dan icon design',
-          'Typography dan text effects',
-          'Pen tool mastery'
-        ]
-      },
-      {
-        title: 'CorelDraw',
-        subtopics: [
-          'Layout design',
-          'Brochure dan banner',
-          'Business card design',
-          'Print preparation'
-        ]
-      },
-      {
-        title: 'Teori Desain',
-        subtopics: [
-          'Teori warna dan komposisi',
-          'Typography dan pemilihan font',
-          'Project: Logo, poster, social media content'
-        ]
-      }
-    ],
-    benefits: [
-      'Membuat desain profesional',
-      'Peluang kerja sebagai desainer grafis',
-      'Bisa freelance dan buka usaha desain',
-      'Kreativitas tanpa batas'
-    ],
-    targetAudience: [
-      'Pemula yang ingin belajar desain',
-      'Content creator',
-      'Marketing & social media specialist',
-      'Pengusaha yang ingin desain sendiri'
-    ],
-    software: [
-      {
-        name: 'CorelDraw',
-        icon: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3e/CorelDRAW_logo.svg/200px-CorelDRAW_logo.svg.png',
-        description: 'Vector design & layout'
-      },
-      {
-        name: 'Canva',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
-        description: 'Online design tool'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant for ideas'
-      },
-      {
-        name: 'Freepik',
-        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
-        description: 'Design resources'
-      }
-    ],
-    pricing: {
-      originalPrice: 1200000,
-      discountedPrice: 950000
-    }
-  },
-  {
-    id: '3',
-    name: 'Video Editing',
-    slug: 'video-editing',
-    description: 'Editing video profesional dengan Adobe Premiere & After Effects',
-    fullDescription: 'Program kursus Video Editing mengajarkan teknik editing video profesional menggunakan Adobe Premiere Pro dan After Effects. Cocok untuk content creator, YouTuber, dan videographer.',
-    duration: '14x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: Video,
-    gradient: 'from-red-500 to-orange-500',
-    curriculum: [
-      {
-        title: 'Adobe Premiere Pro',
-        subtopics: [
-          'Basic editing dan cutting',
-          'Transitions dan effects',
-          'Multi-camera editing',
-          'Export settings'
-        ]
-      },
-      {
-        title: 'Color Grading',
-        subtopics: [
-          'Color correction basics',
-          'Color grading techniques',
-          'LUTs dan presets',
-          'Matching colors'
-        ]
-      },
-      {
-        title: 'Audio Editing',
-        subtopics: [
-          'Audio mixing dan balancing',
-          'Sound effects',
-          'Music synchronization',
-          'Noise reduction'
-        ]
-      },
-      {
-        title: 'Adobe After Effects',
-        subtopics: [
-          'Motion graphics',
-          'Visual effects',
-          'Text animation',
-          'Lower thirds dan titles'
-        ]
-      },
-      {
-        title: 'Final Project',
-        subtopics: [
-          'YouTube video production',
-          'Commercial video',
-          'Short film editing'
-        ]
-      }
-    ],
-    benefits: [
-      'Membuat video berkualitas profesional',
-      'Peluang karir sebagai video editor',
-      'Bisa kerja remote dan freelance',
-      'Skill yang sangat dibutuhkan di era digital'
-    ],
-    targetAudience: [
-      'Content creator & YouTuber',
-      'Social media specialist',
-      'Videographer',
-      'Siapa saja yang ingin membuat video'
-    ],
-    software: [
-      {
-        name: 'CapCut',
-        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968534.png',
-        description: 'Video editing app'
-      },
-      {
-        name: 'Canva',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
-        description: 'Design & video tool'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant'
-      },
-      {
-        name: 'Grok AI',
-        icon: 'https://cdn-icons-png.flaticon.com/512/8943/8943377.png',
-        description: 'AI tool'
-      },
-      {
-        name: 'Gemini',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/200px-Google_Gemini_logo.svg.png',
-        description: 'Google AI'
-      }
-    ],
-    pricing: {
-      originalPrice: 1200000,
-      discountedPrice: 950000
-    }
-  },
-  {
-    id: '4',
-    name: 'Web Design',
-    slug: 'web-design',
-    description: 'Membuat website menarik dengan HTML, CSS, dan JavaScript',
-    fullDescription: 'Program kursus Web Design mengajarkan cara membuat website modern dan responsif dari nol menggunakan HTML, CSS, dan JavaScript. Cocok untuk pemula yang ingin terjun ke dunia web development.',
-    duration: '20x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: Code,
-    gradient: 'from-green-500 to-teal-500',
-    curriculum: [
-      {
-        title: 'HTML Fundamentals',
-        subtopics: [
-          'HTML structure dan semantic markup',
-          'Forms dan input elements',
-          'HTML5 features',
-          'Best practices'
-        ]
-      },
-      {
-        title: 'CSS Styling',
-        subtopics: [
-          'CSS selectors dan properties',
-          'Flexbox dan Grid layout',
-          'Responsive design',
-          'CSS animations'
-        ]
-      },
-      {
-        title: 'JavaScript Basics',
-        subtopics: [
-          'JavaScript fundamentals',
-          'DOM manipulation',
-          'Event handling',
-          'Interactive features'
-        ]
-      },
-      {
-        title: 'Bootstrap Framework',
-        subtopics: [
-          'Bootstrap components',
-          'Grid system',
-          'Responsive utilities',
-          'Customization'
-        ]
-      },
-      {
-        title: 'Final Project',
-        subtopics: [
-          'Portfolio website',
-          'Landing page',
-          'Company profile website'
-        ]
-      }
-    ],
-    benefits: [
-      'Membuat website sendiri',
-      'Peluang karir sebagai web designer',
-      'Freelance dengan penghasilan menjanjikan',
-      'Dasar untuk menjadi full-stack developer'
-    ],
-    targetAudience: [
-      'Pemula yang ingin belajar web',
-      'Pengusaha yang ingin website sendiri',
-      'Mahasiswa IT',
-      'Siapa saja yang tertarik web development'
-    ],
-    software: [
-      {
-        name: 'WordPress',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/WordPress_blue_logo.svg/200px-WordPress_blue_logo.svg.png',
-        description: 'CMS platform'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant'
-      },
-      {
-        name: 'Elementor',
-        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
-        description: 'Page builder'
-      },
-      {
-        name: 'Canva',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
-        description: 'Design tool'
-      }
-    ],
-    pricing: {
-      originalPrice: 2000000,
-      discountedPrice: 1600000
-    }
-  },
-  {
-    id: '5',
-    name: 'Digital Marketing',
-    slug: 'digital-marketing',
-    description: 'Strategi pemasaran digital dan social media marketing',
-    fullDescription: 'Program kursus Digital Marketing mengajarkan strategi pemasaran online yang efektif, dari social media marketing, SEO, hingga iklan berbayar. Cocok untuk pengusaha dan marketer.',
-    duration: '12x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Tatap Muka',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: TrendingUp,
-    gradient: 'from-yellow-500 to-orange-500',
-    curriculum: [
-      {
-        title: 'Digital Marketing Fundamentals',
-        subtopics: [
-          'Konsep dasar digital marketing',
-          'Marketing funnel',
-          'Target audience analysis',
-          'Marketing strategy'
-        ]
-      },
-      {
-        title: 'Social Media Marketing',
-        subtopics: [
-          'Instagram marketing',
-          'Facebook marketing',
-          'TikTok marketing',
-          'Content planning'
-        ]
-      },
-      {
-        title: 'Content Marketing',
-        subtopics: [
-          'Content creation',
-          'Copywriting techniques',
-          'Visual content design',
-          'Content calendar'
-        ]
-      },
-      {
-        title: 'SEO & Paid Advertising',
-        subtopics: [
-          'Search Engine Optimization',
-          'Google Ads',
-          'Facebook Ads',
-          'Campaign optimization'
-        ]
-      },
-      {
-        title: 'Analytics & ROI',
-        subtopics: [
-          'Google Analytics',
-          'Measuring performance',
-          'ROI calculation',
-          'Reporting'
-        ]
-      }
-    ],
-    benefits: [
-      'Meningkatkan penjualan online',
-      'Membangun brand awareness',
-      'Peluang karir sebagai digital marketer',
-      'Skill yang sangat dibutuhkan bisnis'
-    ],
-    targetAudience: [
-      'Pengusaha & UMKM',
-      'Marketing specialist',
-      'Content creator',
-      'Siapa saja yang ingin jualan online'
-    ],
-    software: [
-      {
-        name: 'Google Ads',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Google_Ads_logo.svg/200px-Google_Ads_logo.svg.png',
-        description: 'Advertising platform'
-      },
-      {
-        name: 'Facebook',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/2023_Facebook_icon.svg/200px-2023_Facebook_icon.svg.png',
-        description: 'Social media'
-      },
-      {
-        name: 'Instagram',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/200px-Instagram_logo_2016.svg.png',
-        description: 'Social media'
-      },
-      {
-        name: 'TikTok',
-        icon: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png',
-        description: 'Video platform'
-      },
-      {
-        name: 'Shopee',
-        icon: 'https://cdn-icons-png.flaticon.com/512/5977/5977575.png',
-        description: 'E-commerce'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant'
-      },
-      {
-        name: 'CapCut',
-        icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968534.png',
-        description: 'Video editing'
-      },
-      {
-        name: 'Canva',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/200px-Canva_icon_2021.svg.png',
-        description: 'Design tool'
-      }
-    ],
-    pricing: {
-      originalPrice: 2000000,
-      discountedPrice: 1600000
-    }
-  },
-  {
-    id: '6',
-    name: 'Microsoft Excel Lanjutan',
-    slug: 'microsoft-excel-lanjutan',
-    description: 'Tingkatkan kemampuan Microsoft Excel untuk tujuan yang lebih spesifik',
-    fullDescription: 'Program kursus Microsoft Excel Lanjutan dirancang khusus untuk pembelajaran private dengan metode 1 guru 1 siswa. Fokus pada penguasaan fitur-fitur advanced Excel yang sangat berguna untuk analisis data, pelaporan, dan otomasi pekerjaan.',
-    duration: '6x Pertemuan',
-    sessionDuration: '1,5 Jam',
-    method: 'Private 1 Guru 1 Siswa',
-    practicePercentage: '100% Full Praktik',
-    equipment: 'Peralatan Belajar Sudah Disediakan',
-    iconComponent: Sheet,
-    gradient: 'from-green-600 to-emerald-600',
-    curriculum: [
-      {
-        title: 'Formula & Fungsi Lanjutan',
-        subtopics: [
-          'VLOOKUP dan HLOOKUP',
-          'INDEX-MATCH combination',
-          'Array formulas',
-          'Nested functions'
-        ]
-      },
-      {
-        title: 'Pivot Table & Analysis',
-        subtopics: [
-          'Pivot table creation',
-          'Pivot chart visualization',
-          'Slicers dan filters',
-          'Data analysis techniques'
-        ]
-      },
-      {
-        title: 'Data Management',
-        subtopics: [
-          'Conditional formatting',
-          'Data validation',
-          'Data cleaning',
-          'Import/export data'
-        ]
-      },
-      {
-        title: 'Automation dengan Macro',
-        subtopics: [
-          'Recording macros',
-          'VBA basics',
-          'Automating repetitive tasks',
-          'Custom functions'
-        ]
-      },
-      {
-        title: 'Dashboard & Reporting',
-        subtopics: [
-          'Professional dashboard design',
-          'Interactive reports',
-          'Charts dan visualizations',
-          'Tips produktivitas Excel'
-        ]
-      }
-    ],
-    benefits: [
-      'Menguasai Excel tingkat lanjut',
-      'Meningkatkan efisiensi kerja secara signifikan',
-      'Pembelajaran fokus dengan metode private',
-      'Skill yang sangat dibutuhkan di dunia kerja'
-    ],
-    targetAudience: [
-      'Karyawan yang ingin upgrade skill Excel',
-      'Profesional yang bekerja dengan data',
-      'Mahasiswa yang perlu Excel untuk tugas/skripsi',
-      'Siapa saja yang ingin menguasai Excel lanjutan'
-    ],
-    software: [
-      {
-        name: 'Microsoft Excel',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/200px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png',
-        description: 'Advanced data analysis'
-      },
-      {
-        name: 'ChatGPT',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/200px-ChatGPT_logo.svg.png',
-        description: 'AI assistant for formulas'
-      }
-    ],
-    pricing: {
-      originalPrice: 950000,
-      discountedPrice: 700000
-    }
-  }
-];
+// Removed hardcoded courseDetails - now fetching from database
 
 // Accordion Item Component
 function AccordionItem({ topic, index, gradient }: { topic: CurriculumTopic; index: number; gradient: string }) {
@@ -685,13 +94,122 @@ export default function ProgramDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const course = courseDetails.find(c => c.slug === slug);
+  const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!course) {
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await fetch(`/api/web-content/landing-courses/slug/${slug}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('not_found');
+          } else {
+            setError('server_error');
+          }
+          return;
+        }
+
+        const data = await response.json();
+        
+        // Helper function to parse JSON fields safely
+        const parseJsonField = (field: any): any => {
+          if (!field) return [];
+          
+          // If it's already an array/object, return it
+          if (typeof field === 'object') return field;
+          
+          // If it's a string, try to parse it
+          if (typeof field === 'string') {
+            try {
+              return JSON.parse(field);
+            } catch {
+              return [];
+            }
+          }
+          
+          return [];
+        };
+        
+        // Transform the data to match CourseDetail interface
+        const transformedCourse: CourseDetail = {
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          description: data.description,
+          fullDescription: data.fullDescription || data.description,
+          duration: data.duration,
+          sessionDuration: data.sessionDuration || '1,5 Jam',
+          method: data.method || 'Tatap Muka',
+          practicePercentage: data.practicePercentage || '100% Full Praktik',
+          equipment: data.equipment || 'Peralatan Belajar Sudah Disediakan',
+          gradient: data.gradient || 'from-blue-500 to-cyan-500',
+          curriculum: parseJsonField(data.curriculum),
+          benefits: parseJsonField(data.benefits),
+          targetAudience: parseJsonField(data.targetAudience),
+          software: parseJsonField(data.software),
+          originalPrice: data.originalPrice,
+          discountedPrice: data.discountedPrice,
+          icon: data.icon
+        };
+
+        setCourse(transformedCourse);
+      } catch (err) {
+        console.error('Error fetching course:', err);
+        setError('server_error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Memuat data program...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error === 'not_found' || !course) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Program tidak ditemukan</h1>
+          <p className="text-gray-600 mb-6">Program kursus yang Anda cari tidak tersedia atau sudah tidak aktif.</p>
+          <button
+            onClick={() => router.push('/')}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Kembali ke Beranda
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (error === 'server_error') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Terjadi Kesalahan</h1>
+          <p className="text-gray-600 mb-6">Maaf, terjadi kesalahan saat memuat data. Silakan coba lagi.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium mr-4"
+          >
+            Coba Lagi
+          </button>
           <button
             onClick={() => router.push('/')}
             className="text-blue-600 hover:text-blue-700 font-medium"
@@ -705,6 +223,8 @@ export default function ProgramDetailPage() {
 
   const whatsappNumber = '628216457578';
   const whatsappMessage = encodeURIComponent(`Halo, saya tertarik untuk mendaftar kursus ${course.name}. Mohon informasi lebih lanjut.`);
+  
+  const IconComponent = getIconComponent(course.icon);
 
   return (
     <div className="min-h-screen bg-white">
@@ -739,7 +259,7 @@ export default function ProgramDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${course.gradient} text-white mb-6 shadow-lg`}>
-              <course.iconComponent className="w-10 h-10" />
+              <IconComponent className="w-10 h-10" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               {course.name}
@@ -790,7 +310,7 @@ export default function ProgramDetailPage() {
               </div>
 
               {/* Software Section - Only for courses with software */}
-              {course.software && course.software.length > 0 && (
+              {course.software && Array.isArray(course.software) && course.software.length > 0 && (
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 shadow-lg">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Software yang Digunakan</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -814,42 +334,54 @@ export default function ProgramDetailPage() {
               {/* Curriculum */}
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Materi Pembelajaran</h2>
-                <div className="space-y-3">
-                  {course.curriculum.map((topic, index) => (
-                    <AccordionItem
-                      key={index}
-                      topic={topic}
-                      index={index}
-                      gradient={course.gradient}
-                    />
-                  ))}
-                </div>
+                {course.curriculum && Array.isArray(course.curriculum) && course.curriculum.length > 0 ? (
+                  <div className="space-y-3">
+                    {course.curriculum.map((topic, index) => (
+                      <AccordionItem
+                        key={index}
+                        topic={topic}
+                        index={index}
+                        gradient={course.gradient}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">Materi pembelajaran belum tersedia</p>
+                )}
               </div>
 
               {/* Benefits */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Manfaat yang Didapat</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {course.benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-start space-x-3 bg-white rounded-xl p-4">
-                      <Award className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-gray-700">{benefit}</p>
-                    </div>
-                  ))}
-                </div>
+                {course.benefits && Array.isArray(course.benefits) && course.benefits.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {course.benefits.map((benefit, index) => (
+                      <div key={index} className="flex items-start space-x-3 bg-white rounded-xl p-4">
+                        <Award className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-gray-700">{benefit}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">Manfaat belum tersedia</p>
+                )}
               </div>
 
               {/* Target Audience */}
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Cocok Untuk</h2>
-                <div className="space-y-3">
-                  {course.targetAudience.map((audience, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <Target className="w-5 h-5 text-purple-600 flex-shrink-0" />
-                      <p className="text-gray-700">{audience}</p>
-                    </div>
-                  ))}
-                </div>
+                {course.targetAudience && Array.isArray(course.targetAudience) && course.targetAudience.length > 0 ? (
+                  <div className="space-y-3">
+                    {course.targetAudience.map((audience, index) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <Target className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                        <p className="text-gray-700">{audience}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">Target audience belum tersedia</p>
+                )}
               </div>
             </div>
 
@@ -868,14 +400,14 @@ export default function ProgramDetailPage() {
                 {/* CTA Card with Pricing */}
                 <div className={`bg-gradient-to-br ${course.gradient} rounded-2xl p-6 shadow-xl text-white relative z-10`}>
                   {/* Pricing Info - Only for courses with pricing */}
-                  {course.pricing && (
+                  {course.originalPrice && course.discountedPrice && (
                     <div className="mb-6">
                       <div className="space-y-3">
                         {/* Original Price */}
                         <div className="flex items-center justify-between">
                           <span className="text-white/70 text-sm">Harga Normal</span>
                           <span className="text-white/60 line-through text-lg">
-                            Rp {course.pricing.originalPrice.toLocaleString('id-ID')}
+                            Rp {course.originalPrice.toLocaleString('id-ID')}
                           </span>
                         </div>
                         
@@ -886,14 +418,14 @@ export default function ProgramDetailPage() {
                         <div className="flex items-center justify-between">
                           <span className="text-white font-semibold">Harga Promo</span>
                           <span className="text-white font-bold text-2xl">
-                            Rp {course.pricing.discountedPrice.toLocaleString('id-ID')}
+                            Rp {course.discountedPrice.toLocaleString('id-ID')}
                           </span>
                         </div>
                         
                         {/* Savings Badge */}
                         <div className="text-center pt-2">
                           <span className="inline-block bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-xs font-semibold">
-                            💰 Hemat Rp {(course.pricing.originalPrice - course.pricing.discountedPrice).toLocaleString('id-ID')}
+                            💰 Hemat Rp {(course.originalPrice - course.discountedPrice).toLocaleString('id-ID')}
                           </span>
                         </div>
                       </div>

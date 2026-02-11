@@ -484,3 +484,40 @@ model LocationInfo {
   
   @@index([isActive])
 }
+
+model LandingCourse {
+  id                 String   @id @default(cuid())
+  name               String   // Nama program kursus
+  description        String   @db.Text // Deskripsi singkat program
+  duration           String   // Durasi (contoh: "12 Pertemuan", "16 Pertemuan")
+  icon               String   // Nama icon (dari lucide-react: FileText, Palette, Video, Code, TrendingUp, Sheet)
+  slug               String   @unique // URL slug (contoh: "microsoft-office", "desain-grafis")
+  order              Int      @default(0) // Urutan tampil
+  isActive           Boolean  @default(true)
+  
+  // Detail Program Fields
+  fullDescription    String?  @db.Text // Deskripsi lengkap untuk halaman detail
+  sessionDuration    String?  // Durasi per sesi (contoh: "1,5 Jam")
+  method             String?  // Metode belajar (contoh: "Tatap Muka", "Private 1 Guru 1 Siswa")
+  practicePercentage String?  // Persentase praktik (contoh: "100% Full Praktik")
+  equipment          String?  // Peralatan (contoh: "Peralatan Belajar Sudah Disediakan")
+  gradient           String?  // Gradient color (contoh: "from-blue-500 to-cyan-500")
+  
+  // JSON Fields
+  curriculum         Json?    // Array of {title: string, subtopics: string[]}
+  benefits           Json?    // Array of strings
+  targetAudience     Json?    // Array of strings
+  software           Json?    // Array of {name: string, icon: string, description: string}
+  
+  // Pricing Fields
+  originalPrice      Int?     // Harga normal
+  discountedPrice    Int?     // Harga promo
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  createdBy          String   // user ID yang membuat
+  
+  @@index([isActive])
+  @@index([order])
+  @@index([slug])
+}

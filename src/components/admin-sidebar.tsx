@@ -140,6 +140,11 @@ const sidebarItems: SidebarItem[] = [
         href: '/admin/web-content/location',
         icon: MapPin,
       },
+      {
+        title: 'Program Kursus',
+        href: '/admin/web-content/landing-courses',
+        icon: BookOpen,
+      },
     ],
   },
   {

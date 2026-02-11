@@ -150,57 +150,9 @@ export default function LandingPage() {
     gradient: gradients[index % gradients.length]
   })) || [];
 
-  // Program Kursus
-  const courses: Course[] = [
-    {
-      id: '1',
-      name: 'Microsoft Office',
-      description: 'Cocok untuk Sekolah atau Perkantoran',
-      duration: '12 Pertemuan',
-      icon: FileText,
-      slug: 'microsoft-office'
-    },
-    {
-      id: '2',
-      name: 'Desain Grafis',
-      description: 'Cocok untuk peningkatan Skill Desain Grafis',
-      duration: '16 Pertemuan',
-      icon: Palette,
-      slug: 'desain-grafis'
-    },
-    {
-      id: '3',
-      name: 'Video Editing',
-      description: 'Cocok untuk Peningkatan Skill dan Content Creator',
-      duration: '14 Pertemuan',
-      icon: Video,
-      slug: 'video-editing'
-    },
-    {
-      id: '4',
-      name: 'Pembuatan Website',
-      description: 'Pengembangan web tanpa Coding dengan Wordpress dan AI',
-      duration: '20 Pertemuan',
-      icon: Code,
-      slug: 'web-design'
-    },
-    {
-      id: '5',
-      name: 'Digital Marketing',
-      description: 'Teknik Pemasaran produk secara digital dan Beriklan di Sosial Media',
-      duration: '12 Pertemuan',
-      icon: TrendingUp,
-      slug: 'digital-marketing'
-    },
-    {
-      id: '6',
-      name: 'Microsoft Excel Lanjutan',
-      description: 'Tingkatkan kemampuan Microsoft Excel untuk tujuan yang lebih spesifik',
-      duration: '6x Pertemuan',
-      icon: Sheet,
-      slug: 'microsoft-excel-lanjutan'
-    }
-  ];
+  // Program Kursus - fetch from database
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
 
   // Fasilitas - removed hardcoded data, now fetched from database
 
@@ -248,6 +200,45 @@ export default function LandingPage() {
     fetchHeroData();
   }, []);
 
+  // Fetch courses from database
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/web-content/landing-courses?activeOnly=true');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Map icon names to actual icon components
+          const iconMap: { [key: string]: any } = {
+            'FileText': FileText,
+            'Palette': Palette,
+            'Video': Video,
+            'Code': Code,
+            'TrendingUp': TrendingUp,
+            'Sheet': Sheet,
+            'Monitor': Monitor
+          };
+          
+          const mappedCourses = data.map((course: any) => ({
+            id: course.id,
+            name: course.name,
+            description: course.description,
+            duration: course.duration,
+            icon: iconMap[course.icon] || FileText,
+            slug: course.slug
+          }));
+          
+          setCourses(mappedCourses);
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
   // Fetch mentors from database
   useEffect(() => {
     const fetchMentors = async () => {
