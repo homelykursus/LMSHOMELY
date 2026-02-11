@@ -1,5 +1,5 @@
 # Robots.txt untuk Homely Kursus Komputer
-# Website: https://lmshomely.vercel.app
+# Website: https://homelykursus.com
 
 # Allow all search engines to crawl public pages
 User-agent: *
@@ -27,7 +27,7 @@ Allow: /*.css$
 Allow: /*.js$
 
 # Sitemap location - PENTING untuk SEO
-Sitemap: https://lmshomely.vercel.app/sitemap.xml
+Sitemap: https://homelykursus.com/sitemap.xml
 
 # Crawl-delay (optional, untuk menghindari overload server)
 # Crawl-delay: 1
