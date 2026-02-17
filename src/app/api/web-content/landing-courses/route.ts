@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { verifyAuth } from '@/lib/auth';
+import { AuthService } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const authResult = await verifyAuth(request);
-    if (!authResult.authenticated || !authResult.user) {
+    const user = await AuthService.getUserFromRequest(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
         software,
         originalPrice,
         discountedPrice,
-        createdBy: authResult.user.id
+        createdBy: user.id
       }
     });
 

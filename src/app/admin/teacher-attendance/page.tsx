@@ -471,7 +471,6 @@ export default function TeacherAttendancePage() {
                       <TableHead>Tidak Hadir</TableHead>
                       <TableHead>% Kehadiran Guru</TableHead>
                       <TableHead>% Kehadiran Siswa (Rata-rata)</TableHead>
-                      <TableHead>Kelas Aktif</TableHead>
                       <TableHead className="text-center">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -505,12 +504,12 @@ export default function TeacherAttendancePage() {
                         <TableCell className="text-sm">{summary.education}</TableCell>
                         <TableCell className="text-sm">
                           {summary.activeClasses.length > 0 ? (
-                            <div className="space-y-1">
+                            <div className="grid grid-cols-2 gap-2 max-w-md items-start">
                               {summary.activeClasses.map((cls) => (
                                 <Badge 
                                   key={cls.id} 
                                   variant="default"
-                                  className="text-xs mr-1 mb-1 bg-green-100 text-green-800 border-green-300"
+                                  className="text-xs bg-green-100 text-green-800 border-green-300 whitespace-normal text-center py-1.5 px-2 h-auto min-w-0 break-words"
                                 >
                                   {cls.name}
                                 </Badge>
@@ -549,11 +548,6 @@ export default function TeacherAttendancePage() {
                               {summary.averageStudentAttendance}%
                             </span>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline">
-                            {summary.activeClassesCount}/{summary.classesTaught}
-                          </Badge>
                         </TableCell>
                         <TableCell className="text-center">
                           <Button

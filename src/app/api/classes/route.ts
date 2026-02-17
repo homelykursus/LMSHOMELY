@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
         commissionType: true,
         commissionAmount: true,
         isActive: true,
+        teacherId: true, // Added: Include teacherId field
+        courseId: true, // Added: Include courseId field for consistency
         createdAt: true,
         course: {
           select: {

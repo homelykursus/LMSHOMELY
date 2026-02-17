@@ -521,3 +521,44 @@ model LandingCourse {
   @@index([order])
   @@index([slug])
 }
+
+model BlogPost {
+  id                String   @id @default(cuid())
+  title             String   // Judul blog post
+  slug              String   @unique // URL slug (auto-generated dari title)
+  excerpt           String   @db.Text // Ringkasan/excerpt untuk preview
+  content           String   @db.Text // Konten lengkap blog (HTML dari rich text editor)
+  featuredImage     String?  // URL gambar utama
+  category          String   // Kategori: Tutorial, Tips, Berita, dll
+  tags              String?  // Tags dipisahkan koma (contoh: "microsoft-office,excel,tips")
+  
+  // SEO Fields
+  metaTitle         String?  // SEO title (max 60 karakter)
+  metaDescription   String?  @db.Text // SEO description (max 160 karakter)
+  metaKeywords      String?  // SEO keywords dipisahkan koma
+  ogImage           String?  // Open Graph image untuk social media
+  canonicalUrl      String?  // Canonical URL untuk SEO
+  
+  // Publishing Fields
+  status            String   @default("draft") // draft, published, archived
+  publishedAt       DateTime? // Tanggal publish
+  scheduledAt       DateTime? // Tanggal jadwal publish (optional)
+  
+  // Analytics Fields
+  viewCount         Int      @default(0) // Jumlah views
+  readTime          Int?     // Estimasi waktu baca (menit)
+  
+  // Author Fields
+  authorId          String   // ID user yang membuat
+  authorName        String   // Nama author (snapshot)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([status])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([slug])
+  @@index([authorId])
+  @@index([viewCount])
+}

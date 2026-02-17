@@ -1,104 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, Clock, ArrowRight, Search } from 'lucide-react';
 import Header from '@/components/landing/header';
 import Footer from '@/components/landing/footer';
 
-// Dummy blog data
-const blogPosts = [
-  {
-    id: 1,
-    title: 'Cara Belajar Microsoft Excel untuk Pemula di Pekanbaru',
-    slug: 'cara-belajar-microsoft-excel-untuk-pemula-pekanbaru',
-    excerpt: 'Panduan lengkap belajar Microsoft Excel untuk pemula di Pekanbaru. Tips, trik, dan rekomendasi kursus Excel terbaik. Mulai dari nol hingga mahir!',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-excel_zxcvbn.png',
-    author: 'Admin Homely',
-    date: '2025-02-09',
-    readTime: '8 menit',
-    category: 'Tutorial',
-    categoryColor: 'bg-blue-500'
-  },
-  {
-    id: 2,
-    title: 'Tips Belajar Microsoft Office untuk Pemula',
-    slug: 'tips-belajar-microsoft-office-pemula',
-    excerpt: 'Panduan lengkap untuk memulai belajar Microsoft Office dari nol hingga mahir. Pelajari Word, Excel, dan PowerPoint dengan mudah.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-office_iqvqxe.png',
-    author: 'Admin Homely',
-    date: '2024-02-05',
-    readTime: '5 menit',
-    category: 'Tutorial',
-    categoryColor: 'bg-blue-500'
-  },
-  {
-    id: 3,
-    title: 'Cara Membuat Desain Grafis Profesional dengan CorelDRAW',
-    slug: 'cara-membuat-desain-grafis-coreldraw',
-    excerpt: 'Pelajari teknik-teknik dasar dan advanced dalam CorelDRAW untuk membuat desain grafis yang menarik dan profesional.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/corel-draw_aqhqxe.png',
-    author: 'Admin Homely',
-    date: '2024-02-03',
-    readTime: '7 menit',
-    category: 'Desain',
-    categoryColor: 'bg-purple-500'
-  },
-  {
-    id: 4,
-    title: 'Mengenal Dasar-Dasar Editing Video dengan Adobe Premiere',
-    slug: 'dasar-editing-video-adobe-premiere',
-    excerpt: 'Tutorial lengkap untuk memulai editing video menggunakan Adobe Premiere Pro. Cocok untuk content creator pemula.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/adobe-premiere_xqhqwe.png',
-    author: 'Admin Homely',
-    date: '2024-02-01',
-    readTime: '10 menit',
-    category: 'Video Editing',
-    categoryColor: 'bg-pink-500'
-  },
-  {
-    id: 5,
-    title: 'Strategi Digital Marketing untuk UMKM',
-    slug: 'strategi-digital-marketing-umkm',
-    excerpt: 'Panduan praktis menggunakan digital marketing untuk meningkatkan penjualan bisnis UMKM Anda di era digital.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/digital-marketing_plqwer.png',
-    author: 'Admin Homely',
-    date: '2024-01-28',
-    readTime: '6 menit',
-    category: 'Marketing',
-    categoryColor: 'bg-green-500'
-  },
-  {
-    id: 6,
-    title: 'Photoshop untuk Pemula: Teknik Dasar yang Wajib Dikuasai',
-    slug: 'photoshop-pemula-teknik-dasar',
-    excerpt: 'Kuasai teknik-teknik dasar Adobe Photoshop yang paling sering digunakan dalam dunia desain grafis dan fotografi.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/adobe-photoshop_mnbvcx.png',
-    author: 'Admin Homely',
-    date: '2024-01-25',
-    readTime: '8 menit',
-    category: 'Desain',
-    categoryColor: 'bg-purple-500'
-  },
-  {
-    id: 7,
-    title: 'Meningkatkan Produktivitas dengan Microsoft Excel',
-    slug: 'meningkatkan-produktivitas-excel',
-    excerpt: 'Tips dan trik menggunakan formula dan fitur Excel untuk meningkatkan produktivitas kerja Anda sehari-hari.',
-    image: 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-excel_zxcvbn.png',
-    author: 'Admin Homely',
-    date: '2024-01-22',
-    readTime: '6 menit',
-    category: 'Tutorial',
-    categoryColor: 'bg-blue-500'
-  }
-];
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  featuredImage: string | null;
+  category: string;
+  tags: string | null;
+  publishedAt: string | null;
+  authorName: string;
+  viewCount: number;
+  createdAt: string;
+}
 
-const categories = ['Semua', 'Tutorial', 'Desain', 'Video Editing', 'Marketing'];
+// Helper function to get category color
+const getCategoryColor = (category: string) => {
+  const colors: { [key: string]: string } = {
+    'Tutorial': 'bg-blue-500',
+    'Tips & Trik': 'bg-green-500',
+    'Berita': 'bg-red-500',
+    'Panduan': 'bg-purple-500',
+    'Artikel': 'bg-yellow-500',
+    'Desain': 'bg-purple-500',
+    'Video Editing': 'bg-pink-500',
+    'Marketing': 'bg-green-500'
+  };
+  return colors[category] || 'bg-gray-500';
+};
+
+// Helper function to calculate read time (estimate 5 minutes per post)
+const getReadTime = () => '5 menit';
+
+// Default image if no featured image
+const getDefaultImage = () => 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-office_iqvqxe.png';
 
 export default function BlogPage() {
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch blog posts from API
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const response = await fetch('/api/blog');
+        if (response.ok) {
+          const data = await response.json();
+          setBlogPosts(data);
+        } else {
+          console.error('Failed to fetch blog posts');
+        }
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
+
+  // Get unique categories from blog posts
+  const categories = ['Semua', ...Array.from(new Set(blogPosts.map(post => post.category)))];
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === 'Semua' || post.category === selectedCategory;
@@ -202,70 +173,85 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Blog Grid */}
-        {filteredPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
-              <article
-                key={post.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-              >
-                {/* Image */}
-                <div className="relative h-48 bg-gradient-to-br from-blue-100 to-indigo-100 overflow-hidden">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className={`${post.categoryColor} text-white text-xs font-bold px-3 py-1 rounded-full`}>
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
-                    <Link href={`/blog/${post.slug}`}>
-                      {post.title}
-                    </Link>
-                  </h2>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Calendar size={14} />
-                        <span>{new Date(post.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock size={14} />
-                        <span>{post.readTime}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Read More Button */}
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="inline-flex items-center space-x-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
-                  >
-                    <span>Baca Selengkapnya</span>
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </article>
-            ))}
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="text-gray-500 mt-4">Memuat artikel...</p>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Tidak ada artikel yang ditemukan</p>
-          </div>
+          <>
+            {/* Blog Grid */}
+            {filteredPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredPosts.map((post) => (
+                  <article
+                    key={post.id}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 bg-gradient-to-br from-blue-100 to-indigo-100 overflow-hidden">
+                      <img
+                        src={post.featuredImage || getDefaultImage()}
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className={`${getCategoryColor(post.category)} text-white text-xs font-bold px-3 py-1 rounded-full`}>
+                          {post.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-blue-600 transition-colors">
+                        <Link href={`/blog/${post.slug}`}>
+                          {post.title}
+                        </Link>
+                      </h2>
+                      
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+
+                      {/* Meta Info */}
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-1">
+                            <Calendar size={14} />
+                            <span>
+                              {post.publishedAt 
+                                ? new Date(post.publishedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : new Date(post.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Clock size={14} />
+                            <span>{getReadTime()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Read More Button */}
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="inline-flex items-center space-x-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
+                      >
+                        <span>Baca Selengkapnya</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Tidak ada artikel yang ditemukan</p>
+              </div>
+            )}
+          </>
         )}
       </div>
       

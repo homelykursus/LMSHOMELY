@@ -38,6 +38,7 @@ interface Course {
   duration: string;
   icon: any;
   slug: string;
+  gradient?: string; // Gradient dari database
 }
 
 interface Facility {
@@ -225,7 +226,8 @@ export default function LandingPage() {
             description: course.description,
             duration: course.duration,
             icon: iconMap[course.icon] || FileText,
-            slug: course.slug
+            slug: course.slug,
+            gradient: course.gradient || 'from-blue-500 to-blue-600' // Ambil gradient dari database
           }));
           
           setCourses(mappedCourses);
@@ -447,18 +449,10 @@ export default function LandingPage() {
     }
   };
 
-  // Gallery swipe handlers
-  // Function untuk mendapatkan gradient color berdasarkan course
-  const getCourseGradient = (courseId: string) => {
-    const gradients: { [key: string]: string } = {
-      '1': 'from-blue-500 to-blue-600',      // Microsoft Office - Blue
-      '2': 'from-purple-500 to-pink-500',    // Desain Grafis - Purple/Pink
-      '3': 'from-red-500 to-orange-500',     // Video Editing - Red/Orange
-      '4': 'from-green-500 to-teal-500',     // Web Design - Green/Teal
-      '5': 'from-yellow-500 to-orange-500',  // Digital Marketing - Yellow/Orange
-      '6': 'from-green-600 to-emerald-600'   // Microsoft Excel Lanjutan - Green
-    };
-    return gradients[courseId] || 'from-blue-500 to-blue-600';
+  // Function untuk mendapatkan gradient color dari course data
+  const getCourseGradient = (course: Course) => {
+    // Gunakan gradient dari database jika ada, jika tidak gunakan default
+    return course.gradient || 'from-blue-500 to-blue-600';
   };
 
   const whatsappMessage = encodeURIComponent('Halo, saya tertarik untuk mendaftar kursus di Homely Kursus Komputer. Mohon informasi lebih lanjut.');
@@ -1020,7 +1014,7 @@ export default function LandingPage() {
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 duration-300 cursor-pointer group"
               >
                 {/* 3D Icon Container with Gradient */}
-                <div className={`bg-gradient-to-br ${getCourseGradient(course.id)} w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                <div className={`bg-gradient-to-br ${getCourseGradient(course)} w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                   <course.icon className="w-10 h-10 text-white drop-shadow-lg" strokeWidth={2.5} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">

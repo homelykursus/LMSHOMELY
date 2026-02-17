@@ -30,7 +30,8 @@ import {
   Database,
   Megaphone,
   Image as ImageIcon,
-  MapPin
+  MapPin,
+  FileText
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -110,6 +111,11 @@ const sidebarItems: SidebarItem[] = [
     title: 'Kelola Pengumuman',
     href: '/admin/announcements',
     icon: Megaphone,
+  },
+  {
+    title: 'Blog',
+    href: '/admin/blog',
+    icon: FileText,
   },
   {
     title: 'Konten Web',
