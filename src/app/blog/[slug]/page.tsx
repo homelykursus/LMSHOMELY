@@ -1,20 +1,47 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { db } from '@/lib/db';
 import BlogDetailClient from './blog-detail-client';
 
-// Fungsi untuk fetch data blog post (server-side)
+// Fungsi untuk fetch data blog post dari database (server-side)
 async function getBlogPost(slug: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/blog/${slug}`, {
-      cache: 'no-store' // Selalu ambil data terbaru
+    const blogPost = await db.blogPost.findUnique({
+      where: {
+        slug: slug,
+        status: 'published'
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        content: true,
+        featuredImage: true,
+        category: true,
+        tags: true,
+        publishedAt: true,
+        authorName: true,
+        viewCount: true,
+        readTime: true,
+        metaTitle: true,
+        metaDescription: true,
+        metaKeywords: true,
+        ogImage: true
+      }
     });
-    
-    if (!response.ok) {
+
+    if (!blogPost) {
       return null;
     }
-    
-    return await response.json();
+
+    // Increment view count
+    await db.blogPost.update({
+      where: { id: blogPost.id },
+      data: { viewCount: { increment: 1 } }
+    });
+
+    return blogPost;
   } catch (error) {
     console.error('Error fetching blog post:', error);
     return null;
@@ -37,7 +64,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const keywords = blogPost.metaKeywords || `${blogPost.category}, ${blogPost.tags || ''}`;
   const ogImage = blogPost.ogImage || blogPost.featuredImage || 'https://res.cloudinary.com/dzksnkl72/image/upload/v1738835142/microsoft-office_iqvqxe.png';
   const publishedTime = blogPost.publishedAt || new Date().toISOString();
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://lmshomely.vercel.app';
   const url = `${baseUrl}/blog/${params.slug}`;
 
   return {
