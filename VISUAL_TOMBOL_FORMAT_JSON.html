@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Tombol Format JSON</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 10px;
+        }
+        .step {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+        .step h2 {
+            color: #1e40af;
+            margin-top: 0;
+        }
+        .button-example {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        .button-example:hover {
+            background: #1d4ed8;
+        }
+        .form-field {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+        .field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .field-label {
+            font-weight: 600;
+            font-size: 16px;
+            color: #374151;
+        }
+        .textarea-example {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #f9fafb;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .arrow {
+            font-size: 24px;
+            color: #3b82f6;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .screenshot {
+            border: 3px solid #3b82f6;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .highlight {
+            background: yellow;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📍 Visual Guide: Lokasi Tombol Format JSON</h1>
+        
+        <div class="warning">
+            <strong>⚠️ PENTING:</strong> Tombol Format JSON hanya muncul di dalam FORM, bukan di halaman utama!
+            <br>Anda HARUS klik "Tambah Program" atau "Edit" terlebih dahulu.
+        </div>
+
+        <div class="step">
+            <h2>Langkah 1: Buka Halaman</h2>
+            <p>Buka browser dan ketik:</p>
+            <code>http://localhost:3000/admin/web-content/landing-courses</code>
+        </div>
+
+        <div class="arrow">⬇️</div>
+
+        <div class="step">
+            <h2>Langkah 2: Klik "Tambah Program" atau "Edit"</h2>
+            <p>Cari tombol di pojok kanan atas atau tombol Edit di card program</p>
+            <button class="button-example" style="background: #3b82f6;">
+                ➕ Tambah Program
+            </button>
+            <span style="margin: 0 10px;">atau</span>
+            <button class="button-example" style="background: white; color: #374151; border: 1px solid #d1d5db;">
+                ✏️ Edit
+            </button>
+        </div>
+
+        <div class="arrow">⬇️</div>
+
+        <div class="step">
+            <h2>Langkah 3: Scroll ke Bawah</h2>
+            <p>Setelah form terbuka, scroll melewati field-field berikut:</p>
+            <ul>
+                <li>Nama Program</li>
+                <li>Durasi</li>
+                <li>Deskripsi</li>
+                <li>Icon, Slug, Urutan</li>
+                <li>Checkbox Aktif</li>
+                <li><strong>Section "Detail Program"</strong></li>
+                <li>Deskripsi Lengkap</li>
+                <li>Durasi Per Sesi, Metode Belajar</li>
+                <li>Gradient Color</li>
+                <li>Harga Normal & Harga Promo</li>
+            </ul>
+        </div>
+
+        <div class="arrow">⬇️</div>
+
+        <div class="step">
+            <h2>Langkah 4: Temukan 4 Tombol Format JSON</h2>
+            <p>Anda akan melihat <span class="highlight">4 tombol biru</span> seperti ini:</p>
+
+            <div class="form-field">
+                <div class="field-header">
+                    <span class="field-label">Kurikulum (JSON Format)</span>
+                    <button class="button-example">
+                        📝 Format JSON Rapi
+                    </button>
+                </div>
+                <textarea class="textarea-example" readonly>[
+  {
+    "title": "Topik 1",
+    "subtopics": ["Sub 1", "Sub 2"]
+  }
+]</textarea>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                    Format: Array of objects dengan title dan subtopics
+                </p>
+            </div>
+
+            <div class="form-field">
+                <div class="field-header">
+                    <span class="field-label">Manfaat (JSON Format)</span>
+                    <button class="button-example">
+                        📝 Format JSON Rapi
+                    </button>
+                </div>
+                <textarea class="textarea-example" readonly>[
+  "Manfaat 1",
+  "Manfaat 2",
+  "Manfaat 3"
+]</textarea>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                    Format: Array of strings
+                </p>
+            </div>
+
+            <div class="form-field">
+                <div class="field-header">
+                    <span class="field-label">Target Audience (JSON Format)</span>
+                    <button class="button-example">
+                        📝 Format JSON Rapi
+                    </button>
+                </div>
+                <textarea class="textarea-example" readonly>[
+  "Target 1",
+  "Target 2",
+  "Target 3"
+]</textarea>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                    Format: Array of strings
+                </p>
+            </div>
+
+            <div class="form-field">
+                <div class="field-header">
+                    <span class="field-label">Software (JSON Format)</span>
+                    <button class="button-example">
+                        📝 Format JSON Rapi
+                    </button>
+                </div>
+                <textarea class="textarea-example" readonly>[
+  {
+    "name": "Software 1",
+    "icon": "url",
+    "description": "desc"
+  }
+]</textarea>
+                <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                    Format: Array of objects dengan name, icon (URL), dan description
+                </p>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>✅ Ini Dia Tombolnya!</strong>
+            <br>Tombol biru dengan emoji 📝 dan teks "Format JSON Rapi" ada di sebelah kanan setiap label field JSON.
+        </div>
+
+        <div class="screenshot">
+            <h3>🎨 Ciri-Ciri Tombol:</h3>
+            <ul>
+                <li><strong>Warna:</strong> Biru cerah (#2563eb)</li>
+                <li><strong>Teks:</strong> Putih, font tebal</li>
+                <li><strong>Icon:</strong> Emoji 📝</li>
+                <li><strong>Teks:</strong> "Format JSON Rapi"</li>
+                <li><strong>Posisi:</strong> Di sebelah kanan label field</li>
+                <li><strong>Efek:</strong> Ada bayangan (shadow)</li>
+                <li><strong>Ukuran:</strong> Sedang, mudah diklik</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h2>💡 Cara Menggunakan</h2>
+            <ol>
+                <li>Paste JSON Anda ke textarea (boleh format berantakan)</li>
+                <li>Klik tombol <button class="button-example" style="font-size: 12px; padding: 6px 12px;">📝 Format JSON Rapi</button></li>
+                <li>JSON otomatis rapi dengan indentasi 2 spasi</li>
+                <li>Notifikasi sukses akan muncul</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <h3>❌ Kesalahan Umum:</h3>
+            <ol>
+                <li><strong>Tidak membuka form</strong> - Harus klik "Tambah Program" atau "Edit" dulu!</li>
+                <li><strong>Tidak scroll ke bawah</strong> - Tombol ada di bagian bawah form</li>
+                <li><strong>Browser cache lama</strong> - Tekan Ctrl+Shift+R untuk hard refresh</li>
+                <li><strong>Melihat console browser</strong> - Lihat halaman web normal, bukan console</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <h3>✅ Checklist Verifikasi:</h3>
+            <ul style="list-style: none; padding-left: 0;">
+                <li>☐ Sudah buka http://localhost:3000/admin/web-content/landing-courses</li>
+                <li>☐ Sudah klik "Tambah Program" atau "Edit"</li>
+                <li>☐ Melihat form dengan banyak field input</li>
+                <li>☐ Sudah scroll ke bawah melewati field harga</li>
+                <li>☐ Melihat label "Kurikulum (JSON Format)"</li>
+                <li>☐ Melihat tombol biru dengan emoji 📝</li>
+            </ul>
+            <p><strong>Jika semua checklist ✅, Anda PASTI akan melihat tombol!</strong></p>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #eff6ff; border-radius: 8px; text-align: center;">
+            <h3 style="color: #1e40af;">🎯 Kesimpulan</h3>
+            <p style="font-size: 18px; line-height: 1.6;">
+                Tombol <strong>"📝 Format JSON Rapi"</strong> sudah terpasang dengan sempurna!
+                <br>
+                Tombol ini berada di dalam <strong>FORM</strong>, bukan di halaman utama.
+                <br>
+                <strong>Kunci utama:</strong> Buka form terlebih dahulu, lalu scroll ke bawah.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Add click handler to demonstrate button functionality
+        document.querySelectorAll('.button-example').forEach(button => {
+            if (button.textContent.includes('Format JSON')) {
+                button.addEventListener('click', function() {
+                    alert('✅ Tombol berfungsi!\n\nDi aplikasi asli, tombol ini akan memformat JSON Anda dengan rapi.');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

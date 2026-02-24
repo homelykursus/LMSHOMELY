@@ -79,7 +79,7 @@ export default function AdminLayout({
       <AdminSidebar />
       <div className="lg:ml-64">
         <AdminHeader />
-        <main className="flex-1">
+        <main className="flex-1 p-6">
           {children}
         </main>
       </div>

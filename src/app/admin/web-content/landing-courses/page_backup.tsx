@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,9 +25,6 @@ import {
   EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CurriculumInput } from '@/components/admin/curriculum-input';
-import { SimpleListInput } from '@/components/admin/simple-list-input';
-import { SoftwareInput } from '@/components/admin/software-input';
 
 interface LandingCourse {
   id: string;
@@ -38,18 +35,6 @@ interface LandingCourse {
   slug: string;
   order: number;
   isActive: boolean;
-  fullDescription?: string;
-  sessionDuration?: string;
-  method?: string;
-  practicePercentage?: string;
-  equipment?: string;
-  gradient?: string;
-  curriculum?: any;
-  benefits?: any;
-  targetAudience?: any;
-  software?: any;
-  originalPrice?: number;
-  discountedPrice?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,15 +70,13 @@ export default function LandingCoursesPage() {
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
     gradient: 'from-blue-500 to-cyan-500',
+    curriculum: '',
+    benefits: '',
+    targetAudience: '',
+    software: '',
     originalPrice: 0,
     discountedPrice: 0
   });
-
-  // Dynamic arrays for simple inputs
-  const [curriculumItems, setCurriculumItems] = useState<Array<{title: string, subtopics: string[]}>>([]);
-  const [benefitItems, setBenefitItems] = useState<string[]>([]);
-  const [targetAudienceItems, setTargetAudienceItems] = useState<string[]>([]);
-  const [softwareItems, setSoftwareItems] = useState<Array<{name: string, icon: string, description: string}>>([]);
 
   useEffect(() => {
     fetchCourses();
@@ -125,15 +108,6 @@ export default function LandingCoursesPage() {
       return;
     }
 
-    // Convert arrays to JSON
-    const parsedData: any = { 
-      ...formData,
-      curriculum: curriculumItems.length > 0 ? curriculumItems : null,
-      benefits: benefitItems.length > 0 ? benefitItems : null,
-      targetAudience: targetAudienceItems.length > 0 ? targetAudienceItems : null,
-      software: softwareItems.length > 0 ? softwareItems : null
-    };
-
     setIsSubmitting(true);
 
     try {
@@ -148,7 +122,7 @@ export default function LandingCoursesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(parsedData),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -158,15 +132,11 @@ export default function LandingCoursesPage() {
         fetchCourses();
         resetForm();
       } else {
-        const errorMessage = data.details 
-          ? `${data.error}: ${data.details}` 
-          : data.error || 'Terjadi kesalahan';
-        toast.error(errorMessage);
-        console.error('API Error:', data);
+        toast.error(data.error || 'Terjadi kesalahan');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving course:', error);
-      toast.error(`Terjadi kesalahan saat menyimpan data: ${error.message || 'Unknown error'}`);
+      toast.error('Terjadi kesalahan saat menyimpan data');
     } finally {
       setIsSubmitting(false);
     }
@@ -181,22 +151,19 @@ export default function LandingCoursesPage() {
       slug: course.slug,
       order: course.order,
       isActive: course.isActive,
-      fullDescription: course.fullDescription || '',
-      sessionDuration: course.sessionDuration || '1,5 Jam',
-      method: course.method || 'Tatap Muka',
-      practicePercentage: course.practicePercentage || '100% Full Praktik',
-      equipment: course.equipment || 'Peralatan Belajar Sudah Disediakan',
-      gradient: course.gradient || 'from-blue-500 to-cyan-500',
-      originalPrice: course.originalPrice || 0,
-      discountedPrice: course.discountedPrice || 0
+      fullDescription: (course as any).fullDescription || '',
+      sessionDuration: (course as any).sessionDuration || '1,5 Jam',
+      method: (course as any).method || 'Tatap Muka',
+      practicePercentage: (course as any).practicePercentage || '100% Full Praktik',
+      equipment: (course as any).equipment || 'Peralatan Belajar Sudah Disediakan',
+      gradient: (course as any).gradient || 'from-blue-500 to-cyan-500',
+      curriculum: (course as any).curriculum ? JSON.stringify((course as any).curriculum, null, 2) : '',
+      benefits: (course as any).benefits ? JSON.stringify((course as any).benefits, null, 2) : '',
+      targetAudience: (course as any).targetAudience ? JSON.stringify((course as any).targetAudience, null, 2) : '',
+      software: (course as any).software ? JSON.stringify((course as any).software, null, 2) : '',
+      originalPrice: (course as any).originalPrice || 0,
+      discountedPrice: (course as any).discountedPrice || 0
     });
-
-    // Parse JSON data to arrays
-    setCurriculumItems(course.curriculum || []);
-    setBenefitItems(course.benefits || []);
-    setTargetAudienceItems(course.targetAudience || []);
-    setSoftwareItems(course.software || []);
-
     setEditingId(course.id);
     setShowForm(true);
   };
@@ -239,13 +206,13 @@ export default function LandingCoursesPage() {
       practicePercentage: '100% Full Praktik',
       equipment: 'Peralatan Belajar Sudah Disediakan',
       gradient: 'from-blue-500 to-cyan-500',
+      curriculum: '',
+      benefits: '',
+      targetAudience: '',
+      software: '',
       originalPrice: 0,
       discountedPrice: 0
     });
-    setCurriculumItems([]);
-    setBenefitItems([]);
-    setTargetAudienceItems([]);
-    setSoftwareItems([]);
     setEditingId(null);
     setShowForm(false);
   };
@@ -265,34 +232,30 @@ export default function LandingCoursesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Kelola Program Kursus</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Program Kursus Landing Page</h1>
           <p className="text-gray-600 mt-1">Kelola program kursus yang ditampilkan di landing page</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2">
-          {showForm ? (
-            <>
-              <X className="w-4 h-4" />
-              Tutup Form
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4" />
-              Tambah Program
-            </>
-          )}
-        </Button>
+        {!showForm && (
+          <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Tambah Program
+          </Button>
+        )}
       </div>
 
       {showForm && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>{editingId ? 'Edit Program Kursus' : 'Tambah Program Kursus Baru'}</CardTitle>
+            <CardDescription>
+              {editingId ? 'Update informasi program kursus' : 'Tambahkan program kursus baru ke landing page'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nama Program <span className="text-red-500">*</span></Label>
@@ -300,12 +263,10 @@ export default function LandingCoursesPage() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => {
-                      const newName = e.target.value;
-                      setFormData({ 
-                        ...formData, 
-                        name: newName,
-                        slug: generateSlug(newName)
-                      });
+                      setFormData({ ...formData, name: e.target.value });
+                      if (!editingId) {
+                        setFormData(prev => ({ ...prev, slug: generateSlug(e.target.value) }));
+                      }
                     }}
                     placeholder="Contoh: Microsoft Office"
                     required
@@ -517,32 +478,57 @@ export default function LandingCoursesPage() {
                     </div>
                   </div>
 
-                  {/* New Simple Inputs */}
-                  <CurriculumInput value={curriculumItems} onChange={setCurriculumItems} />
-                  
-                  <SimpleListInput 
-                    label="Manfaat"
-                    icon="✨"
-                    value={benefitItems}
-                    onChange={setBenefitItems}
-                    placeholder="Contoh: Menguasai Microsoft Word"
-                    borderColor="border-green-200"
-                    bgColor="bg-green-50"
-                    textColor="text-green-900"
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="curriculum">Kurikulum (JSON Format)</Label>
+                    <Textarea
+                      id="curriculum"
+                      value={formData.curriculum}
+                      onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
+                      placeholder='[{"title":"Topik 1","subtopics":["Sub 1","Sub 2"]}]'
+                      rows={6}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Format: Array of objects dengan title dan subtopics</p>
+                  </div>
 
-                  <SimpleListInput 
-                    label="Target Audience"
-                    icon="🎯"
-                    value={targetAudienceItems}
-                    onChange={setTargetAudienceItems}
-                    placeholder="Contoh: Pelajar dan Mahasiswa"
-                    borderColor="border-purple-200"
-                    bgColor="bg-purple-50"
-                    textColor="text-purple-900"
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="benefits">Manfaat (JSON Format)</Label>
+                    <Textarea
+                      id="benefits"
+                      value={formData.benefits}
+                      onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                      placeholder='["Manfaat 1","Manfaat 2","Manfaat 3"]'
+                      rows={4}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Format: Array of strings</p>
+                  </div>
 
-                  <SoftwareInput value={softwareItems} onChange={setSoftwareItems} />
+                  <div className="space-y-2">
+                    <Label htmlFor="targetAudience">Target Audience (JSON Format)</Label>
+                    <Textarea
+                      id="targetAudience"
+                      value={formData.targetAudience}
+                      onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                      placeholder='["Target 1","Target 2","Target 3"]'
+                      rows={4}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Format: Array of strings</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="software">Software (JSON Format)</Label>
+                    <Textarea
+                      id="software"
+                      value={formData.software}
+                      onChange={(e) => setFormData({ ...formData, software: e.target.value })}
+                      placeholder='[{"name":"Software 1","icon":"url","description":"desc"}]'
+                      rows={6}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Format: Array of objects dengan name, icon (URL), dan description</p>
+                  </div>
                 </div>
               </div>
 

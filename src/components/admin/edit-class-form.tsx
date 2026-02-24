@@ -69,6 +69,8 @@ interface Class {
   schedule: string;
   startDate: string | null;
   endDate: string | null;
+  totalMeetings: number;
+  completedMeetings: number;
   isActive: boolean;
   course: {
     id: string;
@@ -115,7 +117,8 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
     maxStudents: '',
     commissionType: 'BY_CLASS',
     commissionAmount: '',
-    schedule: ''
+    schedule: '',
+    totalMeetings: ''
   });
 
   useEffect(() => {
@@ -129,7 +132,8 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
         maxStudents: classData.maxStudents.toString(),
         commissionType: classData.commissionType || 'BY_CLASS',
         commissionAmount: classData.commissionAmount?.toString() || '0',
-        schedule: classData.schedule
+        schedule: classData.schedule,
+        totalMeetings: classData.totalMeetings?.toString() || '0'
       });
       setSelectedStudents(classData.students.map(cs => cs.student.id));
     }
@@ -206,8 +210,14 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.courseId || !formData.roomId || 
-        !formData.maxStudents || !formData.commissionAmount || !formData.schedule) {
+        !formData.maxStudents || !formData.commissionAmount || !formData.schedule || !formData.totalMeetings) {
       toast.error('Semua field wajib diisi (kecuali Guru Pengajar)');
+      return;
+    }
+
+    const totalMeetingsNum = parseInt(formData.totalMeetings);
+    if (totalMeetingsNum < 1) {
+      toast.error('Jumlah pertemuan minimal 1');
       return;
     }
 
@@ -228,6 +238,7 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
           commissionType: formData.commissionType,
           commissionAmount: parseInt(formData.commissionAmount),
           schedule: formData.schedule.trim(),
+          totalMeetings: totalMeetingsNum,
           studentIds: selectedStudents
         }),
       });
@@ -298,7 +309,7 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Nama Kelas *</Label>
               <Input
@@ -318,6 +329,19 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
                 value={formData.maxStudents}
                 onChange={(e) => handleInputChange('maxStudents', e.target.value)}
                 placeholder="Contoh: 20"
+                min="1"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-totalMeetings">Jumlah Pertemuan *</Label>
+              <Input
+                id="edit-totalMeetings"
+                type="number"
+                value={formData.totalMeetings}
+                onChange={(e) => handleInputChange('totalMeetings', e.target.value)}
+                placeholder="Contoh: 12"
                 min="1"
                 required
               />
@@ -396,7 +420,7 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-schedule">Jadwal *</Label>
               <Input

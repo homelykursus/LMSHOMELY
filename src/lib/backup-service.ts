@@ -16,24 +16,46 @@ export interface BackupMetadata {
 export interface BackupData {
   metadata: BackupMetadata;
   data: {
+    // Core entities
     students: any[];
     teachers: any[];
     classes: any[];
     courses: any[];
     coursePricing: any[];
-    meetings: any[];
-    payments: any[];
-    paymentTransactions: any[];
-    certificates: any[];
-    certificateTemplates: any[];
     users: any[];
     rooms: any[];
+    
+    // Relations
     classStudents: any[]; // Junction table for Class-Student relations
+    teacherCourses: any[]; // Teacher-Course relations
+    
+    // Meetings & Attendance
+    meetings: any[]; // ClassMeeting
     teacherAttendances: any[]; // Teacher attendance records
     attendances: any[]; // Student attendance records
-    teacherCourses: any[]; // Teacher-Course relations
-    announcements: any[]; // System announcements
     employeeAttendances: any[]; // Employee attendance records
+    
+    // Payments
+    payments: any[];
+    paymentTransactions: any[];
+    
+    // Certificates
+    certificates: any[];
+    certificateTemplates: any[];
+    
+    // Announcements
+    announcements: any[]; // System announcements
+    
+    // Web Content (Landing Page)
+    heroSections: any[]; // Hero section content
+    facilities: any[]; // Facilities list
+    testimonials: any[]; // Testimonials
+    galleryImages: any[]; // Gallery images
+    locationInfo: any[]; // Location information
+    landingCourses: any[]; // Landing page courses
+    
+    // Blog
+    blogPosts: any[]; // Blog posts
   };
   assets?: {
     cloudinary_urls: string[];
@@ -49,130 +71,302 @@ export class BackupService {
     try {
       console.log('🔄 Starting data backup...');
 
-      // Fetch basic data from database (without complex relations for now)
-      const [
-        students,
-        teachers,
-        classes,
-        courses,
-        users,
-        rooms,
-        classStudents,
-        teacherAttendances,
-        attendances,
-        teacherCourses,
-        announcements,
-        employeeAttendances
-      ] = await Promise.all([
-        db.student.findMany(),
-        db.teacher.findMany(),
-        db.class.findMany(),
-        db.course.findMany(),
-        db.user.findMany(),
-        db.room.findMany(),
-        db.classStudent.findMany(),
-        db.teacherAttendance.findMany(),
-        db.attendance.findMany(),
-        db.teacherCourse.findMany(),
-        db.announcement.findMany(),
-        db.employeeAttendance.findMany()
-      ]);
-
-      // Try to get other data if tables exist
+      console.log('📦 Fetching all data from database...');
+      
+      // Fetch ALL data from database with proper error handling
+      // Core entities
+      let students: any[] = [];
+      let teachers: any[] = [];
+      let classes: any[] = [];
+      let courses: any[] = [];
+      let coursePricing: any[] = [];
+      let users: any[] = [];
+      let rooms: any[] = [];
+      
+      // Relations
+      let classStudents: any[] = [];
+      let teacherCourses: any[] = [];
+      
+      // Meetings & Attendance
+      let meetings: any[] = [];
+      let teacherAttendances: any[] = [];
+      let attendances: any[] = [];
+      let employeeAttendances: any[] = [];
+      
+      // Payments
       let payments: any[] = [];
       let paymentTransactions: any[] = [];
+      
+      // Certificates
       let certificates: any[] = [];
       let certificateTemplates: any[] = [];
-      let meetings: any[] = [];
-      let coursePricing: any[] = [];
+      
+      // Announcements
+      let announcements: any[] = [];
+      
+      // Web Content (Landing Page)
+      let heroSections: any[] = [];
+      let facilities: any[] = [];
+      let testimonials: any[] = [];
+      let galleryImages: any[] = [];
+      let locationInfo: any[] = [];
+      let landingCourses: any[] = [];
+      
+      // Blog
+      let blogPosts: any[] = [];
+
+      // Fetch core entities
+      try {
+        students = await db.student.findMany();
+        console.log(`✅ Students: ${students.length}`);
+      } catch (e) {
+        console.warn('⚠️  Student table not accessible');
+      }
 
       try {
+        teachers = await db.teacher.findMany();
+        console.log(`✅ Teachers: ${teachers.length}`);
+      } catch (e) {
+        console.warn('⚠️  Teacher table not accessible');
+      }
+
+      try {
+        classes = await db.class.findMany();
+        console.log(`✅ Classes: ${classes.length}`);
+      } catch (e) {
+        console.warn('⚠️  Class table not accessible');
+      }
+
+      try {
+        courses = await db.course.findMany();
+        console.log(`✅ Courses: ${courses.length}`);
+      } catch (e) {
+        console.warn('⚠️  Course table not accessible');
+      }
+
+      try {
+        coursePricing = await db.coursePricing.findMany();
+        console.log(`✅ CoursePricing: ${coursePricing.length}`);
+      } catch (e) {
+        console.warn('⚠️  CoursePricing table not accessible');
+      }
+
+      try {
+        users = await db.user.findMany();
+        console.log(`✅ Users: ${users.length}`);
+      } catch (e) {
+        console.warn('⚠️  User table not accessible');
+      }
+
+      try {
+        rooms = await db.room.findMany();
+        console.log(`✅ Rooms: ${rooms.length}`);
+      } catch (e) {
+        console.warn('⚠️  Room table not accessible');
+      }
+
+      // Fetch relations
+      try {
+        classStudents = await db.classStudent.findMany();
+        console.log(`✅ ClassStudents: ${classStudents.length}`);
+      } catch (e) {
+        console.warn('⚠️  ClassStudent table not accessible');
+      }
+
+      try {
+        teacherCourses = await db.teacherCourse.findMany();
+        console.log(`✅ TeacherCourses: ${teacherCourses.length}`);
+      } catch (e) {
+        console.warn('⚠️  TeacherCourse table not accessible');
+      }
+
+      // Fetch meetings & attendance
+      try {
+        meetings = await db.classMeeting.findMany();
+        console.log(`✅ ClassMeetings: ${meetings.length}`);
+      } catch (e) {
+        console.warn('⚠️  ClassMeeting table not accessible');
+      }
+
+      try {
+        teacherAttendances = await db.teacherAttendance.findMany();
+        console.log(`✅ TeacherAttendances: ${teacherAttendances.length}`);
+      } catch (e) {
+        console.warn('⚠️  TeacherAttendance table not accessible');
+      }
+
+      try {
+        attendances = await db.attendance.findMany();
+        console.log(`✅ Attendances: ${attendances.length}`);
+      } catch (e) {
+        console.warn('⚠️  Attendance table not accessible');
+      }
+
+      try {
+        employeeAttendances = await db.employeeAttendance.findMany();
+        console.log(`✅ EmployeeAttendances: ${employeeAttendances.length}`);
+      } catch (e) {
+        console.warn('⚠️  EmployeeAttendance table not accessible');
+      }
+
+      // Fetch payments
+      try {
         payments = await db.payment.findMany();
+        console.log(`✅ Payments: ${payments.length}`);
       } catch (e) {
         console.warn('⚠️  Payment table not accessible');
       }
 
       try {
         paymentTransactions = await db.paymentTransaction.findMany();
+        console.log(`✅ PaymentTransactions: ${paymentTransactions.length}`);
       } catch (e) {
         console.warn('⚠️  PaymentTransaction table not accessible');
       }
 
+      // Fetch certificates
       try {
         certificates = await db.certificate.findMany();
+        console.log(`✅ Certificates: ${certificates.length}`);
       } catch (e) {
         console.warn('⚠️  Certificate table not accessible');
       }
 
       try {
         certificateTemplates = await db.certificateTemplate.findMany();
+        console.log(`✅ CertificateTemplates: ${certificateTemplates.length}`);
       } catch (e) {
         console.warn('⚠️  CertificateTemplate table not accessible');
       }
 
+      // Fetch announcements
       try {
-        meetings = await db.classMeeting.findMany();
+        announcements = await db.announcement.findMany();
+        console.log(`✅ Announcements: ${announcements.length}`);
       } catch (e) {
-        console.warn('⚠️  ClassMeeting table not accessible');
+        console.warn('⚠️  Announcement table not accessible');
+      }
+
+      // Fetch web content (Landing Page)
+      try {
+        heroSections = await db.heroSection.findMany();
+        console.log(`✅ HeroSections: ${heroSections.length}`);
+      } catch (e) {
+        console.warn('⚠️  HeroSection table not accessible');
       }
 
       try {
-        coursePricing = await db.coursePricing.findMany();
-        console.log(`📊 CoursePricing records found: ${coursePricing.length}`);
+        facilities = await db.facility.findMany();
+        console.log(`✅ Facilities: ${facilities.length}`);
       } catch (e) {
-        console.warn('⚠️  CoursePricing table not accessible');
+        console.warn('⚠️  Facility table not accessible');
       }
 
-      console.log(`🔗 ClassStudent relations found: ${classStudents.length}`)
-      console.log(`👨‍🏫 TeacherAttendance records found: ${teacherAttendances.length}`)
-      console.log(`👨‍🎓 Student Attendance records found: ${attendances.length}`)
-      console.log(`📚 TeacherCourse relations found: ${teacherCourses.length}`)
-      console.log(`📢 Announcements found: ${announcements.length}`)
-      console.log(`👥 EmployeeAttendance records found: ${employeeAttendances.length}`);
+      try {
+        testimonials = await db.testimonial.findMany();
+        console.log(`✅ Testimonials: ${testimonials.length}`);
+      } catch (e) {
+        console.warn('⚠️  Testimonial table not accessible');
+      }
+
+      try {
+        galleryImages = await db.galleryImage.findMany();
+        console.log(`✅ GalleryImages: ${galleryImages.length}`);
+      } catch (e) {
+        console.warn('⚠️  GalleryImage table not accessible');
+      }
+
+      try {
+        locationInfo = await db.locationInfo.findMany();
+        console.log(`✅ LocationInfo: ${locationInfo.length}`);
+      } catch (e) {
+        console.warn('⚠️  LocationInfo table not accessible');
+      }
+
+      try {
+        landingCourses = await db.landingCourse.findMany();
+        console.log(`✅ LandingCourses: ${landingCourses.length}`);
+      } catch (e) {
+        console.warn('⚠️  LandingCourse table not accessible');
+      }
+
+      // Fetch blog
+      try {
+        blogPosts = await db.blogPost.findMany();
+        console.log(`✅ BlogPosts: ${blogPosts.length}`);
+      } catch (e) {
+        console.warn('⚠️  BlogPost table not accessible');
+      }
 
       // Calculate total records
       const totalRecords = students.length + teachers.length + classes.length + 
-                          courses.length + coursePricing.length + payments.length + paymentTransactions.length + 
-                          certificates.length + certificateTemplates.length + users.length + 
-                          rooms.length + meetings.length + classStudents.length + 
-                          teacherAttendances.length + attendances.length + teacherCourses.length + 
-                          announcements.length + employeeAttendances.length;
+                          courses.length + coursePricing.length + users.length + rooms.length +
+                          classStudents.length + teacherCourses.length +
+                          meetings.length + teacherAttendances.length + attendances.length + employeeAttendances.length +
+                          payments.length + paymentTransactions.length + 
+                          certificates.length + certificateTemplates.length + 
+                          announcements.length +
+                          heroSections.length + facilities.length + testimonials.length + 
+                          galleryImages.length + locationInfo.length + landingCourses.length +
+                          blogPosts.length;
 
-      // Create backup data structure
+      // Create backup data structure with ALL tables
       const backupData: BackupData = {
         metadata: {
-          version: '1.0',
+          version: '2.0', // Updated version for new comprehensive backup
           created_at: new Date().toISOString(),
           backup_type: 'data',
           total_records: totalRecords,
-          description: 'Database backup - data only (no files)'
+          description: 'Comprehensive database backup - all tables included'
         },
         data: {
+          // Core entities
           students,
           teachers,
           classes,
           courses,
           coursePricing,
-          meetings,
-          payments,
-          paymentTransactions,
-          certificates,
-          certificateTemplates,
           users: users.map(user => ({
             ...user,
-            password: '[REDACTED]' // Don't backup passwords
+            password: '[REDACTED]' // Don't backup passwords for security
           })),
           rooms,
+          
+          // Relations
           classStudents,
+          teacherCourses,
+          
+          // Meetings & Attendance
+          meetings,
           teacherAttendances,
           attendances,
-          teacherCourses,
+          employeeAttendances,
+          
+          // Payments
+          payments,
+          paymentTransactions,
+          
+          // Certificates
+          certificates,
+          certificateTemplates,
+          
+          // Announcements
           announcements,
-          employeeAttendances
+          
+          // Web Content (Landing Page)
+          heroSections,
+          facilities,
+          testimonials,
+          galleryImages,
+          locationInfo,
+          landingCourses,
+          
+          // Blog
+          blogPosts
         }
       };
 
-      console.log(`✅ Data backup completed: ${totalRecords} records`);
+      console.log(`✅ Comprehensive backup completed: ${totalRecords} records from ${Object.keys(backupData.data).length} tables`);
       return backupData;
 
     } catch (error) {
@@ -273,6 +467,8 @@ export class BackupService {
         console.log('🗑️  Clearing existing data...');
         
         // Delete in correct order to avoid foreign key constraints
+        // Start with dependent tables first
+        
         try {
           await tx.certificate.deleteMany();
           console.log('   ✅ Certificates cleared');
@@ -295,22 +491,6 @@ export class BackupService {
         }
 
         try {
-          await tx.classMeeting.deleteMany();
-          console.log('   ✅ Class meetings cleared');
-        } catch (e) {
-          console.log('   ⚠️  Class meetings table not found or empty');
-        }
-
-        // Clear ClassStudent relations before clearing classes and students
-        try {
-          await tx.classStudent.deleteMany();
-          console.log('   ✅ Class-student relations cleared');
-        } catch (e) {
-          console.log('   ⚠️  Class-student relations table not found or empty');
-        }
-
-        // Clear attendance records before clearing students and meetings
-        try {
           await tx.attendance.deleteMany();
           console.log('   ✅ Student attendance cleared');
         } catch (e) {
@@ -324,7 +504,20 @@ export class BackupService {
           console.log('   ⚠️  Teacher attendance table not found or empty');
         }
 
-        // Clear teacher-course relations
+        try {
+          await tx.classMeeting.deleteMany();
+          console.log('   ✅ Class meetings cleared');
+        } catch (e) {
+          console.log('   ⚠️  Class meetings table not found or empty');
+        }
+
+        try {
+          await tx.classStudent.deleteMany();
+          console.log('   ✅ Class-student relations cleared');
+        } catch (e) {
+          console.log('   ⚠️  Class-student relations table not found or empty');
+        }
+
         try {
           await tx.teacherCourse.deleteMany();
           console.log('   ✅ Teacher-course relations cleared');
@@ -332,7 +525,6 @@ export class BackupService {
           console.log('   ⚠️  Teacher-course relations table not found or empty');
         }
 
-        // Clear announcements
         try {
           await tx.announcement.deleteMany();
           console.log('   ✅ Announcements cleared');
@@ -340,7 +532,6 @@ export class BackupService {
           console.log('   ⚠️  Announcements table not found or empty');
         }
 
-        // Clear employee attendance
         try {
           await tx.employeeAttendance.deleteMany();
           console.log('   ✅ Employee attendance cleared');
@@ -402,6 +593,56 @@ export class BackupService {
           console.log('   ✅ Users cleared');
         } catch (e) {
           console.log('   ⚠️  Users table not found or empty');
+        }
+
+        // Clear web content tables
+        try {
+          await tx.blogPost.deleteMany();
+          console.log('   ✅ Blog posts cleared');
+        } catch (e) {
+          console.log('   ⚠️  Blog posts table not found or empty');
+        }
+
+        try {
+          await tx.landingCourse.deleteMany();
+          console.log('   ✅ Landing courses cleared');
+        } catch (e) {
+          console.log('   ⚠️  Landing courses table not found or empty');
+        }
+
+        try {
+          await tx.locationInfo.deleteMany();
+          console.log('   ✅ Location info cleared');
+        } catch (e) {
+          console.log('   ⚠️  Location info table not found or empty');
+        }
+
+        try {
+          await tx.galleryImage.deleteMany();
+          console.log('   ✅ Gallery images cleared');
+        } catch (e) {
+          console.log('   ⚠️  Gallery images table not found or empty');
+        }
+
+        try {
+          await tx.testimonial.deleteMany();
+          console.log('   ✅ Testimonials cleared');
+        } catch (e) {
+          console.log('   ⚠️  Testimonials table not found or empty');
+        }
+
+        try {
+          await tx.facility.deleteMany();
+          console.log('   ✅ Facilities cleared');
+        } catch (e) {
+          console.log('   ⚠️  Facilities table not found or empty');
+        }
+
+        try {
+          await tx.heroSection.deleteMany();
+          console.log('   ✅ Hero sections cleared');
+        } catch (e) {
+          console.log('   ⚠️  Hero sections table not found or empty');
         }
 
         console.log('📥 Starting data restoration...');
@@ -882,6 +1123,136 @@ export class BackupService {
           }
         }
 
+        // Restore web content tables
+        console.log('📝 Restoring hero sections...');
+        if (backupData.data.heroSections?.length > 0) {
+          try {
+            for (const heroSection of backupData.data.heroSections) {
+              await tx.heroSection.create({
+                data: {
+                  ...heroSection,
+                  createdAt: heroSection.createdAt ? new Date(heroSection.createdAt) : new Date(),
+                  updatedAt: heroSection.updatedAt ? new Date(heroSection.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.heroSections.length} hero sections restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring hero sections:', error);
+            // Don't throw, continue with other tables
+          }
+        }
+
+        console.log('📝 Restoring facilities...');
+        if (backupData.data.facilities?.length > 0) {
+          try {
+            for (const facility of backupData.data.facilities) {
+              await tx.facility.create({
+                data: {
+                  ...facility,
+                  createdAt: facility.createdAt ? new Date(facility.createdAt) : new Date(),
+                  updatedAt: facility.updatedAt ? new Date(facility.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.facilities.length} facilities restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring facilities:', error);
+          }
+        }
+
+        console.log('📝 Restoring testimonials...');
+        if (backupData.data.testimonials?.length > 0) {
+          try {
+            for (const testimonial of backupData.data.testimonials) {
+              await tx.testimonial.create({
+                data: {
+                  ...testimonial,
+                  createdAt: testimonial.createdAt ? new Date(testimonial.createdAt) : new Date(),
+                  updatedAt: testimonial.updatedAt ? new Date(testimonial.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.testimonials.length} testimonials restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring testimonials:', error);
+          }
+        }
+
+        console.log('📝 Restoring gallery images...');
+        if (backupData.data.galleryImages?.length > 0) {
+          try {
+            for (const galleryImage of backupData.data.galleryImages) {
+              await tx.galleryImage.create({
+                data: {
+                  ...galleryImage,
+                  createdAt: galleryImage.createdAt ? new Date(galleryImage.createdAt) : new Date(),
+                  updatedAt: galleryImage.updatedAt ? new Date(galleryImage.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.galleryImages.length} gallery images restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring gallery images:', error);
+          }
+        }
+
+        console.log('📝 Restoring location info...');
+        if (backupData.data.locationInfo?.length > 0) {
+          try {
+            for (const location of backupData.data.locationInfo) {
+              await tx.locationInfo.create({
+                data: {
+                  ...location,
+                  createdAt: location.createdAt ? new Date(location.createdAt) : new Date(),
+                  updatedAt: location.updatedAt ? new Date(location.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.locationInfo.length} location info restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring location info:', error);
+          }
+        }
+
+        console.log('📝 Restoring landing courses...');
+        if (backupData.data.landingCourses?.length > 0) {
+          try {
+            for (const landingCourse of backupData.data.landingCourses) {
+              await tx.landingCourse.create({
+                data: {
+                  ...landingCourse,
+                  createdAt: landingCourse.createdAt ? new Date(landingCourse.createdAt) : new Date(),
+                  updatedAt: landingCourse.updatedAt ? new Date(landingCourse.updatedAt) : new Date()
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.landingCourses.length} landing courses restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring landing courses:', error);
+          }
+        }
+
+        console.log('📝 Restoring blog posts...');
+        if (backupData.data.blogPosts?.length > 0) {
+          try {
+            for (const blogPost of backupData.data.blogPosts) {
+              await tx.blogPost.create({
+                data: {
+                  ...blogPost,
+                  createdAt: blogPost.createdAt ? new Date(blogPost.createdAt) : new Date(),
+                  updatedAt: blogPost.updatedAt ? new Date(blogPost.updatedAt) : new Date(),
+                  publishedAt: blogPost.publishedAt ? new Date(blogPost.publishedAt) : null,
+                  scheduledAt: blogPost.scheduledAt ? new Date(blogPost.scheduledAt) : null
+                }
+              });
+            }
+            console.log(`   ✅ ${backupData.data.blogPosts.length} blog posts restored`);
+          } catch (error) {
+            console.error('   ❌ Error restoring blog posts:', error);
+          }
+        }
+
         // Ensure admin user exists after restore
         console.log('🔐 Ensuring admin user exists...');
         const adminExists = await tx.user.findFirst({
@@ -1030,8 +1401,14 @@ export class BackupService {
           }
         }
         
-        // Check optional tables
-        const optionalTables = ['coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 'meetings', 'users', 'rooms', 'classStudents', 'teacherAttendances', 'attendances', 'teacherCourses', 'announcements', 'employeeAttendances'];
+        // Check optional tables (including new web content and blog tables)
+        const optionalTables = [
+          'coursePricing', 'payments', 'paymentTransactions', 'certificates', 'certificateTemplates', 
+          'meetings', 'users', 'rooms', 'classStudents', 'teacherAttendances', 'attendances', 
+          'teacherCourses', 'announcements', 'employeeAttendances',
+          'heroSections', 'facilities', 'testimonials', 'galleryImages', 'locationInfo', 
+          'landingCourses', 'blogPosts'
+        ];
         for (const table of optionalTables) {
           if (backupData.data[table] && !Array.isArray(backupData.data[table])) {
             errors.push(`Invalid ${table} data format`);

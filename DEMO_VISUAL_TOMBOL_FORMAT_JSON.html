@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Visual - Tombol Format JSON</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            color: #1a202c;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 16px;
+        }
+        
+        .alert {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .alert h2 {
+            color: #92400e;
+            font-size: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+        
+        .steps {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .step h3 {
+            color: #1a202c;
+            font-size: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .step code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .demo-form {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .demo-form h2 {
+            color: #1a202c;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: #f7fafc;
+        }
+        
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+        }
+        
+        .format-button {
+            background-color: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            border: 3px solid #991b1b;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .format-button:hover {
+            background-color: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .format-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .helper-text {
+            color: #718096;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .highlight-box {
+            background: #fef3c7;
+            border: 3px dashed #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .highlight-box p {
+            color: #92400e;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Demo Visual - Lokasi Tombol Format JSON</h1>
+            <p>Demonstrasi interaktif untuk menunjukkan di mana tombol format JSON berada</p>
+        </div>
+        
+        <div class="alert">
+            <h2>⚠️ PENTING: Tombol HANYA Muncul Saat Form Terbuka!</h2>
+            <p><strong>Tombol format JSON TIDAK terlihat di halaman utama.</strong> Anda harus membuka form terlebih dahulu dengan mengklik tombol <strong>"Tambah Program"</strong> atau <strong>"Edit"</strong> pada salah satu program yang sudah ada.</p>
+        </div>
+        
+        <div class="steps">
+            <h2 style="color: #1a202c; font-size: 24px; margin-bottom: 20px;">📋 Langkah-Langkah Menemukan Tombol</h2>
+            
+            <div class="step">
+                <h3>1️⃣ Buka Halaman Landing Courses</h3>
+                <p>Akses URL: <code>http://localhost:3000/admin/web-content/landing-courses</code></p>
+                <p>Pastikan Anda sudah login sebagai admin.</p>
+            </div>
+            
+            <div class="step">
+                <h3>2️⃣ Klik Tombol "Tambah Program" atau "Edit"</h3>
+                <p><strong>Cara A:</strong> Klik tombol <strong>"Tambah Program"</strong> di pojok kanan atas halaman</p>
+                <p><strong>Cara B:</strong> Klik tombol <strong>"Edit"</strong> pada salah satu program yang sudah ada</p>
+            </div>
+            
+            <div class="step">
+                <h3>3️⃣ Scroll ke Bawah dalam Form</h3>
+                <p>Setelah form terbuka, scroll ke bawah melewati field-field dasar seperti:</p>
+                <ul style="margin-left: 20px; margin-top: 10px; color: #4a5568;">
+                    <li>Nama Program</li>
+                    <li>Durasi</li>
+                    <li>Deskripsi</li>
+                    <li>Icon, Slug, Order</li>
+                    <li>Detail Program</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>4️⃣ Temukan Field JSON dengan Tombol Format</h3>
+                <p>Anda akan menemukan 4 field JSON, masing-masing dengan tombol format merah di bawahnya:</p>
+                <ul style="margin-left: 20px; margin-top: 10px; color: #4a5568;">
+                    <li><strong>Kurikulum (JSON Format)</strong> → Tombol format</li>
+                    <li><strong>Manfaat (JSON Format)</strong> → Tombol format</li>
+                    <li><strong>Target Audience (JSON Format)</strong> → Tombol format</li>
+                    <li><strong>Software (JSON Format)</strong> → Tombol format</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="highlight-box">
+            <p class="arrow">⬇️</p>
+            <p>DEMO INTERAKTIF DI BAWAH INI</p>
+            <p class="arrow">⬇️</p>
+        </div>
+        
+        <div class="demo-form">
+            <h2>🎨 Demo Interaktif - Tombol Format JSON</h2>
+            <p style="color: #718096; margin-bottom: 20px;">Ini adalah simulasi dari form yang sebenarnya. Coba ketik JSON di bawah ini dan klik tombol merah untuk melihat hasilnya!</p>
+            
+            <div class="form-group">
+                <label for="curriculum">Kurikulum (JSON Format)</label>
+                <textarea id="curriculum" rows="8" placeholder='[
+  {
+    "title": "Topik 1",
+    "subtopics": ["Sub 1", "Sub 2"]
+  }
+]'></textarea>
+                <button class="format-button" onclick="formatJSON('curriculum')">
+                    📝 KLIK DI SINI UNTUK FORMAT JSON RAPI
+                </button>
+                <p class="helper-text">Format: Array of objects dengan title dan subtopics</p>
+                <div id="curriculum-success" class="success-message">✅ JSON berhasil diformat!</div>
+                <div id="curriculum-error" class="error-message">❌ Format JSON tidak valid!</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="benefits">Manfaat (JSON Format)</label>
+                <textarea id="benefits" rows="6" placeholder='[
+  "Manfaat 1",
+  "Manfaat 2",
+  "Manfaat 3"
+]'></textarea>
+                <button class="format-button" onclick="formatJSON('benefits')">
+                    📝 KLIK DI SINI UNTUK FORMAT JSON RAPI
+                </button>
+                <p class="helper-text">Format: Array of strings</p>
+                <div id="benefits-success" class="success-message">✅ JSON berhasil diformat!</div>
+                <div id="benefits-error" class="error-message">❌ Format JSON tidak valid!</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="targetAudience">Target Audience (JSON Format)</label>
+                <textarea id="targetAudience" rows="6" placeholder='[
+  "Target 1",
+  "Target 2",
+  "Target 3"
+]'></textarea>
+                <button class="format-button" onclick="formatJSON('targetAudience')">
+                    📝 KLIK DI SINI UNTUK FORMAT JSON RAPI
+                </button>
+                <p class="helper-text">Format: Array of strings</p>
+                <div id="targetAudience-success" class="success-message">✅ JSON berhasil diformat!</div>
+                <div id="targetAudience-error" class="error-message">❌ Format JSON tidak valid!</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="software">Software (JSON Format)</label>
+                <textarea id="software" rows="8" placeholder='[
+  {
+    "name": "Software 1",
+    "icon": "url",
+    "description": "desc"
+  }
+]'></textarea>
+                <button class="format-button" onclick="formatJSON('software')">
+                    📝 KLIK DI SINI UNTUK FORMAT JSON RAPI
+                </button>
+                <p class="helper-text">Format: Array of objects dengan name, icon (URL), dan description</p>
+                <div id="software-success" class="success-message">✅ JSON berhasil diformat!</div>
+                <div id="software-error" class="error-message">❌ Format JSON tidak valid!</div>
+            </div>
+        </div>
+        
+        <div class="alert" style="margin-top: 20px; background: #dbeafe; border-left-color: #3b82f6;">
+            <h2 style="color: #1e40af;">💡 Tips Penggunaan</h2>
+            <p style="color: #1e3a8a;">
+                1. Ketik atau paste JSON Anda di textarea (boleh berantakan, satu baris, tanpa spasi)<br>
+                2. Klik tombol merah "📝 KLIK DI SINI UNTUK FORMAT JSON RAPI"<br>
+                3. JSON akan otomatis dirapikan dengan indentasi 2 spasi<br>
+                4. Jika JSON tidak valid, akan muncul pesan error
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        function formatJSON(fieldId) {
+            const textarea = document.getElementById(fieldId);
+            const successMsg = document.getElementById(fieldId + '-success');
+            const errorMsg = document.getElementById(fieldId + '-error');
+            
+            // Hide previous messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            try {
+                if (textarea.value.trim() === '') {
+                    errorMsg.textContent = '❌ Textarea kosong, tidak ada yang diformat!';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+                
+                const parsed = JSON.parse(textarea.value);
+                textarea.value = JSON.stringify(parsed, null, 2);
+                successMsg.style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                errorMsg.textContent = '❌ Format JSON tidak valid: ' + error.message;
+                errorMsg.style.display = 'block';
+            }
+        }
+        
+        // Add sample data on page load
+        window.addEventListener('load', () => {
+            document.getElementById('curriculum').value = '[{"title":"Pengenalan Microsoft Office","subtopics":["Mengenal Interface","Shortcut Dasar"]},{"title":"Microsoft Word","subtopics":["Formatting Text","Tables & Charts"]}]';
+            
+            document.getElementById('benefits').value = '["Menguasai Microsoft Office","Meningkatkan produktivitas","Siap kerja di kantor"]';
+            
+            document.getElementById('targetAudience').value = '["Pelajar","Mahasiswa","Karyawan","Umum"]';
+            
+            document.getElementById('software').value = '[{"name":"Microsoft Word","icon":"https://example.com/word.png","description":"Pengolah kata"},{"name":"Microsoft Excel","icon":"https://example.com/excel.png","description":"Spreadsheet"}]';
+        });
+    </script>
+</body>
+</html>

@@ -464,15 +464,15 @@ export default function BackupPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Backup & Restore</h1>
-          <p className="text-gray-600 mt-2">Kelola backup data sistem kursus</p>
+          <p className="text-gray-600 mt-2">Kelola cadangan dan pemulihan data sistem kursus Anda dengan aman</p>
         </div>
       </div>
 
       <Tabs defaultValue="backup" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="backup">Buat Backup</TabsTrigger>
-          <TabsTrigger value="restore">Restore Data</TabsTrigger>
-          <TabsTrigger value="history">Riwayat Backup</TabsTrigger>
+          <TabsTrigger value="backup">Buat Cadangan</TabsTrigger>
+          <TabsTrigger value="restore">Pulihkan Data</TabsTrigger>
+          <TabsTrigger value="history">Riwayat Cadangan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="backup" className="space-y-6">
@@ -485,20 +485,22 @@ export default function BackupPage() {
                   <CardTitle>Backup Data Saja</CardTitle>
                 </div>
                 <CardDescription>
-                  Backup hanya data database (siswa, guru, kelas, pembayaran, dll) tanpa file assets
+                  Backup hanya data database tanpa file assets (foto, template, dll)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Yang di-backup:</span>
+                    <span>Yang dicadangkan:</span>
                   </div>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Data siswa & alumni</li>
                     <li>• Data guru & kelas</li>
-                    <li>• Pembayaran & keuangan</li>
+                    <li>• Pembayaran & transaksi</li>
                     <li>• Absensi & pertemuan</li>
-                    <li>• Sertifikat (metadata)</li>
+                    <li>• Sertifikat & template</li>
+                    <li>• Konten web & blog</li>
+                    <li>• Pengumuman & user</li>
                   </ul>
                 </div>
                 
@@ -516,7 +518,7 @@ export default function BackupPage() {
                   <div className="space-y-2">
                     <Progress value={backupProgress} className="w-full" />
                     <p className="text-sm text-gray-600 text-center">
-                      Memproses backup... {backupProgress}%
+                      Memproses cadangan... {backupProgress}%
                     </p>
                   </div>
                 )}
@@ -529,12 +531,12 @@ export default function BackupPage() {
                   {isBackingUp ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Membuat Backup...
+                      Membuat Cadangan...
                     </>
                   ) : (
                     <>
                       <Download className="mr-2 h-4 w-4" />
-                      Backup Data
+                      Cadangkan Data
                     </>
                   )}
                 </Button>
@@ -549,20 +551,21 @@ export default function BackupPage() {
                   <CardTitle>Backup Lengkap</CardTitle>
                 </div>
                 <CardDescription>
-                  Backup lengkap termasuk data database dan semua file assets (foto, template, sertifikat)
+                  Backup lengkap termasuk data database dan semua file assets (foto, sertifikat, template)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Yang di-backup:</span>
+                    <span>Yang dicadangkan:</span>
                   </div>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Semua data database</li>
+                    <li>• Semua data (25 tabel)</li>
                     <li>• Foto siswa & guru</li>
                     <li>• Template sertifikat</li>
                     <li>• File sertifikat PDF</li>
-                    <li>• Konfigurasi sistem</li>
+                    <li>• Konten landing page</li>
+                    <li>• Artikel blog</li>
                   </ul>
                 </div>
                 
@@ -580,7 +583,7 @@ export default function BackupPage() {
                   <div className="space-y-2">
                     <Progress value={backupProgress} className="w-full" />
                     <p className="text-sm text-gray-600 text-center">
-                      Memproses backup lengkap... {backupProgress}%
+                      Memproses cadangan lengkap... {backupProgress}%
                     </p>
                   </div>
                 )}
@@ -594,12 +597,12 @@ export default function BackupPage() {
                   {isBackingUp ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Membuat Backup...
+                      Membuat Cadangan...
                     </>
                   ) : (
                     <>
                       <HardDrive className="mr-2 h-4 w-4" />
-                      Backup Lengkap
+                      Cadangkan Lengkap
                     </>
                   )}
                 </Button>
@@ -616,7 +619,7 @@ export default function BackupPage() {
                 <span>Restore Data dari Backup</span>
               </CardTitle>
               <CardDescription>
-                Upload file backup untuk memulihkan data sistem
+                Upload file cadangan untuk memulihkan data sistem
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -642,10 +645,10 @@ export default function BackupPage() {
                 <div>
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-lg font-medium text-gray-900 mb-2">
-                    Pilih File Backup
+                    Pilih File Cadangan
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    Drag & drop atau klik tombol di bawah untuk memilih file backup (.json atau .zip)
+                    Drag & drop atau klik tombol di bawah untuk memilih file cadangan (.json atau .zip)
                   </p>
                   
                   {isRestoring && (
@@ -687,7 +690,7 @@ export default function BackupPage() {
                   <div>
                     <h4 className="font-medium text-yellow-800">Peringatan</h4>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Proses restore akan mengganti semua data yang ada. Pastikan Anda sudah membuat backup data saat ini sebelum melakukan restore.
+                      Proses pemulihan akan mengganti semua data yang ada. Pastikan Anda sudah membuat cadangan data saat ini sebelum melakukan pemulihan.
                     </p>
                   </div>
                 </div>
