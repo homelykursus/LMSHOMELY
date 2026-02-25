@@ -11,7 +11,6 @@ export async function GET() {
       orderBy: {
         timestamp: 'desc'
       },
-      take: 50,
       select: {
         id: true,
         employeeName: true,
@@ -58,8 +57,7 @@ export async function GET() {
       },
       orderBy: {
         markedAt: 'desc'
-      },
-      take: 100
+      }
     })
 
     const studentRecords = studentAttendance.map(record => {
