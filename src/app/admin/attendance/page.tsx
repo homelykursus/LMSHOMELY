@@ -140,8 +140,10 @@ export default function AttendancePage() {
         const studentsWithClassInfo = (data || []).map((student: any) => {
           // Find active class from the classes relationship, but also check for completed classes
           const activeClassStudent = student.classes?.find((cs: any) => cs.class.isActive);
+          // IMPORTANT: Class is only considered "completed" if it has endDate set (manually completed by teacher)
+          // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
           const completedClassStudent = student.classes?.find((cs: any) => 
-            !cs.class.isActive && cs.class.completedMeetings >= cs.class.totalMeetings
+            !cs.class.isActive && cs.class.endDate !== null
           );
           
           // Prioritize active class, but if no active class, show completed class
@@ -296,9 +298,10 @@ export default function AttendancePage() {
     // Check class completion status
     const classData = student.classData
     
-    // Class is only "completed" if it's marked as inactive AND has reached total meetings
-    // If class is still active, show as "ongoing" even if meetings are completed
-    if (!classData.isActive && classData.completedMeetings >= classData.totalMeetings) {
+    // IMPORTANT: Class is only "completed" if it has endDate set (manually completed by teacher)
+    // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
+    // Class remains "ongoing" until teacher manually marks it as complete
+    if (!classData.isActive && classData.endDate !== null) {
       return {
         status: 'completed',
         label: 'Kelas Selesai',

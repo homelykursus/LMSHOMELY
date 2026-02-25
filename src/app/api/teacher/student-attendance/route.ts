@@ -74,8 +74,10 @@ export async function GET(request: NextRequest) {
       const studentsWithClassInfo = students.map((student: any) => {
         // Find active class from the classes relationship
         const activeClassStudent = student.classes?.find((cs: any) => cs.class.isActive);
+        // IMPORTANT: Class is only considered "completed" if it has endDate set (manually completed by teacher)
+        // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
         const completedClassStudent = student.classes?.find((cs: any) => 
-          !cs.class.isActive && cs.class.completedMeetings >= cs.class.totalMeetings
+          !cs.class.isActive && cs.class.endDate !== null
         );
         
         // Prioritize active class, but if no active class, show completed class

@@ -81,12 +81,17 @@ interface Class {
 
 // Helper function to determine class status
 const determineClassStatus = (classItem: Class): 'WAITING' | 'ONGOING' | 'COMPLETED' => {
-  // If class has endDate, it's completed
+  // IMPORTANT: Class is only COMPLETED if manually marked with endDate
+  // Even if completedMeetings >= totalMeetings, class remains ONGOING
+  // This allows for additional meetings to be added
+  
+  // If class has endDate, it's completed (manually marked by teacher)
   if (classItem.endDate) {
     return 'COMPLETED';
   }
   
   // If class has started (has startDate) and has completed meetings, it's ongoing
+  // Note: This includes cases where completedMeetings >= totalMeetings
   if (classItem.startDate && classItem.completedMeetings > 0) {
     return 'ONGOING';
   }

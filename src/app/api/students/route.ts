@@ -29,6 +29,7 @@ export async function GET() {
                 isActive: true,
                 totalMeetings: true,
                 completedMeetings: true,
+                endDate: true,
                 teacher: {
                   select: {
                     id: true,
@@ -47,11 +48,12 @@ export async function GET() {
     const transformedStudents = students.map(student => {
       const activeClass = student.classes.find(cs => cs.class.isActive);
       
-      // Check if student has completed any class (class is inactive AND meetings completed)
+      // Check if student has completed any class (class is inactive AND manually marked complete with endDate)
+      // IMPORTANT: Class is only considered "completed" if it has endDate set (manually completed by teacher)
+      // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
       const completedClass = student.classes.find(cs => 
         !cs.class.isActive &&
-        cs.class.totalMeetings > 0 && 
-        cs.class.completedMeetings >= cs.class.totalMeetings
+        cs.class.endDate !== null // Must have endDate to be considered completed
       );
       
       // Prioritize active class, but if no active class, show completed class

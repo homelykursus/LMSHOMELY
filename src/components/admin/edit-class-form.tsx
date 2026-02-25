@@ -185,10 +185,10 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
       
       // Filter out students from completed classes and only include active/confirmed students
       const eligibleStudents = data.filter((student: Student) => {
-        // Check if student has completed any class
+        // Check if student has completed any class (must have endDate set)
+        // IMPORTANT: Class is only completed when manually marked with endDate
         const hasCompletedClass = student.classes?.some(cs => 
-          cs.class.totalMeetings > 0 && 
-          cs.class.completedMeetings >= cs.class.totalMeetings
+          cs.class.endDate !== null
         );
         
         // Exclude students who have completed classes

@@ -81,6 +81,7 @@ interface Student {
       isActive: boolean;
       totalMeetings: number;
       completedMeetings: number;
+      endDate: string | null;
     };
     joinedAt: string;
   }>;
@@ -317,10 +318,9 @@ export default function StudentsManagement() {
     
     // If student is graduated, show "Kelas Selesai"
     if (effectiveStatus === 'graduated') {
-      // Find the completed class to show its name
+      // Find the completed class to show its name (must have endDate)
       const completedClass = student.classes?.find(cs => 
-        cs.class.totalMeetings > 0 && 
-        cs.class.completedMeetings >= cs.class.totalMeetings
+        cs.class.endDate !== null
       );
       
       return {
@@ -390,10 +390,11 @@ export default function StudentsManagement() {
 
   // Function to check if student should be graduated based on class completion
   const getStudentStatusBasedOnClassCompletion = (student: Student) => {
-    // Check if student has any completed class
+    // Check if student has any completed class (must have endDate set)
+    // IMPORTANT: Class is only completed when manually marked with endDate
+    // Even if completedMeetings >= totalMeetings, class is still ONGOING
     const completedClass = student.classes?.find(cs => 
-      cs.class.totalMeetings > 0 && 
-      cs.class.completedMeetings >= cs.class.totalMeetings
+      cs.class.endDate !== null
     );
     
     // If student has completed a class, they should be graduated

@@ -25,9 +25,10 @@ export async function POST() {
     // Check each student for class completion
     for (const student of students) {
       // Check if student has completed any class
+      // IMPORTANT: Class is only considered "completed" if it has endDate set (manually completed by teacher)
+      // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
       const completedClass = student.classes.find(cs => 
-        cs.class.totalMeetings > 0 && 
-        cs.class.completedMeetings >= cs.class.totalMeetings
+        cs.class.endDate !== null // Must have endDate to be considered completed
       );
       
       // If student has completed a class but is not yet marked as graduated

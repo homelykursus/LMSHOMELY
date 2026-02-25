@@ -58,6 +58,11 @@ interface AlumniDetail {
       isActive: boolean;
       totalMeetings: number;
       completedMeetings: number;
+      endDate?: string | null;
+      teacher?: {
+        id: string;
+        name: string;
+      } | null;
     };
     joinedAt: string;
   }>;
@@ -541,6 +546,12 @@ export default function AlumniDetailPage() {
                         <p>{classEnrollment.class.schedule}</p>
                       </div>
                       <div>
+                        <span className="text-gray-600">Pengajar:</span>
+                        <p className="font-medium text-blue-600">
+                          {classEnrollment.class.teacher?.name || 'Belum ada pengajar'}
+                        </p>
+                      </div>
+                      <div>
                         <span className="text-gray-600">Progress:</span>
                         <p>{classEnrollment.class.completedMeetings}/{classEnrollment.class.totalMeetings} pertemuan</p>
                       </div>
@@ -549,7 +560,7 @@ export default function AlumniDetailPage() {
                         <p>{formatDate(classEnrollment.joinedAt)}</p>
                       </div>
                     </div>
-                    {classEnrollment.class.completedMeetings >= classEnrollment.class.totalMeetings && (
+                    {classEnrollment.class.endDate !== null && (
                       <div className="mt-2 flex items-center gap-2 text-green-600">
                         <CheckCircle className="h-4 w-4" />
                         <span className="text-sm font-medium">Kelas telah diselesaikan</span>

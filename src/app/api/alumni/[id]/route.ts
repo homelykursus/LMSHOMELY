@@ -37,7 +37,14 @@ export async function GET(
                 schedule: true,
                 isActive: true,
                 totalMeetings: true,
-                completedMeetings: true
+                completedMeetings: true,
+                endDate: true,
+                teacher: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           },

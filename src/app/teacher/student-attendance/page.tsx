@@ -274,9 +274,10 @@ export default function TeacherStudentAttendancePage() {
     // Check class completion status
     const classData = student.classData
     
-    // Class is only "completed" if it's marked as inactive AND has reached total meetings
-    // If class is still active, show as "ongoing" even if meetings are completed
-    if (!classData.isActive && classData.completedMeetings >= classData.totalMeetings) {
+    // IMPORTANT: Class is only "completed" if it has endDate set (manually completed by teacher)
+    // Even if completedMeetings >= totalMeetings, class is NOT auto-completed
+    // Class remains "ongoing" until teacher manually marks it as complete
+    if (!classData.isActive && classData.endDate !== null) {
       return {
         status: 'completed',
         label: 'Kelas Selesai',
