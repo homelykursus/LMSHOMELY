@@ -337,7 +337,9 @@ export default function AdminDashboard() {
         confirmedStudents: filteredStudents.filter((s: any) => 
           s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
         ).length,
-        totalRevenue: filteredStudents.reduce((sum: number, student: any) => sum + student.finalPrice, 0)
+        totalRevenue: filteredStudents
+          .filter((s: any) => s.status !== 'inactive')
+          .reduce((sum: number, student: any) => sum + student.finalPrice, 0)
       };
       
       setFilteredStats(newFilteredStats);
@@ -354,7 +356,9 @@ export default function AdminDashboard() {
         completedRegistrations: filteredStudents.filter((s: any) => 
           s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
         ).length,
-        totalRevenue: filteredStudents.reduce((sum: number, student: any) => sum + student.finalPrice, 0),
+        totalRevenue: filteredStudents
+          .filter((s: any) => s.status !== 'inactive')
+          .reduce((sum: number, student: any) => sum + student.finalPrice, 0),
         monthlyGrowth: 0 // Will be calculated below
       };
 
@@ -385,7 +389,9 @@ export default function AdminDashboard() {
         }
       }
 
-      const totalRevenue = students.reduce((sum: number, student: any) => sum + student.finalPrice, 0);
+      const totalRevenue = students
+        .filter((s: any) => s.status !== 'inactive')
+        .reduce((sum: number, student: any) => sum + student.finalPrice, 0);
       const recentStudents = students.slice(0, 5);
 
       setStats({
@@ -549,10 +555,10 @@ export default function AdminDashboard() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Pendapatan</p>
+                <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
                 <p className="text-2xl font-bold">Rp {filteredStats.totalRevenue.toLocaleString('id-ID')}</p>
                 <p className="text-xs text-green-600">
-                  Dari {filteredStats.confirmedStudents} siswa
+                  Dari siswa aktif
                 </p>
                 {(filterMonth || filterYear) && (
                   <p className="text-xs text-purple-500 mt-1">Periode ini</p>

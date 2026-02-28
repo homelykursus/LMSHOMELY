@@ -869,7 +869,7 @@ export default function StudentsManagement() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Pendapatan</p>
+                <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
                 <p className="text-lg font-bold">Rp {stats.totalRevenue.toLocaleString('id-ID')}</p>
               </div>
             </div>
