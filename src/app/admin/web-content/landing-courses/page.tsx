@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
   Edit, 
@@ -22,12 +23,14 @@ import {
   Monitor,
   Loader2,
   Eye,
-  EyeOff
+  EyeOff,
+  Info,
+  BookOpen,
+  Award,
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CurriculumInput } from '@/components/admin/curriculum-input';
-import { SimpleListInput } from '@/components/admin/simple-list-input';
-import { SoftwareInput } from '@/components/admin/software-input';
 
 interface LandingCourse {
   id: string;
@@ -64,12 +67,22 @@ const iconOptions = [
   { value: 'Monitor', label: 'Monitor', icon: Monitor }
 ];
 
+const gradientOptions = [
+  { value: 'from-blue-500 to-cyan-500', label: 'Blue to Cyan' },
+  { value: 'from-purple-500 to-pink-500', label: 'Purple to Pink' },
+  { value: 'from-green-500 to-teal-500', label: 'Green to Teal' },
+  { value: 'from-orange-500 to-red-500', label: 'Orange to Red' },
+  { value: 'from-indigo-500 to-purple-500', label: 'Indigo to Purple' },
+  { value: 'from-yellow-500 to-orange-500', label: 'Yellow to Orange' }
+];
+
 export default function LandingCoursesPage() {
   const [courses, setCourses] = useState<LandingCourse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -85,11 +98,15 @@ export default function LandingCoursesPage() {
     practicePercentage: '100% Full Praktik',
     equipment: 'Peralatan Belajar Sudah Disediakan',
     gradient: 'from-blue-500 to-cyan-500',
+    curriculum: '',
+    benefits: '',
+    targetAudience: '',
+    software: '',
     originalPrice: 0,
     discountedPrice: 0
   });
 
-  // Dynamic arrays for simple inputs
+  // Dynamic arrays for user-friendly inputs
   const [curriculumItems, setCurriculumItems] = useState<Array<{title: string, subtopics: string[]}>>([]);
   const [benefitItems, setBenefitItems] = useState<string[]>([]);
   const [targetAudienceItems, setTargetAudienceItems] = useState<string[]>([]);
@@ -158,6 +175,7 @@ export default function LandingCoursesPage() {
         fetchCourses();
         resetForm();
       } else {
+        // Show more detailed error message
         const errorMessage = data.details 
           ? `${data.error}: ${data.details}` 
           : data.error || 'Terjadi kesalahan';
@@ -173,6 +191,43 @@ export default function LandingCoursesPage() {
   };
 
   const handleEdit = (course: LandingCourse) => {
+    // Parse JSON data to arrays
+    const parseCurriculum = (data: any): Array<{title: string, subtopics: string[]}> => {
+      if (!data) return [];
+      try {
+        if (typeof data === 'string') {
+          return JSON.parse(data);
+        }
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const parseStringArray = (data: any): string[] => {
+      if (!data) return [];
+      try {
+        if (typeof data === 'string') {
+          return JSON.parse(data);
+        }
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const parseSoftware = (data: any): Array<{name: string, icon: string, description: string}> => {
+      if (!data) return [];
+      try {
+        if (typeof data === 'string') {
+          return JSON.parse(data);
+        }
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    };
+
     setFormData({
       name: course.name,
       description: course.description,
@@ -187,18 +242,23 @@ export default function LandingCoursesPage() {
       practicePercentage: course.practicePercentage || '100% Full Praktik',
       equipment: course.equipment || 'Peralatan Belajar Sudah Disediakan',
       gradient: course.gradient || 'from-blue-500 to-cyan-500',
+      curriculum: '',
+      benefits: '',
+      targetAudience: '',
+      software: '',
       originalPrice: course.originalPrice || 0,
       discountedPrice: course.discountedPrice || 0
     });
 
-    // Parse JSON data to arrays
-    setCurriculumItems(course.curriculum || []);
-    setBenefitItems(course.benefits || []);
-    setTargetAudienceItems(course.targetAudience || []);
-    setSoftwareItems(course.software || []);
+    // Set dynamic arrays
+    setCurriculumItems(parseCurriculum(course.curriculum));
+    setBenefitItems(parseStringArray(course.benefits));
+    setTargetAudienceItems(parseStringArray(course.targetAudience));
+    setSoftwareItems(parseSoftware(course.software));
 
     setEditingId(course.id);
     setShowForm(true);
+    setActiveTab('basic');
   };
 
   const handleDelete = async (id: string) => {
@@ -239,6 +299,10 @@ export default function LandingCoursesPage() {
       practicePercentage: '100% Full Praktik',
       equipment: 'Peralatan Belajar Sudah Disediakan',
       gradient: 'from-blue-500 to-cyan-500',
+      curriculum: '',
+      benefits: '',
+      targetAudience: '',
+      software: '',
       originalPrice: 0,
       discountedPrice: 0
     });
@@ -248,6 +312,7 @@ export default function LandingCoursesPage() {
     setSoftwareItems([]);
     setEditingId(null);
     setShowForm(false);
+    setActiveTab('basic');
   };
 
   const generateSlug = (name: string) => {
@@ -265,7 +330,7 @@ export default function LandingCoursesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto max-w-7xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Kelola Program Kursus</h1>
@@ -517,32 +582,269 @@ export default function LandingCoursesPage() {
                     </div>
                   </div>
 
-                  {/* New Simple Inputs */}
-                  <CurriculumInput value={curriculumItems} onChange={setCurriculumItems} />
-                  
-                  <SimpleListInput 
-                    label="Manfaat"
-                    icon="✨"
-                    value={benefitItems}
-                    onChange={setBenefitItems}
-                    placeholder="Contoh: Menguasai Microsoft Word"
-                    borderColor="border-green-200"
-                    bgColor="bg-green-50"
-                    textColor="text-green-900"
-                  />
+                  {/* Kurikulum Section */}
+                  <div className="space-y-4 p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold text-blue-900">📚 Kurikulum</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setCurriculumItems([...curriculumItems, { title: '', subtopics: [''] }])}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Tambah Topik
+                      </Button>
+                    </div>
+                    
+                    {curriculumItems.map((item, index) => (
+                      <div key={index} className="p-3 bg-white rounded-lg border border-blue-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={item.title}
+                            onChange={(e) => {
+                              const newItems = [...curriculumItems];
+                              newItems[index].title = e.target.value;
+                              setCurriculumItems(newItems);
+                            }}
+                            placeholder="Judul Topik (contoh: Pengenalan Microsoft Word)"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const newItems = curriculumItems.filter((_, i) => i !== index);
+                              setCurriculumItems(newItems);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="ml-4 space-y-2">
+                          <Label className="text-sm text-gray-600">Sub-topik:</Label>
+                          {item.subtopics.map((subtopic, subIndex) => (
+                            <div key={subIndex} className="flex items-center gap-2">
+                              <Input
+                                value={subtopic}
+                                onChange={(e) => {
+                                  const newItems = [...curriculumItems];
+                                  newItems[index].subtopics[subIndex] = e.target.value;
+                                  setCurriculumItems(newItems);
+                                }}
+                                placeholder="Sub-topik (contoh: Membuat dokumen baru)"
+                                className="flex-1"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newItems = [...curriculumItems];
+                                  newItems[index].subtopics = newItems[index].subtopics.filter((_, i) => i !== subIndex);
+                                  setCurriculumItems(newItems);
+                                }}
+                                className="text-red-600"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const newItems = [...curriculumItems];
+                              newItems[index].subtopics.push('');
+                              setCurriculumItems(newItems);
+                            }}
+                            className="text-sm"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Tambah Sub-topik
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {curriculumItems.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Belum ada kurikulum. Klik "Tambah Topik" untuk menambahkan.
+                      </p>
+                    )}
+                  </div>
 
-                  <SimpleListInput 
-                    label="Target Audience"
-                    icon="🎯"
-                    value={targetAudienceItems}
-                    onChange={setTargetAudienceItems}
-                    placeholder="Contoh: Pelajar dan Mahasiswa"
-                    borderColor="border-purple-200"
-                    bgColor="bg-purple-50"
-                    textColor="text-purple-900"
-                  />
+                  {/* Benefits Section */}
+                  <div className="space-y-4 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold text-green-900">✨ Manfaat</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setBenefitItems([...benefitItems, ''])}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Tambah Manfaat
+                      </Button>
+                    </div>
+                    
+                    {benefitItems.map((benefit, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={benefit}
+                          onChange={(e) => {
+                            const newItems = [...benefitItems];
+                            newItems[index] = e.target.value;
+                            setBenefitItems(newItems);
+                          }}
+                          placeholder="Manfaat (contoh: Meningkatkan produktivitas kerja)"
+                          className="flex-1 bg-white"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const newItems = benefitItems.filter((_, i) => i !== index);
+                            setBenefitItems(newItems);
+                          }}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    
+                    {benefitItems.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Belum ada manfaat. Klik "Tambah Manfaat" untuk menambahkan.
+                      </p>
+                    )}
+                  </div>
 
-                  <SoftwareInput value={softwareItems} onChange={setSoftwareItems} />
+                  {/* Target Audience Section */}
+                  <div className="space-y-4 p-4 border-2 border-purple-200 rounded-lg bg-purple-50">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold text-purple-900">🎯 Target Audience</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setTargetAudienceItems([...targetAudienceItems, ''])}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Tambah Target
+                      </Button>
+                    </div>
+                    
+                    {targetAudienceItems.map((target, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={target}
+                          onChange={(e) => {
+                            const newItems = [...targetAudienceItems];
+                            newItems[index] = e.target.value;
+                            setTargetAudienceItems(newItems);
+                          }}
+                          placeholder="Target audience (contoh: Pelajar dan mahasiswa)"
+                          className="flex-1 bg-white"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const newItems = targetAudienceItems.filter((_, i) => i !== index);
+                            setTargetAudienceItems(newItems);
+                          }}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    
+                    {targetAudienceItems.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Belum ada target audience. Klik "Tambah Target" untuk menambahkan.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Software Section */}
+                  <div className="space-y-4 p-4 border-2 border-orange-200 rounded-lg bg-orange-50">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold text-orange-900">💻 Software</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setSoftwareItems([...softwareItems, { name: '', icon: '', description: '' }])}
+                        className="bg-orange-600 hover:bg-orange-700"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Tambah Software
+                      </Button>
+                    </div>
+                    
+                    {softwareItems.map((software, index) => (
+                      <div key={index} className="p-3 bg-white rounded-lg border border-orange-200 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={software.name}
+                            onChange={(e) => {
+                              const newItems = [...softwareItems];
+                              newItems[index].name = e.target.value;
+                              setSoftwareItems(newItems);
+                            }}
+                            placeholder="Nama Software (contoh: Microsoft Word)"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const newItems = softwareItems.filter((_, i) => i !== index);
+                              setSoftwareItems(newItems);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <Input
+                          value={software.icon}
+                          onChange={(e) => {
+                            const newItems = [...softwareItems];
+                            newItems[index].icon = e.target.value;
+                            setSoftwareItems(newItems);
+                          }}
+                          placeholder="URL Icon (contoh: https://example.com/icon.png)"
+                        />
+                        <Textarea
+                          value={software.description}
+                          onChange={(e) => {
+                            const newItems = [...softwareItems];
+                            newItems[index].description = e.target.value;
+                            setSoftwareItems(newItems);
+                          }}
+                          placeholder="Deskripsi software"
+                          rows={2}
+                        />
+                      </div>
+                    ))}
+                    
+                    {softwareItems.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Belum ada software. Klik "Tambah Software" untuk menambahkan.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -583,7 +885,7 @@ export default function LandingCoursesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => {
             const IconComponent = getIconComponent(course.icon);
             return (

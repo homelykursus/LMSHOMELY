@@ -21,7 +21,9 @@ import {
   Plus,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
+  Search,
+  X
 } from 'lucide-react';
 
 interface CertificateTemplate {
@@ -68,6 +70,7 @@ export default function CertificatesPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [uploadForm, setUploadForm] = useState({
     name: '',
     description: '',
@@ -260,6 +263,7 @@ export default function CertificatesPage() {
     if (template) {
       setSelectedTemplate(template);
       setSelectedStudents([]);
+      setStudentSearchQuery('');
       setShowGenerateModal(true);
     }
   };
@@ -677,7 +681,13 @@ export default function CertificatesPage() {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => setSelectedStudents(students.map(s => s.id))}
+                    onClick={() => {
+                      const filtered = students.filter(student => 
+                        (!selectedTemplate.course || selectedTemplate.course.id === student.course.id) &&
+                        (studentSearchQuery === '' || student.name.toLowerCase().includes(studentSearchQuery.toLowerCase()))
+                      );
+                      setSelectedStudents(filtered.map(s => s.id));
+                    }}
                   >
                     Pilih Semua
                   </Button>
@@ -690,6 +700,26 @@ export default function CertificatesPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Search Input */}
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari nama siswa..."
+                  value={studentSearchQuery}
+                  onChange={(e) => setStudentSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-9 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {studentSearchQuery && (
+                  <button
+                    onClick={() => setStudentSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
               
               <div className="border rounded-lg max-h-60 overflow-y-auto">
                 {students.length === 0 ? (
@@ -699,42 +729,56 @@ export default function CertificatesPage() {
                       Siswa harus terdaftar di kelas untuk dapat membuat sertifikat
                     </div>
                   </div>
-                ) : (
-                  students
-                    .filter(student => 
-                      !selectedTemplate.course || 
-                      selectedTemplate.course.id === student.course.id
-                    )
-                    .map(student => (
-                      <div 
-                        key={student.id} 
-                        className="flex items-center p-3 border-b last:border-b-0 hover:bg-gray-50"
-                      >
-                        <input
-                          type="checkbox"
-                          id={`student-${student.id}`}
-                          checked={selectedStudents.includes(student.id)}
-                          onChange={(e) => handleStudentSelection(student.id, e.target.checked)}
-                          className="mr-3"
-                        />
-                        <label 
-                          htmlFor={`student-${student.id}`}
-                          className="flex-1 cursor-pointer"
-                        >
-                          <div className="font-medium">{student.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {student.studentNumber} • {student.course.name}
-                          </div>
-                          {student.classCount && student.classCount > 0 && (
-                            <div className="text-xs text-green-600">
-                              ✓ {student.classCount} kelas • Guru: {student.teachers?.join(', ') || 'Tidak ada'}
-                            </div>
-                          )}
-                        </label>
+                ) : (() => {
+                  const filteredStudents = students.filter(student => 
+                    (!selectedTemplate.course || selectedTemplate.course.id === student.course.id) &&
+                    (studentSearchQuery === '' || student.name.toLowerCase().includes(studentSearchQuery.toLowerCase()))
+                  );
+                  
+                  if (filteredStudents.length === 0) {
+                    return (
+                      <div className="p-4 text-center text-gray-500">
+                        <Search className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                        <div className="text-sm">Tidak ada siswa dengan nama &quot;{studentSearchQuery}&quot;</div>
                       </div>
-                    ))
-                )}
+                    );
+                  }
+                  
+                  return filteredStudents.map(student => (
+                    <div 
+                      key={student.id} 
+                      className="flex items-center p-3 border-b last:border-b-0 hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`student-${student.id}`}
+                        checked={selectedStudents.includes(student.id)}
+                        onChange={(e) => handleStudentSelection(student.id, e.target.checked)}
+                        className="mr-3"
+                      />
+                      <label 
+                        htmlFor={`student-${student.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {student.studentNumber} • {student.course.name}
+                        </div>
+                        {student.classCount && student.classCount > 0 && (
+                          <div className="text-xs text-green-600">
+                            ✓ {student.classCount} kelas • Guru: {student.teachers?.join(', ') || 'Tidak ada'}
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  ));
+                })()}
               </div>
+              {studentSearchQuery && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Menampilkan hasil pencarian untuk &quot;{studentSearchQuery}&quot;. Tombol &quot;Pilih Semua&quot; hanya memilih siswa yang tampil.
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2 justify-end">
