@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Plus,
   Eye,
+  EyeOff,
   Download,
   TrendingUp,
   Users,
@@ -83,6 +84,7 @@ interface PaymentTransaction {
 export default function PaymentsManagement() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showRevenue, setShowRevenue] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMonth, setFilterMonth] = useState<string>('');
@@ -438,9 +440,24 @@ export default function PaymentsManagement() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Pemasukan</p>
-                <p className="text-lg font-bold">{formatCurrency(stats.totalRevenue)}</p>
+              <div className="ml-4 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-600">Total Pemasukan</p>
+                  <button
+                    onClick={() => setShowRevenue(prev => !prev)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title={showRevenue ? 'Sembunyikan' : 'Tampilkan'}
+                  >
+                    {showRevenue ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-lg font-bold tracking-wider">
+                  {showRevenue ? formatCurrency(stats.totalRevenue) : '••••••••'}
+                </p>
                 {(filterMonth || filterYear) && (
                   <p className="text-xs text-green-600">Sesuai Filter</p>
                 )}

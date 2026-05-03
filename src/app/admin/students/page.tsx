@@ -27,6 +27,7 @@ import {
   Edit,
   Filter,
   Eye,
+  EyeOff,
   Users2,
   UserX,
   ChevronLeft,
@@ -94,6 +95,7 @@ export default function StudentsManagement() {
   const [loading, setLoading] = useState<boolean>(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showRevenue, setShowRevenue] = useState<boolean>(false);
   
   // Set default filter to show all data
   const [filterMonth, setFilterMonth] = useState<string>('all');
@@ -868,9 +870,27 @@ export default function StudentsManagement() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
-                <p className="text-lg font-bold">Rp {stats.totalRevenue.toLocaleString('id-ID')}</p>
+              <div className="ml-4 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
+                  <button
+                    onClick={() => setShowRevenue(prev => !prev)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title={showRevenue ? 'Sembunyikan' : 'Tampilkan'}
+                  >
+                    {showRevenue ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-lg font-bold tracking-wider">
+                  {showRevenue
+                    ? `Rp ${stats.totalRevenue.toLocaleString('id-ID')}`
+                    : '••••••••'
+                  }
+                </p>
               </div>
             </div>
           </CardContent>

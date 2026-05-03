@@ -21,6 +21,8 @@ import {
   TrendingUp,
   Filter,
   Download,
+  Eye,
+  EyeOff,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -56,6 +58,7 @@ interface FinancialRecord {
 export default function FinancialRecords() {
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showRevenue, setShowRevenue] = useState<boolean>(false);
   
   // Set default filter to current month and year
   const currentDate = new Date();
@@ -322,9 +325,24 @@ export default function FinancialRecords() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Pemasukan</p>
-                <p className="text-lg font-bold">{formatCurrency(stats.totalAmount)}</p>
+              <div className="ml-4 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-600">Total Pemasukan</p>
+                  <button
+                    onClick={() => setShowRevenue(prev => !prev)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title={showRevenue ? 'Sembunyikan' : 'Tampilkan'}
+                  >
+                    {showRevenue ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-lg font-bold tracking-wider">
+                  {showRevenue ? formatCurrency(stats.totalAmount) : '••••••••'}
+                </p>
                 {(filterMonth !== 'all' || filterYear !== 'all') && (
                   <p className="text-xs text-blue-600">Sesuai Filter</p>
                 )}

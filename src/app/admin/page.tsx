@@ -18,7 +18,9 @@ import {
   BarChart3,
   Users2,
   UserCheck,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -66,6 +68,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState<boolean>(true);
   const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
   const [filterYear, setFilterYear] = useState<string>(currentYear);
+  const [showRevenue, setShowRevenue] = useState<boolean>(false);
   const [chartData, setChartData] = useState<any[]>([]);
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area'>('bar');
   const [chartPeriod, setChartPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -554,9 +557,27 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
-                <p className="text-2xl font-bold">Rp {filteredStats.totalRevenue.toLocaleString('id-ID')}</p>
+              <div className="ml-4 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-gray-600">Perkiraan Pendapatan</p>
+                  <button
+                    onClick={() => setShowRevenue(prev => !prev)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title={showRevenue ? 'Sembunyikan' : 'Tampilkan'}
+                  >
+                    {showRevenue ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-2xl font-bold tracking-wider">
+                  {showRevenue
+                    ? `Rp ${filteredStats.totalRevenue.toLocaleString('id-ID')}`
+                    : '••••••••'
+                  }
+                </p>
                 <p className="text-xs text-green-600">
                   Dari siswa aktif
                 </p>
