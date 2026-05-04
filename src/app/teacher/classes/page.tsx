@@ -88,7 +88,7 @@ export default function TeacherClassesPage() {
   const [waitingPage, setWaitingPage] = useState<number>(1);
   const [activePage, setActivePage] = useState<number>(1);
   const [completedPage, setCompletedPage] = useState<number>(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
 
   // Confirmation dialog hook
   const { showConfirmation, ConfirmationDialog } = useConfirmationDialog();
