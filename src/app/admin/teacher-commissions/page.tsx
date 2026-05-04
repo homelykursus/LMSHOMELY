@@ -453,7 +453,7 @@ export default function TeacherCommissionsPage() {
                     onClick={() => toggleTeacherExpansion(teacherData.teacher.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 min-w-0 flex-1">
                         <div className="flex-shrink-0">
                           <Avatar className="w-12 h-12">
                             <AvatarImage 
@@ -465,25 +465,33 @@ export default function TeacherCommissionsPage() {
                             </AvatarFallback>
                           </Avatar>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{teacherData.teacher.name}</h3>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base font-semibold text-gray-900 truncate">{teacherData.teacher.name}</h3>
+                          <div className="flex flex-wrap items-center gap-x-2 text-sm text-gray-600">
                             <span>{teacherData.teacher.education}</span>
                             {teacherData.teacher.specialization && (
                               <span>• {teacherData.teacher.specialization}</span>
                             )}
                           </div>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                          <div className="flex flex-wrap items-center gap-x-2 text-sm text-gray-500 mt-1">
                             <span>{teacherData.classes.length} kelas</span>
                             <span>• {teacherData.totalMeetings} pertemuan</span>
                             {teacherData.substituteMeetings > 0 && (
                               <span>• {teacherData.substituteMeetings} sebagai pengganti</span>
                             )}
                           </div>
+                          {/* Komisi tampil di bawah info pada mobile */}
+                          <div className="mt-2 sm:hidden">
+                            <div className="text-xl font-bold text-green-600">
+                              {formatCurrency(teacherData.totalCommission)}
+                            </div>
+                            <div className="text-xs text-gray-500">Total Komisi</div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
+                      <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                        {/* Komisi hanya tampil di desktop */}
+                        <div className="text-right hidden sm:block">
                           <div className="text-2xl font-bold text-green-600">
                             {formatCurrency(teacherData.totalCommission)}
                           </div>
