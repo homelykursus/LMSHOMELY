@@ -1061,11 +1061,11 @@ export default function TeacherClassesPage() {
       {/* View Class Dialog */}
       {isViewDialogOpen && viewClass && (
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Detail Kelas
+              <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Eye className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Detail Kelas</span>
               </DialogTitle>
             </DialogHeader>
             
@@ -1204,9 +1204,9 @@ export default function TeacherClassesPage() {
                 </CardHeader>
                 <CardContent>
                   {viewClass.students.length > 0 ? (
-                    <div className="overflow-x-auto -mx-6 px-6">
+                    <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
                       <div className="min-w-full inline-block align-middle">
-                        <Table className="min-w-full">
+                        <Table className="min-w-[600px]">
                           <TableHeader>
                             <TableRow>
                               <TableHead className="w-12 min-w-[3rem]">No</TableHead>

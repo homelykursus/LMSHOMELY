@@ -375,11 +375,11 @@ export default function AttendanceDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Absensi Kelas: {classData.name}
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="h-5 w-5 flex-shrink-0" />
+            <span className="line-clamp-2">Absensi Kelas: {classData.name}</span>
           </DialogTitle>
           <DialogDescription>
             Catat kehadiran siswa untuk pertemuan kali ini
@@ -389,21 +389,21 @@ export default function AttendanceDialog({
         <div className="space-y-6 flex-1 overflow-y-auto">
           {/* Teacher Attendance */}
           <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <UserCheck className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium text-blue-900">Guru Utama: {classData.teacher.name}</p>
-                    <p className="text-sm text-blue-700">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+              <div className="flex items-start justify-between mb-3 gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <UserCheck className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-blue-900 text-sm truncate">Guru Utama: {classData.teacher.name}</p>
+                    <p className="text-xs text-blue-700">
                       {isMainTeacherAbsent ? 'Berhalangan hadir' : 'Status kehadiran otomatis tercatat'}
                     </p>
                   </div>
                 </div>
-                <Badge className={isMainTeacherAbsent 
+                <Badge className={`flex-shrink-0 text-xs ${isMainTeacherAbsent 
                   ? "bg-red-100 text-red-800 border-red-200" 
                   : "bg-green-100 text-green-800 border-green-200"
-                }>
+                }`}>
                   {isMainTeacherAbsent ? 'Berhalangan' : 'Hadir'}
                 </Badge>
               </div>
@@ -505,15 +505,15 @@ export default function AttendanceDialog({
                   const lastAttendance = lastAttendanceData[student.id];
                   
                   return (
-                    <div key={student.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <div key={student.id} className="p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-medium">
                             {student.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
                             {student.name}
                             {(() => {
                               const age = calculateAge(student.dateOfBirth);
@@ -522,11 +522,11 @@ export default function AttendanceDialog({
                               ) : null;
                             })()}
                           </p>
-                          <p className="text-xs text-gray-500">{student.whatsapp}</p>
+                          <p className="text-xs text-gray-500 truncate">{student.whatsapp}</p>
                           {lastAttendance && (
-                            <div className="flex items-center gap-1 mt-1">
-                              <History className="h-3 w-3 text-gray-400" />
-                              <span className="text-xs text-gray-500">
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <History className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                              <span className="text-xs text-gray-500 truncate">
                                 Terakhir: {new Date(lastAttendance.date).toLocaleDateString('id-ID', {
                                   day: 'numeric',
                                   month: 'short',
@@ -536,7 +536,7 @@ export default function AttendanceDialog({
                             </div>
                           )}
                           {!lastAttendance && !loadingLastAttendance && (
-                            <div className="flex items-center gap-1 mt-1">
+                            <div className="flex items-center gap-1 mt-0.5">
                               <History className="h-3 w-3 text-gray-400" />
                               <span className="text-xs text-gray-400">Belum pernah absen</span>
                             </div>
@@ -544,13 +544,14 @@ export default function AttendanceDialog({
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      {/* Tombol status - 2x2 grid di mobile, 1 baris di desktop */}
+                      <div className="grid grid-cols-2 sm:flex sm:flex-row gap-1.5">
                         {['HADIR', 'TERLAMBAT', 'IZIN', 'TIDAK_HADIR'].map((status) => (
                           <Button
                             key={status}
                             size="sm"
                             variant={attendance?.status === status ? "default" : "outline"}
-                            className={`text-xs px-2 py-1 h-7 ${
+                            className={`text-xs px-2 py-1 h-7 w-full sm:w-auto ${
                               attendance?.status === status 
                                 ? getAttendanceStatusColor(status) 
                                 : 'hover:bg-gray-50'
@@ -572,12 +573,12 @@ export default function AttendanceDialog({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between gap-3 pt-4 border-t flex-shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t flex-shrink-0">
             <Button
               variant="destructive"
               onClick={handleCompleteClass}
               disabled={isCompletingClass || isSubmitting}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
             >
               {isCompletingClass ? (
                 <>
@@ -587,16 +588,17 @@ export default function AttendanceDialog({
               ) : (
                 <>
                   <Flag className="h-4 w-4 mr-2" />
-                  Menyelesaikan Kelas
+                  Selesaikan Kelas
                 </>
               )}
             </Button>
             
-            <div className="flex gap-3">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting || isCompletingClass}
+                className="flex-1 sm:flex-none"
               >
                 Batal
               </Button>
@@ -608,7 +610,7 @@ export default function AttendanceDialog({
                   presentCount === 0 || 
                   (isMainTeacherAbsent && !substituteTeacherId)
                 }
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
               >
                 {isSubmitting ? (
                   <>
