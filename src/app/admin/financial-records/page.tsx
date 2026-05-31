@@ -67,6 +67,8 @@ export default function FinancialRecords() {
   
   const [filterMonth, setFilterMonth] = useState<string>(currentMonth);
   const [filterYear, setFilterYear] = useState<string>(currentYear);
+  const [filterDateFrom, setFilterDateFrom] = useState<string>('');
+  const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -79,7 +81,7 @@ export default function FinancialRecords() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterMonth, filterYear, filterPaymentMethod, filterStatus]);
+  }, [filterMonth, filterYear, filterDateFrom, filterDateTo, filterPaymentMethod, filterStatus]);
 
   const fetchFinancialRecords = async () => {
     try {
@@ -126,11 +128,26 @@ export default function FinancialRecords() {
   };
 
   const filteredRecords = records.filter(record => {
-    // Filter by payment date
+    // Filter by date range (takes priority over month/year if set)
     let dateMatch = true;
-    if (filterMonth !== 'all' || filterYear !== 'all') {
+    if (filterDateFrom || filterDateTo) {
       const paymentDate = new Date(record.paymentDate);
-      const recordMonth = paymentDate.getMonth() + 1; // JavaScript months are 0-indexed
+      paymentDate.setHours(0, 0, 0, 0);
+      
+      if (filterDateFrom) {
+        const fromDate = new Date(filterDateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (paymentDate < fromDate) dateMatch = false;
+      }
+      if (filterDateTo) {
+        const toDate = new Date(filterDateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (paymentDate > toDate) dateMatch = false;
+      }
+    } else if (filterMonth !== 'all' || filterYear !== 'all') {
+      // Fallback to month/year filter if no date range
+      const paymentDate = new Date(record.paymentDate);
+      const recordMonth = paymentDate.getMonth() + 1;
       const recordYear = paymentDate.getFullYear();
 
       if (filterMonth !== 'all' && recordMonth !== parseInt(filterMonth)) {
@@ -265,6 +282,37 @@ export default function FinancialRecords() {
             </SelectContent>
           </Select>
 
+          {/* Filter per Tanggal */}
+          <div className="flex items-center gap-1">
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => {
+                setFilterDateFrom(e.target.value);
+                if (e.target.value) {
+                  setFilterMonth('all');
+                  setFilterYear('all');
+                }
+              }}
+              className="h-10 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Dari tanggal"
+            />
+            <span className="text-gray-400 text-xs">-</span>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => {
+                setFilterDateTo(e.target.value);
+                if (e.target.value) {
+                  setFilterMonth('all');
+                  setFilterYear('all');
+                }
+              }}
+              className="h-10 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Sampai tanggal"
+            />
+          </div>
+
           <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Metode Bayar" />
@@ -288,12 +336,14 @@ export default function FinancialRecords() {
             </SelectContent>
           </Select>
 
-          {(filterMonth !== currentMonth || filterYear !== currentYear || filterPaymentMethod !== 'all' || filterStatus !== 'all') && (
+          {(filterMonth !== currentMonth || filterYear !== currentYear || filterPaymentMethod !== 'all' || filterStatus !== 'all' || filterDateFrom || filterDateTo) && (
             <Button
               variant="outline"
               onClick={() => {
                 setFilterMonth(currentMonth);
                 setFilterYear(currentYear);
+                setFilterDateFrom('');
+                setFilterDateTo('');
                 setFilterPaymentMethod('all');
                 setFilterStatus('all');
               }}

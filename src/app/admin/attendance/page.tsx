@@ -85,6 +85,7 @@ export default function AttendancePage() {
   const [selectedCourse, setSelectedCourse] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0])
+  const [selectedDateTo, setSelectedDateTo] = useState<string>('')
   const [showOnlyWithClass, setShowOnlyWithClass] = useState(true)
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null)
   const [editStatus, setEditStatus] = useState<string>('')
@@ -344,7 +345,14 @@ export default function AttendancePage() {
 
   const filteredAttendance = attendanceRecords.filter(record => {
     const recordDate = new Date(record.meetingDate).toISOString().split('T')[0]
-    const matchesDate = selectedDate === '' || recordDate === selectedDate
+    let matchesDate = true
+    if (selectedDate && selectedDateTo) {
+      // Range filter
+      matchesDate = recordDate >= selectedDate && recordDate <= selectedDateTo
+    } else if (selectedDate) {
+      // Single date filter
+      matchesDate = recordDate === selectedDate
+    }
     const matchesStatus = selectedStatus === 'all' || record.status === selectedStatus
     
     // Filter by class - need to match classId from attendance record
@@ -384,7 +392,7 @@ export default function AttendancePage() {
   useEffect(() => {
     setStudentsCurrentPage(1)
     setAttendanceCurrentPage(1)
-  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, showOnlyWithClass])
+  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, selectedDateTo, showOnlyWithClass])
 
   const getStudentAttendanceSummary = (studentId: string) => {
     const studentRecords = attendanceRecords.filter(r => r.studentId === studentId)
@@ -681,12 +689,24 @@ export default function AttendancePage() {
               </div>
               <div>
                 <Label htmlFor="date">Tanggal</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    id="date"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full"
+                  />
+                  <span className="text-gray-400 text-xs">-</span>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={selectedDateTo}
+                    onChange={(e) => setSelectedDateTo(e.target.value)}
+                    className="w-full"
+                    placeholder="Sampai"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>

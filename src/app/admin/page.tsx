@@ -133,8 +133,8 @@ export default function AdminDashboard() {
 
   const generateChartData = async () => {
     try {
-      // Fetch all students for chart data
-      const studentsResponse = await fetch('/api/students');
+      // Fetch all students for chart data (including alumni/graduated)
+      const studentsResponse = await fetch('/api/students?includeAll=true');
       const allStudents = await studentsResponse.json();
       
       // Check if both month and year filters are applied - show daily view
@@ -312,8 +312,8 @@ export default function AdminDashboard() {
       const coursesResponse = await fetch('/api/courses');
       const courses = await coursesResponse.json();
       
-      // Fetch students
-      const studentsResponse = await fetch('/api/students');
+      // Fetch students (including alumni for accurate period statistics)
+      const studentsResponse = await fetch('/api/students?includeAll=true');
       const students = await studentsResponse.json();
 
       // Filter students by period if filters are applied

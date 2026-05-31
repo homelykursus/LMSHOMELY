@@ -4,14 +4,20 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { StudentIdGenerator } from '@/lib/student-id-generator';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Check if includeAll parameter is set (for chart/statistics that need all students)
+    const { searchParams } = new URL(request.url);
+    const includeAll = searchParams.get('includeAll') === 'true';
+
+    const whereClause = includeAll ? {} : {
+      status: {
+        notIn: ['completed', 'graduated'] // Exclude alumni from students list by default
+      }
+    };
+
     const students = await db.student.findMany({
-      where: {
-        status: {
-          notIn: ['completed', 'graduated'] // Exclude alumni from students list
-        }
-      },
+      where: whereClause,
       include: {
         course: {
           select: {
