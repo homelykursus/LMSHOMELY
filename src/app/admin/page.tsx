@@ -332,8 +332,12 @@ export default function AdminDashboard() {
       }
 
       // Calculate filtered statistics with correct status mapping
+      // Total Siswa only counts confirmed/active students (not pending)
       const newFilteredStats = {
-        totalStudents: filteredStudents.length,
+        totalStudents: filteredStudents.filter((s: any) => 
+          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' || 
+          s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+        ).length,
         pendingStudents: filteredStudents.filter((s: any) => 
           s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
         ).length,
@@ -400,7 +404,10 @@ export default function AdminDashboard() {
       setStats({
         totalCourses: courses.length,
         activeCourses: courses.filter((c: any) => c.isActive).length,
-        totalStudents: students.length,
+        totalStudents: students.filter((s: any) => 
+          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' || 
+          s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+        ).length,
         pendingStudents: students.filter((s: any) => 
           s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
         ).length,
