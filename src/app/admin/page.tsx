@@ -332,16 +332,15 @@ export default function AdminDashboard() {
       }
 
       // Calculate filtered statistics with correct status mapping
-      // Total Siswa counts all students that have been confirmed (exclude pending/waiting/inactive only)
+      // Total Siswa = semua siswa termasuk pending dan alumni
+      // Confirmed = siswa yang sudah dikonfirmasi termasuk alumni (exclude pending saja)
       const newFilteredStats = {
-        totalStudents: filteredStudents.filter((s: any) => 
-          s.status !== 'pending' && s.status !== 'inactive' && s.status !== 'waiting'
-        ).length,
+        totalStudents: filteredStudents.length,
         pendingStudents: filteredStudents.filter((s: any) => 
           s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
         ).length,
         confirmedStudents: filteredStudents.filter((s: any) => 
-          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
+          s.status !== 'pending' && s.status !== 'inactive' && s.status !== 'waiting'
         ).length,
         totalRevenue: filteredStudents
           .filter((s: any) => s.status !== 'inactive')
@@ -403,14 +402,12 @@ export default function AdminDashboard() {
       setStats({
         totalCourses: courses.length,
         activeCourses: courses.filter((c: any) => c.isActive).length,
-        totalStudents: students.filter((s: any) => 
-          s.status !== 'pending' && s.status !== 'inactive' && s.status !== 'waiting'
-        ).length,
+        totalStudents: students.length,
         pendingStudents: students.filter((s: any) => 
           s.status === 'pending' || s.status === 'inactive' || s.status === 'waiting'
         ).length,
         confirmedStudents: students.filter((s: any) => 
-          s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
+          s.status !== 'pending' && s.status !== 'inactive' && s.status !== 'waiting'
         ).length,
         totalRevenue,
         recentStudents,

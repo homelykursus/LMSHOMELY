@@ -238,10 +238,18 @@ export default function AlumniManagement() {
   );
 
   // Statistics
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  const alumniThisMonth = alumni.filter(a => {
+    const date = a.completedAt ? new Date(a.completedAt) : new Date(a.updatedAt);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+
   const stats = {
     total: alumni.length,
-    completed: alumni.filter(a => a.status === 'completed').length,
-    graduated: alumni.filter(a => a.status === 'graduated').length,
+    alumniThisMonth,
     totalRevenue: alumni.reduce((sum, a) => sum + a.finalPrice, 0),
     totalOutstanding: alumni.reduce((sum, a) => sum + calculateRemainingPayment(a), 0),
     fullyPaid: alumni.filter(a => calculateRemainingPayment(a) === 0).length
@@ -284,7 +292,7 @@ export default function AlumniManagement() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -297,26 +305,14 @@ export default function AlumniManagement() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm">Selesai</p>
-                <p className="text-3xl font-bold">{stats.completed}</p>
+                <p className="text-blue-100 text-sm">Alumni Bulan Ini</p>
+                <p className="text-3xl font-bold">{stats.alumniThisMonth}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 text-sm">Lulus</p>
-                <p className="text-3xl font-bold">{stats.graduated}</p>
-              </div>
-              <Award className="h-8 w-8 text-indigo-200" />
+              <Award className="h-8 w-8 text-blue-200" />
             </div>
           </CardContent>
         </Card>
