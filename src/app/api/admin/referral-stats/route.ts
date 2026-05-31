@@ -20,8 +20,13 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [REFERRAL STATS] Fetching referral source statistics...');
     console.log(`📅 [REFERRAL STATS] Filters - Month: ${month}, Year: ${year}`);
 
-    // Fetch all students with referral source data
+    // Fetch all confirmed students with referral source data (including alumni)
     const students = await db.student.findMany({
+      where: {
+        status: {
+          notIn: ['pending', 'inactive', 'waiting']
+        }
+      },
       select: {
         id: true,
         referralSource: true,

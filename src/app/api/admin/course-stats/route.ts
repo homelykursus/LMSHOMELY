@@ -9,16 +9,17 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get('month');
     const year = searchParams.get('year');
 
-    // Build filter conditions
-    const whereConditions: any = {};
+    // Build filter conditions - only confirmed students (including alumni)
+    const whereConditions: any = {
+      status: {
+        notIn: ['pending', 'inactive', 'waiting']
+      }
+    };
     
     if (month || year) {
       whereConditions.createdAt = {};
       
       if (year) {
-        const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
-        const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
-        
         if (month) {
           const startOfMonth = new Date(`${year}-${month.padStart(2, '0')}-01T00:00:00.000Z`);
           const endOfMonth = new Date(startOfMonth);
@@ -29,6 +30,8 @@ export async function GET(request: NextRequest) {
           whereConditions.createdAt.gte = startOfMonth;
           whereConditions.createdAt.lte = endOfMonth;
         } else {
+          const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+          const endOfYear = new Date(`${year}-12-31T23:59:59.999Z`);
           whereConditions.createdAt.gte = startOfYear;
           whereConditions.createdAt.lte = endOfYear;
         }
