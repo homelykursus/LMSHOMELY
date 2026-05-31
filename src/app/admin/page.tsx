@@ -160,10 +160,9 @@ export default function AdminDashboard() {
             return studentDateStr === dateStr;
           });
           
-          // Only count confirmed students (including alumni as confirmed registrations)
+          // Only count confirmed/active students (exclude pending and alumni)
           const confirmedStudents = dayStudents.filter((s: any) => 
-            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
-            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
           );
           
           dailyData.push({
@@ -197,10 +196,9 @@ export default function AdminDashboard() {
             return studentMonth === monthNum && studentYear === currentYear;
           });
           
-          // Only count confirmed students (including alumni as confirmed registrations)
+          // Only count confirmed/active students (exclude pending and alumni)
           const confirmedStudents = monthStudents.filter((s: any) => 
-            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
-            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
           );
           
           return {
@@ -226,10 +224,9 @@ export default function AdminDashboard() {
             return studentYear === year;
           });
           
-          // Only count confirmed students (including alumni as confirmed registrations)
+          // Only count confirmed/active students (exclude pending and alumni)
           const confirmedStudents = yearStudents.filter((s: any) => 
-            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved' ||
-            s.status === 'completed' || s.status === 'graduated' || s.status === 'finished'
+            s.status === 'confirmed' || s.status === 'active' || s.status === 'approved'
           );
           
           return {
@@ -612,10 +609,10 @@ export default function AdminDashboard() {
               </CardTitle>
               <CardDescription>
                 {filterMonth && filterYear 
-                  ? `Data siswa yang dikonfirmasi per hari untuk ${generateMonthOptions().find(m => m.value === filterMonth)?.label} ${filterYear} (termasuk alumni)`
+                  ? `Data siswa yang dikonfirmasi per hari untuk ${generateMonthOptions().find(m => m.value === filterMonth)?.label} ${filterYear} (hanya siswa aktif)`
                   : chartPeriod === 'monthly' 
-                    ? `Data siswa yang dikonfirmasi per bulan untuk tahun ${filterYear || new Date().getFullYear()} (termasuk alumni)`
-                    : 'Data siswa yang dikonfirmasi per tahun dari 2022 hingga sekarang (termasuk alumni)'
+                    ? `Data siswa yang dikonfirmasi per bulan untuk tahun ${filterYear || new Date().getFullYear()} (hanya siswa aktif)`
+                    : 'Data siswa yang dikonfirmasi per tahun dari 2022 hingga sekarang (hanya siswa aktif)'
                 }
               </CardDescription>
             </div>
@@ -773,7 +770,7 @@ export default function AdminDashboard() {
                     }
                   </div>
                   <div className="text-xs text-green-600 mt-1">
-                    Termasuk alumni yang telah lulus
+                    Hanya siswa aktif/dikonfirmasi
                   </div>
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
