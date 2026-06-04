@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 
 export async function PUT(
@@ -16,7 +16,7 @@ export async function PUT(
     const { id } = await params;
 
     // Find the student
-    const student = await prisma.student.findUnique({
+    const student = await db.student.findUnique({
       where: { id },
     });
 
@@ -33,7 +33,7 @@ export async function PUT(
     }
 
     // Update student status to 'completed' (same as when a class is completed)
-    const updatedStudent = await prisma.student.update({
+    const updatedStudent = await db.student.update({
       where: { id },
       data: {
         status: 'completed',
