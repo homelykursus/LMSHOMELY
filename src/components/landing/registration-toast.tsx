@@ -96,6 +96,17 @@ export default function RegistrationToast() {
     return 'U';
   };
 
+  // Function untuk menyembunyikan sebagian huruf nama untuk privasi
+  const maskName = (name: string) => {
+    const words = name.trim().split(' ').filter(w => w.length > 0);
+    return words.map(word => {
+      if (word.length <= 2) return word;
+      if (word.length <= 4) return word[0] + '*'.repeat(word.length - 1);
+      // Tampilkan 2 huruf pertama + * + huruf terakhir
+      return word.substring(0, 2) + '*'.repeat(word.length - 3) + word[word.length - 1];
+    }).join(' ');
+  };
+
   // Show toast dengan timing berbeda untuk mobile dan desktop
   useEffect(() => {
     if (students.length === 0) return;
@@ -185,7 +196,7 @@ export default function RegistrationToast() {
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <p className="text-gray-900 font-semibold text-sm truncate">
-                  {toast.name}
+                  {maskName(toast.name)}
                 </p>
                 <p className="text-gray-600 text-xs mt-0.5">
                   Mendaftar Kursus
@@ -234,7 +245,7 @@ export default function RegistrationToast() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-900 font-semibold text-sm truncate">
-                    {toast.name}
+                    {maskName(toast.name)}
                   </p>
                   <p className="text-gray-600 text-xs mt-0.5">
                     Mendaftar Kursus
