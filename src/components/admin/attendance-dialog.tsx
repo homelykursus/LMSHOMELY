@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, UserCheck, Clock, CheckCircle, Flag, UserX, UserPlus, History } from 'lucide-react';
+import { Calendar, Users, UserCheck, Clock, CheckCircle, Flag, UserX, UserPlus, History, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
@@ -82,6 +82,7 @@ export default function AttendanceDialog({
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [lastAttendanceData, setLastAttendanceData] = useState<{[key: string]: LastAttendance}>({});
   const [loadingLastAttendance, setLoadingLastAttendance] = useState(false);
+  const [graduatingStudentId, setGraduatingStudentId] = useState<string | null>(null);
 
   // Confirmation dialog hook - hanya digunakan jika tidak ada dari parent
   const { showConfirmation: localShowConfirmation, ConfirmationDialog } = useConfirmationDialog();
@@ -337,6 +338,38 @@ export default function AttendanceDialog({
     });
   };
 
+  const handleGraduateStudent = (studentId: string, studentName: string) => {
+    showConfirmation({
+      title: 'Selesaikan Siswa',
+      description: `Apakah Anda yakin ingin menyelesaikan siswa "${studentName}"?\n\nStatus siswa akan berubah menjadi alumni. Kelas tetap berlanjut untuk siswa lain.`,
+      confirmText: 'Ya, Selesaikan',
+      cancelText: 'Batal',
+      variant: 'destructive',
+      onConfirm: async () => {
+        setGraduatingStudentId(studentId);
+        try {
+          const response = await fetch(`/api/students/${studentId}/graduate`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (response.ok) {
+            toast.success(`Siswa "${studentName}" berhasil diselesaikan dan menjadi alumni!`);
+            onAttendanceSubmitted(); // refresh class data
+          } else {
+            const error = await response.json();
+            toast.error(error.error || 'Gagal menyelesaikan siswa');
+          }
+        } catch (error) {
+          console.error('Error graduating student:', error);
+          toast.error('Terjadi kesalahan saat menyelesaikan siswa');
+        } finally {
+          setGraduatingStudentId(null);
+        }
+      }
+    });
+  };
+
   const getAttendanceStatusColor = (status: string) => {
     switch (status) {
       case 'HADIR':
@@ -564,6 +597,29 @@ export default function AttendanceDialog({
                             {getAttendanceStatusText(status)}
                           </Button>
                         ))}
+                      </div>
+
+                      {/* Tombol Selesaikan Siswa */}
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs h-7 w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200"
+                          disabled={graduatingStudentId === student.id}
+                          onClick={() => handleGraduateStudent(student.id, student.name)}
+                        >
+                          {graduatingStudentId === student.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600 mr-1.5" />
+                              Menyelesaikan...
+                            </>
+                          ) : (
+                            <>
+                              <GraduationCap className="h-3 w-3 mr-1.5" />
+                              Selesaikan Siswa Ini
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   );
