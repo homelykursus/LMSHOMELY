@@ -125,14 +125,17 @@
   0% {
     transform: translateX(-150%) skewX(-20deg);
   }
-  50%, 100% {
+  25%, 50% {
     transform: translateX(250%) skewX(-20deg);
+  }
+  75%, 100% {
+    transform: translateX(-150%) skewX(-20deg);
   }
 }
 
 @layer utilities {
   .animate-shimmer {
-    animation: shimmer 2.5s infinite ease-in-out;
+    animation: shimmer 4s infinite linear;
   }
 }
 
