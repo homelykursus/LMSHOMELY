@@ -264,9 +264,10 @@ export default function KuotaKelasPage() {
                       ) : (
                         <button
                           onClick={() => handlePilihKelas(cls)}
-                          className="w-full bg-[#ed325a] hover:bg-rose-600 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow-sm shadow-rose-200"
+                          className="relative overflow-hidden group w-full bg-[#ed325a] hover:bg-rose-600 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow-sm shadow-rose-200"
                         >
-                          Pilih Kelas
+                          <span className="relative z-10">Pilih Kelas</span>
+                          <div className="absolute inset-0 h-full w-[40%] bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-[150%] animate-shimmer pointer-events-none" />
                         </button>
                       )}
                     </div>
