@@ -784,7 +784,13 @@ export default function CertificatesPage() {
                               id={`qr-${cert.student.studentNumber}`}
                               value={`${typeof window !== 'undefined' ? window.location.origin : 'https://daftar.homelykursus.com'}/s/${cert.student.studentNumber}`}
                               size={60}
-                              level="M"
+                              level="H"
+                              imageSettings={{
+                                src: "/images/logo.jpg",
+                                height: 16,
+                                width: 16,
+                                excavate: true,
+                              }}
                             />
                           </div>
                         </TableCell>
