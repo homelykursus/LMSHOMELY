@@ -36,6 +36,7 @@ import PaymentReceipt from '@/components/admin/payment-receipt';
 
 interface Alumni {
   id: string;
+  studentNumber: string;
   name: string;
   whatsapp: string;
   photo?: string | null;
@@ -427,6 +428,7 @@ export default function AlumniManagement() {
                 <TableRow>
                   <TableHead className="w-12">No</TableHead>
                   <TableHead>Foto</TableHead>
+                  <TableHead>ID Siswa</TableHead>
                   <TableHead>Nama</TableHead>
                   <TableHead>WhatsApp</TableHead>
                   <TableHead>Kursus</TableHead>
@@ -461,6 +463,7 @@ export default function AlumniManagement() {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell className="font-mono text-sm">{alumnus.studentNumber}</TableCell>
                       <TableCell className="font-medium">{alumnus.name}</TableCell>
                       <TableCell>{alumnus.whatsapp}</TableCell>
                       <TableCell>{alumnus.course?.name || alumnus.courseName}</TableCell>

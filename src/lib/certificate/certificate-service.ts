@@ -197,8 +197,45 @@ export class CertificateService {
       const pdfHeader = pdfBuffer.subarray(0, 4).toString();
       const fileExtension = pdfHeader === '%PDF' ? 'pdf' : 'docx';
 
-      // Return certificate data directly without saving to database
-      console.log(`✅ Word template certificate generated for ${student.name}`);
+      // Save to database
+      try {
+        const existing = await prisma.certificate.findFirst({
+          where: { studentId, templateId }
+        });
+        if (!existing) {
+          await prisma.certificate.create({
+            data: {
+              certificateNumber,
+              studentId,
+              templateId,
+              courseId: student.courseId,
+              studentName: student.name,
+              courseName: student.course.name,
+              courseDuration: calculateCourseDurationInHours(student.course.duration),
+              teacherName,
+              generatedBy,
+              filePath: 'generated-on-the-fly',
+            }
+          });
+        } else {
+          await prisma.certificate.update({
+            where: { id: existing.id },
+            data: {
+              certificateNumber,
+              studentName: student.name,
+              courseName: student.course.name,
+              courseDuration: calculateCourseDurationInHours(student.course.duration),
+              teacherName,
+              generatedBy,
+              generatedAt: new Date(),
+            }
+          });
+        }
+      } catch (dbError) {
+        console.error('Failed to save certificate to DB:', dbError);
+      }
+
+      console.log(`✅ Word template certificate generated and saved for ${student.name}`);
 
       return {
         success: true,
@@ -340,6 +377,44 @@ export class CertificateService {
 
         certificateDataArray.push(certificateData);
         certificateNumbers.push(certificateNumber);
+
+        // Save to database
+        try {
+          const existing = await prisma.certificate.findFirst({
+            where: { studentId: student.id, templateId }
+          });
+          if (!existing) {
+            await prisma.certificate.create({
+              data: {
+                certificateNumber,
+                studentId: student.id,
+                templateId,
+                courseId: student.courseId,
+                studentName: student.name,
+                courseName: student.course.name,
+                courseDuration: calculateCourseDurationInHours(student.course.duration),
+                teacherName,
+                generatedBy,
+                filePath: 'generated-in-batch',
+              }
+            });
+          } else {
+            await prisma.certificate.update({
+              where: { id: existing.id },
+              data: {
+                certificateNumber,
+                studentName: student.name,
+                courseName: student.course.name,
+                courseDuration: calculateCourseDurationInHours(student.course.duration),
+                teacherName,
+                generatedBy,
+                generatedAt: new Date(),
+              }
+            });
+          }
+        } catch (dbError) {
+          console.error(`Failed to save certificate for ${student.name}:`, dbError);
+        }
       }
 
       console.log(`📄 Processing ${certificateDataArray.length} certificates into one document`);

@@ -25,6 +25,18 @@ import {
   Search,
   X
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QRCodeSVG } from 'qrcode.react';
+import { format } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface CertificateTemplate {
   id: string;
@@ -59,6 +71,18 @@ interface Student {
   teachers?: string[];
 }
 
+interface CertificateHistory {
+  id: string;
+  certificateNumber: string;
+  courseName: string;
+  courseDuration: string;
+  generatedAt: string;
+  student: {
+    name: string;
+    studentNumber: string;
+  };
+}
+
 export default function CertificatesPage() {
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -84,12 +108,67 @@ export default function CertificatesPage() {
     warnings?: string[];
   } | null>(null);
 
+  const [history, setHistory] = useState<CertificateHistory[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   // Load templates and courses
   useEffect(() => {
     loadTemplates();
     loadCourses();
     loadStudents();
+    loadHistory();
   }, []);
+
+  const loadHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await fetch('/api/certificates/history');
+      const data = await response.json();
+      if (data.success) {
+        setHistory(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to load history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleDeleteHistory = async (id: string) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus riwayat sertifikat ini?')) return;
+    try {
+      const res = await fetch(`/api/certificates/history/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setHistory(history.filter(h => h.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete history', error);
+    }
+  };
+
+  const handleDownloadQR = (studentNumber: string, studentName: string) => {
+    const svg = document.getElementById(`qr-${studentNumber}`);
+    if (svg) {
+      const clone = svg.cloneNode(true) as SVGElement;
+      clone.setAttribute("width", "1000"); // High resolution
+      clone.setAttribute("height", "1000"); // High resolution
+      const svgData = new XMLSerializer().serializeToString(clone);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 1000;
+        canvas.height = 1000;
+        ctx?.drawImage(img, 0, 0, 1000, 1000);
+        const pngFile = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `QR-Sertifikat-${studentName.replace(/\s+/g, '-')}.png`;
+        downloadLink.href = `${pngFile}`;
+        downloadLink.click();
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    }
+  };
 
   const loadTemplates = async () => {
     try {
@@ -330,6 +409,7 @@ export default function CertificatesPage() {
           window.URL.revokeObjectURL(url);
           
           alert('Sertifikat berhasil dibuat dan didownload!');
+          loadHistory();
         } else {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           alert(errorData.error || 'Gagal membuat sertifikat');
@@ -365,6 +445,7 @@ export default function CertificatesPage() {
           window.URL.revokeObjectURL(url);
           
           alert(`Berhasil membuat ${selectedStudents.length} sertifikat dalam 1 file Word!`);
+          loadHistory();
         } else {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           alert(errorData.error || 'Gagal membuat sertifikat batch');
@@ -423,6 +504,14 @@ export default function CertificatesPage() {
           Upload Template
         </Button>
       </div>
+
+      <Tabs defaultValue="templates" className="w-full">
+        <TabsList className="mb-8">
+          <TabsTrigger value="templates">Template & Generate</TabsTrigger>
+          <TabsTrigger value="history">Riwayat Sertifikat</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="templates" className="space-y-6">
 
       {/* Upload Result Alert */}
       {uploadResult && (
@@ -646,6 +735,89 @@ export default function CertificatesPage() {
           ))
         )}
       </div>
+      </TabsContent>
+
+      <TabsContent value="history">
+        <Card>
+          <CardHeader>
+            <CardTitle>Riwayat Sertifikat</CardTitle>
+            <CardDescription>
+              Daftar siswa yang sertifikatnya sudah pernah digenerate.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingHistory ? (
+              <div className="py-8 flex justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              </div>
+            ) : history.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Belum ada riwayat sertifikat.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>No</TableHead>
+                      <TableHead>ID Siswa</TableHead>
+                      <TableHead>Nama Siswa</TableHead>
+                      <TableHead>Program Kursus</TableHead>
+                      <TableHead>Durasi</TableHead>
+                      <TableHead>Tanggal Terbit</TableHead>
+                      <TableHead>QR Code</TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {history.map((cert, index) => (
+                      <TableRow key={cert.id}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="font-mono text-sm">{cert.student.studentNumber}</TableCell>
+                        <TableCell className="font-medium">{cert.student.name}</TableCell>
+                        <TableCell>{cert.courseName}</TableCell>
+                        <TableCell>{cert.courseDuration}</TableCell>
+                        <TableCell>{format(new Date(cert.generatedAt), 'dd MMM yyyy', { locale: idLocale })}</TableCell>
+                        <TableCell>
+                          <div className="bg-white p-1 rounded inline-block border">
+                            <QRCodeSVG
+                              id={`qr-${cert.student.studentNumber}`}
+                              value={`${typeof window !== 'undefined' ? window.location.origin : 'https://daftar.homelykursus.com'}/s/${cert.student.studentNumber}`}
+                              size={60}
+                              level="M"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDownloadQR(cert.student.studentNumber, cert.student.name)}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download QR
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleDeleteHistory(cert.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+      </Tabs>
 
       {/* Generate Certificate Modal */}
       {showGenerateModal && selectedTemplate && (
