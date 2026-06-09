@@ -146,12 +146,33 @@ export default function CertificatesPage() {
     }
   };
 
-  const handleDownloadQR = (studentNumber: string, studentName: string) => {
+  const handleDownloadQR = async (studentNumber: string, studentName: string) => {
     const svg = document.getElementById(`qr-${studentNumber}`);
     if (svg) {
       const clone = svg.cloneNode(true) as SVGElement;
       clone.setAttribute("width", "1000"); // High resolution
       clone.setAttribute("height", "1000"); // High resolution
+      
+      // Fix logo not downloading by converting href to base64
+      const imageEl = clone.querySelector('image');
+      if (imageEl) {
+        const href = imageEl.getAttribute('href');
+        if (href && !href.startsWith('data:')) {
+          try {
+            const response = await fetch(href);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            const base64data = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(blob);
+            });
+            imageEl.setAttribute('href', base64data as string);
+          } catch (e) {
+            console.error('Failed to convert logo to base64', e);
+          }
+        }
+      }
+
       const svgData = new XMLSerializer().serializeToString(clone);
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
