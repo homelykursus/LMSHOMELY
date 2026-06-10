@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(
   request: NextRequest,
@@ -137,6 +138,10 @@ export async function PUT(
       }
     });
 
+    // Revalidate public cache for available classes
+    revalidatePath('/api/public/available-classes');
+    revalidatePath('/kuota-kelas');
+
     return NextResponse.json(finalClass);
   } catch (error) {
     console.error('Error updating class:', error);
@@ -157,6 +162,10 @@ export async function DELETE(
     await db.class.delete({
       where: { id: classId }
     });
+
+    // Revalidate public cache for available classes
+    revalidatePath('/api/public/available-classes');
+    revalidatePath('/kuota-kelas');
 
     return NextResponse.json({ message: 'Kelas berhasil dihapus' });
   } catch (error) {

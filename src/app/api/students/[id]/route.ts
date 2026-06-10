@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 import { CloudinaryService } from '@/lib/cloudinary';
 
 export async function GET(
@@ -320,6 +321,10 @@ export async function DELETE(
     await db.student.delete({
       where: { id: params.id }
     });
+
+    // Revalidate public cache for available classes just in case they were enrolled
+    revalidatePath('/api/public/available-classes');
+    revalidatePath('/kuota-kelas');
 
     return NextResponse.json({ message: 'Student deleted successfully' });
   } catch (error) {

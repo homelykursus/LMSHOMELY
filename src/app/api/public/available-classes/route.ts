@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export const revalidate = 300; // Cache for 5 minutes, can be revalidated on-demand
+
 export async function GET() {
   try {
     // Query only WAITING classes: startDate = null AND endDate = null AND isActive = true
@@ -64,12 +66,7 @@ export async function GET() {
       })),
     }));
 
-    return NextResponse.json(result, {
-      headers: {
-        // Cache 5 menit di browser, revalidate di background
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      },
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('[PUBLIC] Error fetching available classes:', error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -227,6 +228,10 @@ export async function POST(request: NextRequest) {
         data: classStudents
       });
     }
+
+    // Revalidate public cache for available classes
+    revalidatePath('/api/public/available-classes');
+    revalidatePath('/kuota-kelas');
 
     return NextResponse.json(newClass, { status: 201 });
   } catch (error) {
