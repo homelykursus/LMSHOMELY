@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { AuthService } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
@@ -8,8 +8,10 @@ export async function PUT(
 ) {
   try {
     // Auth check
-    const user = await getAuthUser(request);
-    if (!user) {
+    const user = await AuthService.getUserFromRequest(request);
+    const teacher = await AuthService.getTeacherFromRequest(request);
+    
+    if (!user && !teacher) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
