@@ -34,11 +34,11 @@ export async function PUT(
       );
     }
 
-    // Update student status to 'completed' (same as when a class is completed)
+    // Update student status to 'graduated' (same as when a class is completed)
     const updatedStudent = await db.student.update({
       where: { id },
       data: {
-        status: 'completed',
+        status: 'graduated',
         completedAt: new Date(),
         updatedAt: new Date(),
       },

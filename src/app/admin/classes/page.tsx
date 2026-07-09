@@ -364,22 +364,33 @@ export default function ClassesManagement() {
   // Ensure classes is always an array before using filter methods
   const safeClasses = Array.isArray(classes) ? classes : [];
 
+  const getActiveStudents = (classData: Class) => {
+    if (!classData?.students) return [];
+    return classData.students.filter(
+      (enrollment) => enrollment.student?.status !== 'completed' && enrollment.student?.status !== 'graduated'
+    );
+  };
+
+  const getActiveStudentsCount = (classData: Class) => {
+    return getActiveStudents(classData).length;
+  };
+
   const stats = {
     total: safeClasses.length,
     waiting: safeClasses.filter(c => determineClassStatus(c) === 'WAITING').length,
     active: safeClasses.filter(c => determineClassStatus(c) === 'ONGOING').length,
     completed: safeClasses.filter(c => determineClassStatus(c) === 'COMPLETED').length,
-    totalStudents: safeClasses.reduce((sum, c) => sum + c.students.length, 0),
+    totalStudents: safeClasses.reduce((sum, c) => sum + getActiveStudentsCount(c), 0),
     waitingStudents: safeClasses
       .filter(c => determineClassStatus(c) === 'WAITING') // Kelas menunggu
-      .reduce((sum, c) => sum + c.students.length, 0), // Jumlah siswa di kelas menunggu
+      .reduce((sum, c) => sum + getActiveStudentsCount(c), 0), // Jumlah siswa di kelas menunggu
     activeStudents: safeClasses
       .filter(c => determineClassStatus(c) === 'ONGOING') // Kelas sedang berjalan
-      .reduce((sum, c) => sum + c.students.length, 0), // Jumlah siswa di kelas berjalan
+      .reduce((sum, c) => sum + getActiveStudentsCount(c), 0), // Jumlah siswa di kelas berjalan
     totalCommission: safeClasses.reduce((sum, c) => sum + c.commissionAmount, 0),
     availableQuota: safeClasses
       .filter(c => determineClassStatus(c) !== 'COMPLETED') // Kelas menunggu + kelas sedang berjalan (yang belum selesai)
-      .reduce((sum, c) => sum + (c.maxStudents - c.students.length), 0) // Jumlah kuota tersisa
+      .reduce((sum, c) => sum + (c.maxStudents - getActiveStudentsCount(c)), 0) // Jumlah kuota tersisa
   };
 
   // Filter classes into three categories with search functionality
@@ -688,9 +699,9 @@ export default function ClassesManagement() {
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              <div className="font-medium">{classData.students.length}/{classData.maxStudents}</div>
+                              <div className="font-medium">{getActiveStudentsCount(classData)}/{classData.maxStudents}</div>
                               <div className="text-xs text-gray-500">
-                                {classData.maxStudents - classData.students.length} tersisa
+                                {classData.maxStudents - getActiveStudentsCount(classData)} tersisa
                               </div>
                             </div>
                           </TableCell>
@@ -926,9 +937,9 @@ export default function ClassesManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          <div className="font-medium">{classData.students.length}/{classData.maxStudents}</div>
+                          <div className="font-medium">{getActiveStudentsCount(classData)}/{classData.maxStudents}</div>
                           <div className="text-xs text-gray-500">
-                            {classData.maxStudents - classData.students.length} tersisa
+                            {classData.maxStudents - getActiveStudentsCount(classData)} tersisa
                           </div>
                         </div>
                       </TableCell>
