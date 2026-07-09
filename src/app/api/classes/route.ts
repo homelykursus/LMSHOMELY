@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
                 whatsapp: true,
                 dateOfBirth: true,
                 lastEducation: true,
-                gender: true
+                gender: true,
+                status: true
               }
             }
           }
