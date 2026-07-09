@@ -93,9 +93,11 @@ export default function AttendancePage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   
+  const [selectedWarning, setSelectedWarning] = useState<string>('all')
+
   // Pagination states for students table
   const [studentsCurrentPage, setStudentsCurrentPage] = useState(1)
-  const [studentsPageSize, setStudentsPageSize] = useState(10)
+  const [studentsPageSize, setStudentsPageSize] = useState(50)
   
   // Pagination states for attendance records table
   const [attendanceCurrentPage, setAttendanceCurrentPage] = useState(1)
@@ -339,8 +341,20 @@ export default function AttendancePage() {
     // Only exclude students if their class is marked as inactive (not just completed meetings)
     // Students should still appear even if they've reached total meetings, unless class is explicitly inactive
     const isActiveOrCompleted = studentStatus.status !== 'inactive'
+
+    let matchesWarning = true
+    if (selectedWarning !== 'all') {
+      const lastAttendance = getLastAttendanceInfo(student.id)
+      if (selectedWarning === 'yellow' && lastAttendance.color.includes('yellow')) {
+        matchesWarning = true
+      } else if (selectedWarning === 'red' && lastAttendance.color.includes('red')) {
+        matchesWarning = true
+      } else {
+        matchesWarning = false
+      }
+    }
     
-    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && isActiveOrCompleted
+    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && isActiveOrCompleted && matchesWarning
   })
 
   const filteredAttendance = attendanceRecords.filter(record => {
@@ -392,7 +406,7 @@ export default function AttendancePage() {
   useEffect(() => {
     setStudentsCurrentPage(1)
     setAttendanceCurrentPage(1)
-  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, selectedDateTo, showOnlyWithClass])
+  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, selectedDateTo, showOnlyWithClass, selectedWarning])
 
   const getStudentAttendanceSummary = (studentId: string) => {
     const studentRecords = attendanceRecords.filter(r => r.studentId === studentId)
@@ -405,7 +419,7 @@ export default function AttendancePage() {
     return { total, present, absent, late, excused }
   }
 
-  const getLastAttendanceInfo = (studentId: string) => {
+  function getLastAttendanceInfo(studentId: string) {
     const presentRecords = attendanceRecords.filter(
       r => r.studentId === studentId && (r.status === 'present' || r.status === 'late')
     );
@@ -677,7 +691,7 @@ export default function AttendancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               <div>
                 <Label htmlFor="search">Cari Siswa</Label>
                 <Input
@@ -752,6 +766,19 @@ export default function AttendancePage() {
                     <SelectItem value="absent">Tidak Hadir</SelectItem>
                     <SelectItem value="late">Terlambat</SelectItem>
                     <SelectItem value="excused">Izin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="warning">Peringatan Kehadiran</Label>
+                <Select value={selectedWarning} onValueChange={setSelectedWarning}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih peringatan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="yellow">Kuning (&gt; 8 Hari)</SelectItem>
+                    <SelectItem value="red">Merah (&gt; 30 Hari)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
