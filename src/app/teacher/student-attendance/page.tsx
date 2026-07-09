@@ -93,9 +93,11 @@ export default function TeacherStudentAttendancePage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   
+  const [selectedWarning, setSelectedWarning] = useState<string>('all')
+
   // Pagination states for students table
   const [studentsCurrentPage, setStudentsCurrentPage] = useState(1)
-  const [studentsPageSize, setStudentsPageSize] = useState(10)
+  const [studentsPageSize, setStudentsPageSize] = useState(50)
   
   // Pagination states for attendance records table
   const [attendanceCurrentPage, setAttendanceCurrentPage] = useState(1)
@@ -315,7 +317,19 @@ export default function TeacherStudentAttendancePage() {
     // Students should still appear even if they've reached total meetings, unless class is explicitly inactive
     const isActiveOrCompleted = studentStatus.status !== 'inactive'
     
-    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && isActiveOrCompleted
+    let matchesWarning = true
+    if (selectedWarning !== 'all') {
+      const lastAttendance = getLastAttendanceInfo(student.id)
+      if (selectedWarning === 'yellow' && lastAttendance.color.includes('yellow')) {
+        matchesWarning = true
+      } else if (selectedWarning === 'red' && lastAttendance.color.includes('red')) {
+        matchesWarning = true
+      } else {
+        matchesWarning = false
+      }
+    }
+
+    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && isActiveOrCompleted && matchesWarning
   })
 
   const filteredAttendance = attendanceRecords.filter(record => {
@@ -360,7 +374,39 @@ export default function TeacherStudentAttendancePage() {
   useEffect(() => {
     setStudentsCurrentPage(1)
     setAttendanceCurrentPage(1)
-  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, showOnlyWithClass])
+  }, [searchTerm, attendanceSearchTerm, selectedClass, selectedCourse, selectedStatus, selectedDate, showOnlyWithClass, selectedWarning])
+
+  function getLastAttendanceInfo(studentId: string) {
+    const presentRecords = attendanceRecords.filter(
+      r => r.studentId === studentId && (r.status === 'present' || r.status === 'late')
+    );
+
+    if (presentRecords.length === 0) {
+      return { text: '-', color: 'text-gray-500 font-medium' };
+    }
+
+    const latestDate = new Date(Math.max(...presentRecords.map(r => new Date(r.meetingDate).getTime())));
+    
+    const today = new Date();
+    const lastDateOnly = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diffTime = todayOnly.getTime() - lastDateOnly.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return { text: 'Hari ini', color: 'text-green-600 font-medium' };
+    }
+    
+    let color = 'text-green-600 font-medium';
+    if (diffDays > 30) {
+      color = 'text-red-600 font-medium';
+    } else if (diffDays > 8) {
+      color = 'text-yellow-600 font-medium';
+    }
+
+    return { text: `${diffDays} hari lalu`, color };
+  }
 
   const getStudentAttendanceSummary = (studentId: string) => {
     const studentRecords = attendanceRecords.filter(r => r.studentId === studentId)
@@ -679,7 +725,20 @@ export default function TeacherStudentAttendancePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-2">
+              <div>
+                <Label htmlFor="warning">Peringatan Kehadiran</Label>
+                <Select value={selectedWarning} onValueChange={setSelectedWarning}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih peringatan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="yellow">Peringatan (8+ hari)</SelectItem>
+                    <SelectItem value="red">Kritis (30+ hari)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 md:col-span-2 lg:col-span-1">
                 <Switch
                   id="show-attendance"
                   checked={showOnlyWithClass}
@@ -732,6 +791,7 @@ export default function TeacherStudentAttendancePage() {
                         <TableHead>Terlambat</TableHead>
                         <TableHead>Izin</TableHead>
                         <TableHead>Kehadiran</TableHead>
+                        <TableHead>Terakhir Masuk</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -740,6 +800,7 @@ export default function TeacherStudentAttendancePage() {
                         const attendanceRate = attendance.total > 0 
                           ? Math.round(((attendance.present + attendance.late) / attendance.total) * 100) 
                           : 0
+                        const lastAttendance = getLastAttendanceInfo(student.id)
                         const rowNumber = (studentsCurrentPage - 1) * studentsPageSize + index + 1
                         const studentStatus = getStudentStatusFromClass(student)
                         const age = calculateAge(student.dateOfBirth)
@@ -780,6 +841,9 @@ export default function TeacherStudentAttendancePage() {
                                 </div>
                                 <span className="text-sm font-medium">{attendanceRate}%</span>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={lastAttendance.color}>{lastAttendance.text}</span>
                             </TableCell>
                           </TableRow>
                         )

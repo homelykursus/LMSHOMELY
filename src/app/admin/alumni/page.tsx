@@ -92,7 +92,7 @@ export default function AlumniManagement() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterCourse, setFilterCourse] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   
   // Payment modal states
   const [selectedAlumniForPayment, setSelectedAlumniForPayment] = useState<Alumni | null>(null);
@@ -226,7 +226,13 @@ export default function AlumniManagement() {
     const matchesSearch = alumnus.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          alumnus.whatsapp.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCourse = filterCourse === 'all' || alumnus.courseId === filterCourse;
-    const matchesStatus = filterStatus === 'all' || alumnus.status === filterStatus;
+    
+    let matchesStatus = true;
+    if (filterStatus === 'lunas') {
+      matchesStatus = calculateRemainingPayment(alumnus) <= 0;
+    } else if (filterStatus === 'belum_lunas') {
+      matchesStatus = calculateRemainingPayment(alumnus) > 0;
+    }
     
     return matchesSearch && matchesCourse && matchesStatus;
   });
@@ -367,15 +373,15 @@ export default function AlumniManagement() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">Status Pembayaran</label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih status" />
+                  <SelectValue placeholder="Pilih status pembayaran" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="completed">Selesai</SelectItem>
-                  <SelectItem value="graduated">Lulus</SelectItem>
+                  <SelectItem value="lunas">Lunas</SelectItem>
+                  <SelectItem value="belum_lunas">Belum Lunas</SelectItem>
                 </SelectContent>
               </Select>
             </div>

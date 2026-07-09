@@ -406,6 +406,10 @@ export default function AttendanceDialog({
 
   if (!classData) return null;
 
+  const activeStudents = classData.students.filter(
+    (enrollment) => enrollment.student.status !== 'completed' && enrollment.student.status !== 'graduated'
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-4 sm:p-6">
@@ -507,7 +511,7 @@ export default function AttendanceDialog({
               <div className="flex items-center gap-3">
                 <Users className="h-5 w-5 text-gray-600" />
                 <div>
-                  <p className="font-medium">Total Siswa: {classData.students.length}</p>
+                  <p className="font-medium">Total Siswa: {activeStudents.length}</p>
                   <p className="text-sm text-gray-600">Siswa Hadir: {presentCount}</p>
                 </div>
               </div>
@@ -532,7 +536,7 @@ export default function AttendanceDialog({
             
             <ScrollArea className="h-64 w-full rounded-md border">
               <div className="p-4 space-y-3">
-                {classData.students.map((studentEnrollment) => {
+                {activeStudents.map((studentEnrollment) => {
                   const student = studentEnrollment.student;
                   const attendance = attendanceRecords.find(r => r.studentId === student.id);
                   const lastAttendance = lastAttendanceData[student.id];
@@ -629,32 +633,13 @@ export default function AttendanceDialog({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t flex-shrink-0">
-            <Button
-              variant="destructive"
-              onClick={handleCompleteClass}
-              disabled={isCompletingClass || isSubmitting}
-              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-            >
-              {isCompletingClass ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Menyelesaikan...
-                </>
-              ) : (
-                <>
-                  <Flag className="h-4 w-4 mr-2" />
-                  Selesaikan Kelas
-                </>
-              )}
-            </Button>
-            
-            <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 pt-4 border-t flex-shrink-0">
+            <div className="flex gap-2 w-full">
               <Button
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting || isCompletingClass}
-                className="flex-1 sm:flex-none"
+                className="flex-1"
               >
                 Batal
               </Button>
@@ -666,7 +651,7 @@ export default function AttendanceDialog({
                   presentCount === 0 || 
                   (isMainTeacherAbsent && !substituteTeacherId)
                 }
-                className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                className="bg-blue-600 hover:bg-blue-700 flex-1"
               >
                 {isSubmitting ? (
                   <>
@@ -681,6 +666,25 @@ export default function AttendanceDialog({
                 )}
               </Button>
             </div>
+
+            <Button
+              variant="destructive"
+              onClick={handleCompleteClass}
+              disabled={isCompletingClass || isSubmitting}
+              className="bg-red-600 hover:bg-red-700 w-full"
+            >
+              {isCompletingClass ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Menyelesaikan...
+                </>
+              ) : (
+                <>
+                  <Flag className="h-4 w-4 mr-2" />
+                  Selesaikan Kelas
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </DialogContent>
