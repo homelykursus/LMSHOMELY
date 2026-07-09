@@ -405,6 +405,38 @@ export default function AttendancePage() {
     return { total, present, absent, late, excused }
   }
 
+  const getLastAttendanceInfo = (studentId: string) => {
+    const presentRecords = attendanceRecords.filter(
+      r => r.studentId === studentId && (r.status === 'present' || r.status === 'late')
+    );
+
+    if (presentRecords.length === 0) {
+      return { text: '-', color: 'text-gray-500 font-medium' };
+    }
+
+    const latestDate = new Date(Math.max(...presentRecords.map(r => new Date(r.meetingDate).getTime())));
+    
+    const today = new Date();
+    const lastDateOnly = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diffTime = todayOnly.getTime() - lastDateOnly.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return { text: 'Hari ini', color: 'text-green-600 font-medium' };
+    }
+    
+    let color = 'text-green-600 font-medium';
+    if (diffDays > 30) {
+      color = 'text-red-600 font-medium';
+    } else if (diffDays > 8) {
+      color = 'text-yellow-600 font-medium';
+    }
+
+    return { text: `${diffDays} hari lalu`, color };
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'present': return 'bg-green-100 text-green-800'
@@ -777,6 +809,7 @@ export default function AttendancePage() {
                     <TableHead>Terlambat</TableHead>
                     <TableHead>Izin</TableHead>
                     <TableHead>Kehadiran</TableHead>
+                    <TableHead>Terakhir Masuk</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -785,6 +818,7 @@ export default function AttendancePage() {
                     const attendanceRate = attendance.total > 0 
                       ? Math.round((attendance.present / attendance.total) * 100) 
                       : 0
+                    const lastAttendance = getLastAttendanceInfo(student.id)
                     const rowNumber = (studentsCurrentPage - 1) * studentsPageSize + index + 1
                     const studentStatus = getStudentStatusFromClass(student)
                     const age = calculateAge(student.dateOfBirth)
@@ -825,6 +859,9 @@ export default function AttendancePage() {
                             </div>
                             <span className="text-sm font-medium">{attendanceRate}%</span>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={lastAttendance.color}>{lastAttendance.text}</span>
                         </TableCell>
                       </TableRow>
                     )
