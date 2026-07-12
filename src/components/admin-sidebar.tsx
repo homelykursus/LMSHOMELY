@@ -31,7 +31,9 @@ import {
   Megaphone,
   Image as ImageIcon,
   MapPin,
-  FileText
+  FileText,
+  Calendar,
+  Map
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -101,6 +103,11 @@ const sidebarItems: SidebarItem[] = [
     title: 'Data Ruang',
     href: '/admin/rooms',
     icon: DoorOpen,
+  },
+  {
+    title: 'Peta Kelas',
+    href: '/admin/class-map',
+    icon: Map,
   },
   {
     title: 'Data Kelas',

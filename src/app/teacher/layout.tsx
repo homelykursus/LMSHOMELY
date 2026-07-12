@@ -70,10 +70,8 @@ export default function TeacherLayout({
       <TeacherSidebar />
       <div className="lg:pl-64">
         <TeacherHeader teacher={teacher} />
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+        <main className="p-6">
+          {children}
         </main>
       </div>
     </div>

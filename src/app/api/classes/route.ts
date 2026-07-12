@@ -71,6 +71,12 @@ export async function GET(request: NextRequest) {
               }
             }
           }
+        },
+        meetings: {
+          select: { date: true },
+          where: { status: 'COMPLETED' },
+          orderBy: { date: 'desc' },
+          take: 1
         }
       },
       orderBy: { createdAt: 'desc' }

@@ -427,9 +427,12 @@ export default function EditClassForm({ classData, isOpen, onClose, onClassUpdat
                 id="edit-schedule"
                 value={formData.schedule}
                 onChange={(e) => handleInputChange('schedule', e.target.value)}
-                placeholder="Contoh: Senin, 09:00-11:00"
+                placeholder="Contoh: Senin, Rabu, Jumat 08:00 - 09:30"
                 required
               />
+              <p className="text-xs text-gray-500">
+                Penting: Gunakan format Jam yang standar (cth: 08:00 - 09:30, 14:00 - 15:30) agar terbaca oleh Peta Kelas.
+              </p>
             </div>
           </div>
 

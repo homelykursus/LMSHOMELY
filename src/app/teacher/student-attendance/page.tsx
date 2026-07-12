@@ -313,9 +313,15 @@ export default function TeacherStudentAttendancePage() {
     // Get student status to check if class is completed
     const studentStatus = getStudentStatusFromClass(student)
     
-    // Only exclude students if their class is marked as inactive (not just completed meetings)
-    // Students should still appear even if they've reached total meetings, unless class is explicitly inactive
-    const isActiveOrCompleted = studentStatus.status !== 'inactive'
+    // Filter by activeTab
+    let matchesTab = true;
+    if (activeTab === 'students') {
+      matchesTab = studentStatus.status !== 'completed' && studentStatus.status !== 'inactive';
+    } else if (activeTab === 'completed') {
+      matchesTab = studentStatus.status === 'completed';
+    } else {
+      matchesTab = true;
+    }
     
     let matchesWarning = true
     if (selectedWarning !== 'all') {
@@ -329,7 +335,7 @@ export default function TeacherStudentAttendancePage() {
       }
     }
 
-    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && isActiveOrCompleted && matchesWarning
+    return matchesSearch && matchesClass && matchesCourse && matchesClassFilter && matchesTab && matchesWarning
   })
 
   const filteredAttendance = attendanceRecords.filter(record => {
@@ -562,7 +568,7 @@ export default function TeacherStudentAttendancePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -752,10 +758,14 @@ export default function TeacherStudentAttendancePage() {
 
         {/* Tabs for Students and Attendance History */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-[600px] grid-cols-3">
             <TabsTrigger value="students" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Data Siswa
+              Kelas Berjalan
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Kelas Selesai
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -764,11 +774,11 @@ export default function TeacherStudentAttendancePage() {
           </TabsList>
 
           {/* Students Tab */}
-          <TabsContent value="students">
+          <TabsContent value={activeTab === 'completed' ? 'completed' : 'students'}>
             {/* Students with Attendance Summary */}
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Data Siswa dan Riwayat Absensi</CardTitle>
+                <CardTitle>{activeTab === 'completed' ? 'Data Siswa Kelas Selesai' : 'Data Siswa Kelas Berjalan'}</CardTitle>
                 <CardDescription>
                   Menampilkan {filteredStudents.length} siswa di kelas Anda
                 </CardDescription>

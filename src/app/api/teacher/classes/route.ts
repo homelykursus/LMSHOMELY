@@ -57,6 +57,12 @@ export async function GET(request: NextRequest) {
               }
             }
           }
+        },
+        meetings: {
+          select: { date: true },
+          where: { status: 'COMPLETED' },
+          orderBy: { date: 'desc' },
+          take: 1
         }
       },
       orderBy: {
@@ -87,7 +93,8 @@ export async function GET(request: NextRequest) {
         id: cs.id,
         joinedAt: cs.joinedAt,
         student: cs.student
-      }))
+      })),
+      meetings: cls.meetings
     }));
 
     return NextResponse.json(formattedClasses);

@@ -11,7 +11,8 @@ import {
   BookOpen,
   DollarSign,
   Menu,
-  X
+  X,
+  Map
 } from 'lucide-react';
 
 const navigation = [
@@ -34,6 +35,11 @@ const navigation = [
     name: 'Data Kelas',
     href: '/teacher/classes',
     icon: BookOpen,
+  },
+  {
+    name: 'Peta Kelas',
+    href: '/teacher/class-map',
+    icon: Map,
   },
   {
     name: 'Komisi Guru',

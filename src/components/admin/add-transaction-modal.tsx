@@ -186,8 +186,7 @@ export default function AddTransactionModal({
                   <SelectItem value="cash">Tunai</SelectItem>
                   <SelectItem value="transfer">Transfer Bank</SelectItem>
                   <SelectItem value="ewallet">E-Wallet</SelectItem>
-                  <SelectItem value="debit">Kartu Debit</SelectItem>
-                  <SelectItem value="credit">Kartu Kredit</SelectItem>
+                  <SelectItem value="qris">QRIS</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -194,3 +194,4 @@ export class BackupService {
       throw new Error(`Data backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+}

@@ -562,3 +562,13 @@ model BlogPost {
   @@index([authorId])
   @@index([viewCount])
 }
+
+model MasterSchedule {
+  id          String   @id @default(cuid())
+  name        String   // Nama/Deskripsi jadwal
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
