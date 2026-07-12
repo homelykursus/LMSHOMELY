@@ -368,8 +368,9 @@ export default function ClassMap() {
                   <td key={`${time}-${day}`} className="p-2 border-r align-top relative group">
                     <div className="flex flex-col gap-2 min-h-[80px]">
                       {matrix[time][day].length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-gray-400 text-xs italic">
-                          Kosong
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 text-xs italic">
+                          <span>Kosong</span>
+                          <span className="text-[10px] mt-1 opacity-70">{time}</span>
                         </div>
                       ) : (
                         matrix[time][day].map(c => {
