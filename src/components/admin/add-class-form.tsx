@@ -364,15 +364,16 @@ export default function AddClassForm({ onClassAdded }: AddClassFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="schedule">Jadwal *</Label>
-              <Input
+              <Textarea
                 id="schedule"
                 value={formData.schedule}
                 onChange={(e) => handleInputChange('schedule', e.target.value)}
-                placeholder="Contoh: Senin, Rabu, Jumat 08:00 - 09:30"
+                placeholder="Contoh:&#10;Senin 08:00 - 09:30&#10;Selasa 10:00 - 11:30"
                 required
+                rows={3}
               />
               <p className="text-xs text-gray-500">
-                Penting: Gunakan format Jam yang standar (cth: 08:00 - 09:30, 14:00 - 15:30) agar terbaca oleh Peta Kelas.
+                Penting: Gunakan format Jam yang standar (cth: 08:00 - 09:30). Tekan Enter (baris baru) untuk memisahkan jadwal hari yang berbeda.
               </p>
             </div>
           </div>

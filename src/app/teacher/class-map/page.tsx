@@ -98,26 +98,30 @@ const TIME_SLOTS = [
   "20:00 - 21:30"
 ];
 
-// Helper to check if a class schedule string matches a day and time slot
 const classMatchesSlot = (schedule: string, day: string, timeSlot: string) => {
   if (!schedule) return false;
   
-  const normalizedSchedule = schedule.toLowerCase();
   const normalizedDay = day.toLowerCase();
-  
-  // Create variants of time slot to handle minor formatting differences
-  // e.g., "08:00 - 09:30" -> "08:00-09:30", "08.00 - 09.30", "08.00-09.30"
   const timeVariants = [
     timeSlot,
     timeSlot.replace(/\s/g, ''),
     timeSlot.replace(/:/g, '.'),
     timeSlot.replace(/\s/g, '').replace(/:/g, '.')
-  ];
+  ].map(v => v.toLowerCase());
   
-  const hasDay = normalizedSchedule.includes(normalizedDay);
-  const hasTime = timeVariants.some(variant => normalizedSchedule.includes(variant.toLowerCase()));
+  // Split schedule by newline or semicolon to process each part independently
+  const lines = schedule.toLowerCase().split(/\n|<br\s*\/?>|;/);
   
-  return hasDay && hasTime;
+  for (const line of lines) {
+    const hasDay = line.includes(normalizedDay);
+    const hasTime = timeVariants.some(variant => line.includes(variant));
+    
+    if (hasDay && hasTime) {
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 export default function ClassMap() {
