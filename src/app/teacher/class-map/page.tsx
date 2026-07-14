@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Map, Users, BookOpen, Clock, Filter, X, DoorOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,7 +78,7 @@ const getTimeAgo = (dateString: string) => {
 const getTimeColor = (dateString: string) => {
   const diffInDays = calculateDaysDifference(dateString);
   
-  if (diffInDays < 7) return 'text-green-600';
+  if (diffInDays < 8) return 'text-green-600';
   if (diffInDays <= 30) return 'text-amber-600';
   return 'text-red-600';
 };
@@ -133,6 +134,26 @@ export default function ClassMap() {
   // Filter states
   const [selectedRoom, setSelectedRoom] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+
+  // Helper functions for student
+  const calculateAge = (dob: string) => {
+    if (!dob) return '?';
+    const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return '?';
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  };
 
   useEffect(() => {
     Promise.all([
@@ -347,7 +368,8 @@ export default function ClassMap() {
                           return (
                             <div 
                               key={c.id} 
-                              className={`${isWaiting ? 'bg-amber-50 border-amber-200 hover:border-amber-300' : 'bg-blue-50 border-blue-200 hover:border-blue-300'} border rounded-md p-2 shadow-sm flex flex-col gap-1 transition-colors`}
+                              onClick={() => setSelectedClass(c)}
+                              className={`${isWaiting ? 'bg-amber-50 border-amber-200 hover:border-amber-300' : 'bg-blue-50 border-blue-200 hover:border-blue-300'} border rounded-md p-2 shadow-sm flex flex-col gap-1 transition-colors cursor-pointer hover:shadow-md`}
                             >
                               <div className={`font-semibold text-sm leading-tight ${isWaiting ? 'text-amber-900' : 'text-blue-900'}`}>
                                 {c.name}
@@ -410,7 +432,8 @@ export default function ClassMap() {
                 return (
                   <div 
                     key={c.id} 
-                    className={`${isWaiting ? 'bg-amber-50 border-amber-200 hover:border-amber-300' : 'bg-gray-50 hover:border-gray-300'} border rounded-md p-3 flex flex-col gap-2 transition-colors shadow-sm`}
+                    onClick={() => setSelectedClass(c)}
+                    className={`${isWaiting ? 'bg-amber-50 border-amber-200 hover:border-amber-300' : 'bg-gray-50 hover:border-gray-300'} border rounded-md p-3 flex flex-col gap-2 transition-colors shadow-sm cursor-pointer hover:shadow-md`}
                   >
                     <div className={`font-semibold ${isWaiting ? 'text-amber-900' : ''}`}>{c.name}</div>
                     <Badge variant={isWaiting ? "outline" : "secondary"} className={`w-fit ${isWaiting ? 'border-amber-300 text-amber-800' : ''}`}>{c.schedule}</Badge>
@@ -448,6 +471,113 @@ export default function ClassMap() {
           </CardContent>
         </Card>
       )}
+
+      {/* Detail Kelas Modal */}
+      <Dialog open={!!selectedClass} onOpenChange={(open) => !open && setSelectedClass(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedClass?.name}</DialogTitle>
+            <DialogDescription>
+              Detail Informasi Kelas dan Siswa
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedClass && (
+            <div className="space-y-6 mt-4">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Nama Guru</p>
+                  <p className="font-semibold text-gray-900">{selectedClass.teacher?.name || 'Tanpa Guru'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Nama Ruang</p>
+                  <p className="font-semibold text-gray-900">{selectedClass.room.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Jumlah Absensi Kelas</p>
+                  <p className="font-semibold text-gray-900">{selectedClass.completedMeetings} / {selectedClass.totalMeetings} Pertemuan</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Terakhir Masuk Kelas</p>
+                  {selectedClass.meetings && selectedClass.meetings.length > 0 ? (
+                    <p className={`font-semibold ${getTimeColor(selectedClass.meetings[0].date)}`}>
+                      {getTimeAgo(selectedClass.meetings[0].date)}
+                    </p>
+                  ) : (
+                    <p className="font-semibold text-gray-500">Belum pernah masuk</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-lg mb-3 flex items-center">
+                  <Users className="w-5 h-5 mr-2 text-blue-600" />
+                  Daftar Siswa ({selectedClass.students?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {selectedClass.students?.map((cs: any) => {
+                    const student = cs.student;
+                    const age = calculateAge(student.dateOfBirth);
+                    const sisa = student.payments?.reduce((sum: number, p: any) => sum + (p.remainingAmount || 0), 0) || 0;
+                    
+                    let lastEntered = 'Belum pernah';
+                    let lastEnteredColor = 'text-gray-500';
+                    if (student.attendances && student.attendances.length > 0 && student.attendances[0].classMeeting?.date) {
+                      const date = student.attendances[0].classMeeting.date;
+                      lastEntered = getTimeAgo(date);
+                      lastEnteredColor = getTimeColor(date);
+                    } else if (selectedClass.meetings && selectedClass.meetings.length > 0) {
+                      // Fallback to class meeting if specific student attendance isn't available easily
+                      const date = selectedClass.meetings[0].date;
+                      lastEntered = getTimeAgo(date) + " (Kelas)";
+                      lastEnteredColor = getTimeColor(date);
+                    }
+
+                    return (
+                      <div key={cs.id} className="bg-white border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-blue-200 transition-colors">
+                        <div>
+                          <div className="font-semibold text-gray-900 flex items-center gap-2">
+                            {student.name} <Badge variant="outline" className="text-xs bg-gray-50">{age} Tahun</Badge>
+                          </div>
+                          <div className="text-sm mt-1 flex items-center gap-2">
+                            <span className="text-gray-500">Sisa Pembayaran:</span>
+                            <span className={`font-medium ${sisa > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {formatCurrency(sisa)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col sm:items-end gap-2">
+                          <div className="text-sm flex items-center">
+                            <Clock className="w-4 h-4 mr-1.5 text-gray-400" />
+                            <span className="text-gray-500 mr-1">Terakhir Masuk:</span>
+                            <span className={`font-medium ${lastEnteredColor}`}>{lastEntered}</span>
+                          </div>
+                          {student.whatsapp && (
+                            <a 
+                              href={`https://wa.me/${student.whatsapp.replace(/\D/g, '').replace(/^0/, '62')}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-md hover:bg-green-100 border border-green-200 transition-colors w-fit"
+                            >
+                              No WhatsApp: {student.whatsapp}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {(!selectedClass.students || selectedClass.students.length === 0) && (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
+                      Belum ada siswa di kelas ini
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

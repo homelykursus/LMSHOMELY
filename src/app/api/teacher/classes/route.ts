@@ -53,7 +53,16 @@ export async function GET(request: NextRequest) {
                 whatsapp: true,
                 dateOfBirth: true, // Added for age calculation
                 lastEducation: true, // Added for education column
-                gender: true // Added for gender column
+                gender: true, // Added for gender column
+                payments: {
+                  select: { remainingAmount: true }
+                },
+                attendances: {
+                  select: { classMeeting: { select: { date: true } } },
+                  where: { status: 'HADIR' },
+                  orderBy: { markedAt: 'desc' },
+                  take: 1
+                }
               }
             }
           }

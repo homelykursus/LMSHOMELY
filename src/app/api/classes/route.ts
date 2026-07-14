@@ -67,7 +67,16 @@ export async function GET(request: NextRequest) {
                 dateOfBirth: true,
                 lastEducation: true,
                 gender: true,
-                status: true
+                status: true,
+                payments: {
+                  select: { remainingAmount: true }
+                },
+                attendances: {
+                  select: { classMeeting: { select: { date: true } } },
+                  where: { status: 'HADIR' },
+                  orderBy: { markedAt: 'desc' },
+                  take: 1
+                }
               }
             }
           }
